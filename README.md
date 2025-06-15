@@ -10,7 +10,8 @@
 
 Go straight to the [FLUID specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
 Or see it in action [FLUID examples](https://github.com/open-data-protocol/fluid/blob/main/examples.md)
----0
+
+---
 
 ## 🚀 Vision: Your Data, Ready for the Agentic Revolution
 
