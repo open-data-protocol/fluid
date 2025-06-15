@@ -107,11 +107,11 @@ No matter how advanced, an AI agent cannot operate on data it does not understan
 
 | Principle               | Description                                                                 |
 |-------------------------|-----------------------------------------------------------------------------|
-| **Data as a Product**   | Versioned assets with owners, SLAs, and contracts                           |
-| **Declarative**         | Define *what* not *how* — let the tools figure it out                      |
-| **Contracts as Code**   | Governance built into your version-controlled spec                          |
-| **Federated Ownership** | Aligns with Data Mesh, supports decentralized domains                       |
-| **Compliant Ecosystem** | FLUID-aware tools configure themselves using `.fluid.yml`                   |
+| **Data as a Product**   | The core mental model of FLUID is to shift from thinking about "pipelines" to thinking about "products." A pipeline is an imperative process. A product is a versioned asset with a defined interface, quality guarantees, and a clear owner. FLUID files are the specification for these products.                         |
+| **Declarative, Not Imperative**         | You define the desired end state of your data product—what it consumes, what it exposes, and the contract it must adhere to. You do not define the step-by-step "how." This is the job of a FLUID-compliant tool, which reads your definition and figures out the best way to implement it.                     |
+| **Contracts as Code**   | The contract block is the heart of every data product. It embeds schema, quality rules, and privacy treatments directly into a version-controlled file. This makes governance an automated, proactive part of the development lifecycle, not a reactive, manual process.                          |
+| **Federated Ownership** | FLUID is designed for a Data Mesh. .fluid.yml files are intended to be decentralized and co-located with the domain teams that own them. The standard's use of globally unique dataProduct names allows a central orchestrator or catalog to discover these distributed files and weave them into a single, unified data fabric.                       |
+| **Compliant Ecosystem** | FLUID is not a monolithic platform. It is a standard that delegates execution to the tools you already use. An orchestrator, a catalog, or an ingestion service becomes "FLUID-aware" by learning to read .fluid.yml files to configure itself. This fosters an open, composable ecosystem rather than creating a new silo.                 |
 
 ---
 
@@ -262,19 +262,19 @@ build:
 
 A specification is only as strong as its ability to withstand scrutiny. Here, we address the toughest questions head-on.
 
-### 1❓: Isn't this just another layer of abstraction that complicates things?
+### 1❓Isn't this just another layer of abstraction that complicates things?
 A: This is a crucial distinction. FLUID is not an "abstraction layer" in the traditional sense; it's a unifying protocol. Today, you write dbt models, then separate Airflow DAGs, and perhaps other scripts for quality checks. These are disconnected artifacts. FLUID unifies this into a single file, eliminating "glue code" and making the complexity contained and explicit, not created.
 
-### 2❓: Does this replace my existing tools like Airflow or dbt?
+### 2❓Does this replace my existing tools like Airflow or dbt?
 A: No. FLUID makes them radically better by becoming their most reliable source of truth. The vision is for a decentralized ecosystem of "FLUID-aware" tools. An orchestrator becomes compliant by having a provider that can read a .fluid.yml file and dynamically generate the correct DAG. A transformation tool becomes compliant by reading the consumes block to find its sources.
 
-### 3❓: The "Agentic Executor" sounds mythical. How does this actually get implemented?
+### 3❓The "Agentic Executor" sounds mythical. How does this actually get implemented?
 A: The "Agentic Executor" is a concept, not a monolith. The power of FLUID is that it delegates execution to a compliant ecosystem. A CI/CD pipeline (e.g., GitHub Actions) is the practical "executor." When a .fluid.yml file is changed, the CI/CD job can trigger a series of compliant tools to act on it.
 
-### 4❓: What happens when I need a complex Python transformation? Doesn't that break the declarative model and lineage?
+### 4❓What happens when I need a complex Python transformation? Doesn't that break the declarative model and lineage?
 A: This is a fair critique of purely automated solutions. FLUID is pragmatic. The specification includes a build.transformation.lineage block. For Python transformations, the developer is responsible for explicitly declaring the column-level mappings. This makes the "escape hatch" auditable and keeps the lineage graph complete.
 
-### 5❓: This seems like a massive cultural shift. How can any large organization realistically adopt it?
+### 5❓This seems like a massive cultural shift. How can any large organization realistically adopt it?
 A: Through incremental, value-driven adoption. The federated nature of FLUID is specifically designed for this. It does not require a "big bang" rollout. Start with one high-value domain team. Once they produce demonstrably better, more reliable data products faster than anyone else, a gravitational pull is created for other teams to adopt the standard.
 
 ---
