@@ -10,6 +10,7 @@
 
 Go straight to the [FLUID specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
 Or see it in action [FLUID examples](https://github.com/open-data-protocol/fluid/blob/main/examples.md)
+; it even has a defined [FLUID schema](https://github.com/open-data-protocol/fluid/blob/main/fluid-schema.md)
 
 ---
 
