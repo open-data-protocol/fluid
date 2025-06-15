@@ -3,7 +3,7 @@
   <img src="fluid-logo.png" width="200" alt="FLUID Logo"/>
 </p>
 
-# 🌊 FLUID: Federated Layered Unified Interchange Definition
+# Federated Layered Unified Interchange Definition
 
 > **The open, declarative standard for Data Products.**  
 > FLUID provides the foundational protocol for building trustworthy, governable, and scalable data ecosystems—ready for the agentic era.
