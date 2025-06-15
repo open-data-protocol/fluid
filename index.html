@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FLUID Protocol - The Shared Language for the Agentic Data Fabric</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -24,11 +24,6 @@
             background: linear-gradient(90deg, #38BDF8, #A78BFA);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-        .gradient-border {
-            border: 2px solid transparent;
-            background-clip: padding-box;
-            border-image: linear-gradient(90deg, #38BDF8, #A78BFA) 1;
         }
         .feature-card::before {
             content: '';
@@ -53,6 +48,9 @@
             opacity: 0.15;
             filter: blur(100px);
         }
+        .hero-logo {
+            filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.4));
+        }
     </style>
 </head>
 <body class="overflow-x-hidden">
@@ -63,15 +61,15 @@
     
     <header class="fixed top-0 left-0 right-0 z-50 glass-card">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="flex items-center space-x-2">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-sky-400"><path d="M12 2L2 7V17L12 22L22 17V7L12 2ZM5.47 8.5L12 12V19.9L18.53 16.5V10L12 6.54L5.47 8.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 7L12 12L22 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 22V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <a href="#" class="flex items-center space-x-3">
+                <img src="fluid-logo.png" alt="FLUID Logo" class="h-8 w-8">
                 <span class="font-sora text-2xl font-bold text-slate-100">FLUID</span>
             </a>
             <nav class="hidden md:flex items-center space-x-8 text-slate-300">
-                <a href="#vision" class="hover:text-sky-400 transition-colors">Vision</a>
-                <a href="#concepts" class="hover:text-sky-400 transition-colors">Core Concepts</a>
-                <a href="#example" class="hover:text-sky-400 transition-colors">Example</a>
-                <a href="#stakeholders" class="hover:text-sky-400 transition-colors">Who is it for?</a>
+                <a href=""https://github.com/open-data-protocol/fluid/blob/main/docs/future/2030.md"" class="hover:text-sky-400 transition-colors">Vision</a>
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/examples.md" class="hover:text-sky-400 transition-colors">See Examples</a>
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="hover:text-sky-400 transition-colors">Read the Spec</a>
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/contribute.md" class="hover:text-sky-400 transition-colors">Contribute</a>
             </nav>
             <a href="https://github.com/open-data-protocol/fluid" target="_blank" class="hidden md:inline-block bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold py-2 px-4 rounded-lg transition-colors">
                 View on GitHub
@@ -81,20 +79,51 @@
 
     <main class="relative z-10">
         <!-- Hero Section -->
-        <section id="vision" class="min-h-screen flex items-center pt-24">
+        <section id="vision" class="min-h-screen flex items-center pt-32 pb-16">
             <div class="container mx-auto px-6 text-center">
+                <!-- Main Hero Image Added Here -->
+                <img src="fluid-image.png" alt="FLUID Protocol Main Visual" class="w-auto h-48 md:h-64 mx-auto mb-10 hero-logo">
+
                 <h1 class="font-sora text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
                     The <span class="gradient-text">Shared Language</span><br>for the Agentic Data Fabric
                 </h1>
-                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-300 mb-10">
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-300 mb-12">
                     FLUID is an open, declarative standard for defining Data Products. It replaces brittle pipelines with a trustworthy, governable, and scalable protocol, making your data ecosystem ready for the agentic era.
                 </p>
                 <div class="flex justify-center space-x-4">
-                    <a href="#concepts" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Get Started</a>
-                    <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Read the Spec</a>
+                    <a href="#concepts" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Core Concepts</a>
+                    <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Full Specification</a>
                 </div>
             </div>
         </section>
+
+        <!-- What FLUID Stands For Section -->
+        <section class="py-16">
+            <div class="container mx-auto px-6">
+                <div class="glass-card rounded-xl p-8 md:p-12 text-center">
+                    <h2 class="font-sora text-2xl md:text-3xl font-bold mb-6 text-slate-100">What is FLUID?</h2>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
+                        <div>
+                            <h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Federated</h3>
+                            <p class="text-slate-300">Enabling a Data Mesh where ownership is distributed across domains, with FLUID files co-located with the data products they define.</p>
+                        </div>
+                        <div>
+                            <h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Layered</h3>
+                            <p class="text-slate-300">Building reliable data products in logical layers, from raw to refined (Bronze, Silver, Gold), creating clear, traceable lineage.</p>
+                        </div>
+                        <div>
+                            <h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Unified</h3>
+                            <p class="text-slate-300">Bringing a product's interface (`exposes`), dependencies (`consumes`), and implementation (`build`) into a single definition.</p>
+                        </div>
+                        <div>
+                            <h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Interchange Definition</h3>
+                            <p class="text-slate-300">Serving as a universal language for defining and sharing data products between humans, tools, and autonomous agents.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         <!-- What is FLUID? -->
         <section id="what-is-fluid" class="py-20">
@@ -257,13 +286,13 @@ build:
         </section>
 
         <!-- CTA Section -->
-        <section class="py-20">
+        <section id="cta" class="py-20">
             <div class="container mx-auto px-6 text-center">
                 <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">Ready to Build the Future?</h2>
                 <p class="max-w-xl mx-auto text-slate-300 mb-10">
                     FLUID is an open-source standard, and we welcome contributions from the community. Join us in defining the next era of data engineering.
                 </p>
-                 <a href="https://github.com/open-data-protocol/fluid" target="_blank" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-10 rounded-lg text-xl transition-transform transform hover:scale-105 inline-block">Join the Community & Contribute</a>
+                 <a href="https://github.com/open-data-protocol/fluid/contribute.md" target="_blank" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-10 rounded-lg text-xl transition-transform transform hover:scale-105 inline-block">Join the Community & Contribute</a>
             </div>
         </section>
     </main>
@@ -348,16 +377,23 @@ build:
         function copyCode() {
             const codeBlock = document.getElementById('code-block');
             const code = codeBlock.innerText;
-            navigator.clipboard.writeText(code).then(() => {
+            // Using document.execCommand as a fallback for iFrame restrictions
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
                 const button = document.querySelector('#example button');
                 const originalText = button.innerText;
                 button.innerText = 'Copied!';
                 setTimeout(() => {
                     button.innerText = originalText;
                 }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy code: ', err);
-            });
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textarea);
         }
     </script>
 
