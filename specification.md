@@ -1,6 +1,26 @@
+<p align="center">
+  <img src="fluid-logo.png" width="200" alt="FLUID Logo"/>
+</p>
+
 ## 📚 Fluid Protocol Specification (v1.0)
 
-### **Root Object**
+This document provides the complete, official v1.0 specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
+
+### 1. The Strategic Imperative: A Protocol for the Agentic Era
+The contemporary enterprise is shifting from process automation to an Agentic Ecosystem, where autonomous AI agents drive operations with unprecedented speed and intelligence. This paradigm shift, enabled by communication standards like the Model Context Protocol (MCP), exposes a foundational vulnerability in modern data architecture: the lack of a common language for defining, governing, and interacting with data assets.
+
+Today's data landscape is a fragmented collection of imperative pipelines, siloed tool configurations, and implicit knowledge. This static, brittle foundation cannot support the dynamic, real-time demands of an agentic workforce. Agents require a data fabric that is not only accessible but also discoverable, trustworthy, and context-aware.
+
+FLUID is the standard designed to create this fabric. It addresses this challenge by providing a declarative, universal protocol for defining Data Products. It is the missing piece of the puzzle, serving as the foundational layer that makes an organization truly MCP-ready. While MCP standardizes how agents communicate, FLUID standardizes the trustworthy Data Products they communicate with.
+
+### 2. What is FLUID?
+FLUID is an open, declarative specification, written in YAML and managed in version control. It is not a platform or a single tool, but a shared language that enables a decentralized ecosystem of compliant tools to work in concert.
+
+It re-frames the data lifecycle around the concept of a Data Product: a versioned, autonomous asset with a clearly defined interface, contract, and implementation. By unifying the definition of what a data product consumes (its dependencies), what it exposes (its public interface), and how it is built (its implementation logic), FLUID provides a holistic, auditable, and machine-readable blueprint for every data asset in the enterprise.
+
+This document details the full specification for this protocol, providing the technical foundation required to build the governable, scalable, and agent-ready data ecosystems of the future.
+
+## **Root Object**
 
 | Key             | Type           | Required | Description                                                        |
 |-----------------|---------------|----------|--------------------------------------------------------------------|
