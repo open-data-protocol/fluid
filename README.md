@@ -8,6 +8,7 @@
 > **The open, declarative standard for Data Products.**  
 > FLUID provides the foundational protocol for building trustworthy, governable, and scalable data ecosystems—ready for the agentic era.
 
+Go straight to the [FLUID specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
 ---
 
 ## 🚀 Vision: Your Data, Ready for the Agentic Revolution
