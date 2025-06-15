@@ -1,0 +1,334 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/open-data-protocol/fluid/blob/main/fluid-schema.json",
+  "title": "FLUID Data Product Specification",
+  "description": "The official JSON Schema for the FLUID v1.0 specification. It defines the structure and constraints of a .fluid.yml file.",
+  "type": "object",
+  "properties": {
+    "fluidVersion": {
+      "type": "string",
+      "description": "The version of the FLUID specification this file adheres to.",
+      "enum": ["1.0"]
+    },
+    "kind": {
+      "type": "string",
+      "description": "The type of data product definition.",
+      "enum": ["DataProduct", "VirtualDataProduct", "EgressFlow"]
+    },
+    "extends": {
+      "type": "string",
+      "description": "Path or URL to a base template FLUID file for standardization."
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "exposes": {
+      "$ref": "#/$defs/exposes"
+    },
+    "consumes": {
+      "$ref": "#/$defs/consumes"
+    },
+    "build": {
+      "$ref": "#/$defs/build"
+    },
+    "accessPolicy": {
+      "$ref": "#/$defs/accessPolicy"
+    },
+    "dynamicPolicies": {
+      "$ref": "#/$defs/dynamicPolicies"
+    },
+    "operations": {
+      "$ref": "#/$defs/operations"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    },
+    "revision": {
+      "type": "string",
+      "description": "(Recommended) The Git commit hash, tag, or version for traceability."
+    }
+  },
+  "required": [
+    "fluidVersion",
+    "kind",
+    "metadata",
+    "exposes"
+  ],
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "description": "Identification, ownership, and classification information.",
+      "properties": {
+        "dataProduct": {
+          "type": "string",
+          "description": "Globally unique name using dot notation (e.g., finance.gold.balances).",
+          "pattern": "^[a-z0-9]+(?:\\.[a-z0-9]+)*$"
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "team": { "type": "string" },
+            "email": { "type": "string", "format": "email" }
+          },
+          "required": ["team"]
+        },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+        }
+      },
+      "required": ["dataProduct", "owner", "classification"]
+    },
+    "exposes": {
+      "oneOf": [
+        { "$ref": "#/$defs/exposeItem" },
+        { "type": "array", "items": { "$ref": "#/$defs/exposeItem" } }
+      ]
+    },
+    "exposeItem": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "$ref": "#/$defs/location" },
+        "contract": { "$ref": "#/$defs/contract" }
+      },
+      "required": ["location", "contract"]
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["bigquery", "s3", "snowflake", "gcs", "iceberg", "api", "kafka", "virtual"] },
+        "connection": { "type": "string" },
+        "format": { "type": "object" },
+        "properties": { "type": "object" }
+      },
+      "required": ["type", "connection"]
+    },
+    "consumes": {
+      "oneOf": [
+        { "$ref": "#/$defs/consumeItem" },
+        { "type": "array", "items": { "$ref": "#/$defs/consumeItem" } }
+      ]
+    },
+    "consumeItem": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["gcs", "kafka", "s3", "api", "postgres-cdc", "sftp", "fluid-product"] },
+        "name": { "type": "string" },
+        "alias": { "type": "string" },
+        "onUpstreamChange": { "type": "string", "enum": ["fail", "alert", "triggerRebuild"] },
+        "connection": { "type": "string" },
+        "format": { "type": "object" },
+        "properties": { "type": "object" }
+      },
+      "required": ["type"]
+    },
+    "contract": {
+      "type": "object",
+      "properties": {
+        "inheritFrom": { "type": "string", "enum": ["dbt", "fluid-product", "openApi"] },
+        "model": { "type": "string" },
+        "spec": { "type": "string" },
+        "schema": {
+          "type": "object",
+          "properties": {
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string", "enum": ["STRING", "INT64", "NUMERIC", "TIMESTAMP", "JSON", "BOOLEAN", "DATE"] },
+                  "nullable": { "type": "boolean" }
+                },
+                "required": ["name", "type"]
+              }
+            }
+          },
+          "required": ["columns"]
+        },
+        "quality": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/qualityRule" }
+        },
+        "privacy": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/privacyRule" }
+        },
+        "semantics": {
+          "type": "object",
+          "properties": {
+            "ontology": { "type": "string", "format": "uri" },
+            "classifications": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "column": { "type": "string" },
+                  "term": { "type": "string" },
+                  "description": { "type": "string" }
+                },
+                "required": ["column", "term"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "qualityRule": {
+      "type": "object",
+      "properties": {
+        "rule": { "type": "string" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "pattern": { "type": "string", "format": "regex" },
+        "set": { "type": "array" },
+        "onFailure": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string", "enum": ["reject_row", "quarantine_row", "fail_pipeline", "alert"] },
+            "notifications": { "type": "array" }
+          },
+          "required": ["action"]
+        }
+      },
+      "required": ["rule", "onFailure"]
+    },
+    "privacyRule": {
+      "type": "object",
+      "properties": {
+        "classification": { "type": "string", "enum": ["PII", "SPI", "Confidential"] },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "treatment": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["hashing", "masking", "encryption", "tokenization"] },
+            "properties": { "type": "object" }
+          },
+          "required": ["type"]
+        }
+      },
+      "required": ["columns", "treatment"]
+    },
+    "build": {
+      "type": "object",
+      "properties": {
+        "transformation": { "$ref": "#/$defs/transformation" },
+        "execution": { "$ref": "#/$defs/execution" },
+        "stateManagement": { "$ref": "#/$defs/stateManagement" }
+      },
+      "required": ["execution"]
+    },
+    "transformation": {
+      "type": "object",
+      "properties": {
+        "engine": { "type": "string", "enum": ["sql", "python", "dbt", "dbt-cloud", "spark-sql"] },
+        "properties": { "type": "object" },
+        "lineage": {
+          "type": "object",
+          "properties": {
+            "inputs": { "type": "array", "items": { "type": "string" } },
+            "outputs": { "type": "array", "items": { "type": "string" } },
+            "mappings": { "type": "array" }
+          }
+        }
+      },
+      "required": ["engine", "properties"]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "trigger": { "type": "object" },
+        "runtime": { "type": "object" },
+        "dependencies": { "type": "object" },
+        "retries": { "type": "object" },
+        "notifications": { "type": "object" }
+      },
+      "required": ["trigger", "runtime"]
+    },
+    "stateManagement": {
+      "type": "object",
+      "properties": {
+        "backend": { "type": "string", "enum": ["gcs", "s3", "bigquery_table"] },
+        "properties": { "type": "object" }
+      },
+      "required": ["backend", "properties"]
+    },
+    "accessPolicy": {
+      "type": "object",
+      "properties": {
+        "visibility": { "type": "string", "enum": ["private", "internal"] },
+        "grants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "principal": { "type": "string" },
+              "permissions": { "type": "array", "items": { "type": "string", "enum": ["readData", "readMetadata", "manage"] } },
+              "scope": { "$ref": "#/$defs/scope" }
+            },
+            "required": ["principal", "permissions"]
+          }
+        }
+      },
+      "required": ["grants"]
+    },
+    "dynamicPolicies": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "condition": { "type": "string" },
+              "grant": {
+                "type": "object",
+                "properties": {
+                  "permissions": { "type": "array", "items": { "type": "string", "enum": ["readData", "readMetadata"] } },
+                  "scope": { "$ref": "#/$defs/scope" }
+                },
+                "required": ["permissions"]
+              }
+            },
+            "required": ["name", "condition", "grant"]
+          }
+        }
+      },
+      "required": ["rules"]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "rowFilter": { "type": "string" },
+        "privacyView": { "type": "string", "enum": ["treated", "cleartext"] }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "properties": {
+        "sla": { "type": "object" },
+        "lifecycle": { "type": "object" },
+        "observability": { "type": "object" }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "properties": {
+        "customTransformations": { "type": "array" },
+        "policyEngines": { "type": "array" },
+        "observabilityHooks": { "type": "array" }
+      }
+    }
+  }
+}
