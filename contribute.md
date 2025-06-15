@@ -17,7 +17,7 @@ We keep things lean and effective—no unnecessary bureaucracy.
 ### 1. Have an Idea? Start the Conversation
 
 - **Big ideas, new features, or breaking changes:**  
-    Open a [GitHub Issue](https://github.com/your-repo/issues) to start a discussion.  
+    Open a [GitHub Issue](https://github.com/open-data-protocol/fluid/issues) to start a discussion.  
     *Tip: A great proposal explains the “why” as much as the “what.”*
 
 - **Bug fixes, typos, or small improvements:**  
