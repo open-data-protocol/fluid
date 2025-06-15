@@ -155,10 +155,37 @@
         <!-- Hero Section -->
         <section id="vision" class="min-h-screen flex items-center pt-32 pb-16">
             <div class="container mx-auto px-6 text-center">
-
-                <img src="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png" class="mx-auto mb-8 h-32 w-32" style="pointer-events:none;">
-                      
-                
+            <div class="relative inline-block mx-auto mb-8 h-32 w-32">
+                <img 
+                    src="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png" 
+                    class="mx-auto h-32 w-32 transition-transform duration-300 will-change-transform fluid-logo"
+                    style="pointer-events:none;"
+                    alt="FLUID Logo"
+                >
+                <style>
+                    .fluid-logo {
+                        filter: drop-shadow(0 4px 24px #38BDF8aa);
+                    }
+                    .zindex-50 {
+                        z-index: 50; /* Ensure the logo is above the glow effect */
+                    }
+                    @keyframes fluidRipple {
+                        0% { transform: scale(1) }
+                        10% { transform: scale(1.04, 0.96) rotate(-1deg) }
+                        20% { transform: scale(0.98, 1.02) rotate(1deg) }
+                        30% { transform: scale(1.03, 0.97) rotate(-1.5deg) }
+                        40% { transform: scale(0.97, 1.03) rotate(1.5deg) }
+                        50% { transform: scale(1.02, 0.98) rotate(-1deg) }
+                        60% { transform: scale(0.99, 1.01) rotate(1deg) }
+                        70% { transform: scale(1.01, 0.99) rotate(-0.5deg) }
+                        80% { transform: scale(1, 1) rotate(0.5deg) }
+                        100% { transform: scale(1) rotate(0deg) }
+                    }
+                    .fluid-logo:hover {
+                        animation: fluidRipple 1.1s cubic-bezier(.4,1.6,.6,1) infinite;
+                    }
+                </style>
+            </div>
                 <h1 id="fluid-title" class="font-sora text-7xl md:text-8xl lg:text-9xl font-extrabold leading-none mb-4 text-slate-300 select-none">
                     <span class="hero-title-char">F</span><span class="hero-title-char">L</span><span class="hero-title-char">U</span><span class="hero-title-char">I</span><span class="hero-title-char">D</span>
                 </h1>
