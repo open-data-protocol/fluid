@@ -14,14 +14,15 @@
             overflow-x: hidden;
             cursor: default;
         }
+        /* Critical Fix: Ensures the canvas is in the background and does not block mouse events. */
         #canvas-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; /* Ensure it's in the background */
-            pointer-events: none; /* Critical fix: lets mouse events pass through to HTML */
+            z-index: -1; 
+            pointer-events: none;
         }
         .font-sora {
             font-family: 'Sora', sans-serif;
@@ -36,6 +37,7 @@
             background: linear-gradient(90deg, #38BDF8, #A78BFA);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            z-index: 30; 
         }
         .feature-card::before {
             content: '';
@@ -61,8 +63,40 @@
             cursor: pointer;
         }
         .btn {
-            @apply font-bold py-3 px-8 rounded-lg text-lg transition-all duration-200 transform;
+            font-weight: 700;
+            padding: 0.75rem 2.25rem;
+            border-radius: 0.75rem;
+            font-size: 1.125rem;
+            transition: 
+            background 0.2s cubic-bezier(0.4,0,0.2,1),
+            color 0.2s cubic-bezier(0.4,0,0.2,1),
+            box-shadow 0.2s cubic-bezier(0.4,0,0.2,1),
+            transform 0.15s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 4px 24px -4px rgba(56,189,248,0.18), 0 1.5px 6px -1px rgba(67,56,202,0.10);
+            border: none;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 100; 
         }
+        .btn:before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            background: linear-gradient(90deg, #38BDF8 0%, #A78BFA 100%);
+            transition: opacity 0.2s;
+            z-index: 0;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn:focus-visible {
+            box-shadow: 0 0 0 3px #38BDF8, 0 4px 24px -4px rgba(56,189,248,0.18);
+        }
+        /* Redesigned Button Styles for a more "button-like" feel */
         .btn-primary {
             background: linear-gradient(90deg, #38BDF8, #6D28D9);
             color: white;
@@ -87,6 +121,9 @@
         .btn-secondary:active {
             transform: translateY(2px);
             border-bottom-width: 2px;
+        }
+        .header {
+            z-index: 40;
         }
     </style>
 </head>
@@ -131,8 +168,12 @@
                     FLUID is an open, declarative standard for defining Data Products. It replaces brittle pipelines with a trustworthy, governable, and scalable protocol, making your entire data ecosystem ready for the agentic era.
                 </p>
                 <div class="flex justify-center flex-wrap gap-4">
-                    <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="btn btn-primary">Read the Full Specification</a>
-                    <a href="https://github.com/open-data-protocol/fluid/blob/main/examples.md" target="_blank" class="btn btn-secondary">See Examples</a>
+                    <button onclick="window.open('https://github.com/open-data-protocol/fluid/blob/main/specification.md','_blank')" class="btn btn-primary cursor-pointer focus:outline-none active:scale-95 shadow-lg transition-transform">
+                        Specification
+                    </button>
+                    <button onclick="window.open('https://github.com/open-data-protocol/fluid/blob/main/examples.md','_blank')" class="btn btn-secondary cursor-pointer focus:outline-none active:scale-95 shadow-lg transition-transform">
+                        Examples
+                    </button>
                 </div>
             </div>
         </section>
@@ -320,11 +361,8 @@ build:
             });
         });
 
-        // --- DYNAMIC BACKGROUND ---
+        // --- CLASSIC STARFIELD BACKGROUND ---
         let scene, camera, renderer, particles;
-        let mouse = new THREE.Vector2(-100,-100);
-        const particleCount = 2000;
-        const baseSize = 0.03;
         
         function init() {
             const container = document.getElementById('canvas-container');
@@ -337,59 +375,28 @@ build:
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
+            const particleCount = 2500;
             const particlesGeometry = new THREE.BufferGeometry();
             const posArray = new Float32Array(particleCount * 3);
-            const sizeArray = new Float32Array(particleCount);
             
-            for (let i = 0; i < particleCount; i++) {
-                posArray[i*3] = (Math.random() - 0.5) * 40;
-                posArray[i*3+1] = (Math.random() - 0.5) * 40;
-                posArray[i*3+2] = (Math.random() - 0.5) * 40;
-                sizeArray[i] = baseSize;
+            for (let i = 0; i < particleCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 50;
             }
             
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
             
-            const particleMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    color: { value: new THREE.Color(0x38BDF8) },
-                },
-                vertexShader: `
-                    attribute float size;
-                    void main() {
-                        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-                        gl_PointSize = size * ( 300.0 / -mvPosition.z );
-                        gl_Position = projectionMatrix * mvPosition;
-                    }
-                `,
-                fragmentShader: `
-                    uniform vec3 color;
-                    void main() {
-                        if ( length( gl_PointCoord - vec2( 0.5, 0.5 ) ) > 0.475 ) discard;
-                        gl_FragColor = vec4( color, 1.0 );
-                    }
-                `,
-                blending: THREE.AdditiveBlending,
-                depthTest: false,
-                transparent: true
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 0.03,
+                color: 0x38BDF8,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
             });
 
             particles = new THREE.Points(particlesGeometry, particleMaterial);
             scene.add(particles);
 
             window.addEventListener('resize', onWindowResize, false);
-            // Use the main content area for mousemove events to avoid blocking clicks
-            document.querySelector('main').addEventListener('mousemove', onMouseMove, false);
-            document.querySelector('main').addEventListener('mouseleave', () => {
-                 mouse.x = -100;
-                 mouse.y = -100;
-            });
-        }
-
-        function onMouseMove(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         }
 
         function onWindowResize() {
@@ -398,36 +405,12 @@ build:
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        const raycaster = new THREE.Raycaster();
         function animate() {
             requestAnimationFrame(animate);
 
             const time = Date.now() * 0.00005;
-            particles.rotation.y = time * 0.3;
-
-            // Animate star sizes based on mouse proximity
-            const positions = particles.geometry.attributes.position.array;
-            const sizes = particles.geometry.attributes.size.array;
-            
-            const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-            raycaster.setFromCamera(mouse, camera);
-            const mousePos3D = new THREE.Vector3();
-            if (raycaster.ray.intersectPlane(plane, mousePos3D)) {
-                for (let i = 0; i < particleCount; i++) {
-                    const p = new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
-                    const dist = p.distanceTo(mousePos3D);
-                    
-                    const growthFactor = Math.max(0, 1 - dist / 5);
-                    // Reduced the multiplier from 250 to 80 for a more subtle effect
-                    const targetSize = baseSize + (growthFactor * growthFactor * baseSize * 80);
-                    sizes[i] += (targetSize - sizes[i]) * 0.1;
-                }
-            } else {
-                 for (let i = 0; i < particleCount; i++) {
-                     sizes[i] += (baseSize - sizes[i]) * 0.1;
-                 }
-            }
-            particles.geometry.attributes.size.needsUpdate = true;
+            particles.rotation.y = time * 0.2;
+            particles.rotation.x = time * 0.1;
 
             renderer.render(scene, camera);
         }
