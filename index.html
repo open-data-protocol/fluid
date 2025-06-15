@@ -14,6 +14,15 @@
             overflow-x: hidden;
             cursor: default;
         }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Ensure it's in the background */
+            pointer-events: none; /* Critical fix: lets mouse events pass through to HTML */
+        }
         .font-sora {
             font-family: 'Sora', sans-serif;
         }
@@ -42,7 +51,7 @@
         .glow-effect {
             position: absolute;
             pointer-events: none;
-            z-index: -1;
+            z-index: -2;
             opacity: 0.15;
             filter: blur(120px);
         }
@@ -52,26 +61,38 @@
             cursor: pointer;
         }
         .btn {
-            @apply font-bold py-3 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105;
+            @apply font-bold py-3 px-8 rounded-lg text-lg transition-all duration-200 transform;
         }
         .btn-primary {
             background: linear-gradient(90deg, #38BDF8, #6D28D9);
             color: white;
-            border: 1px solid rgba(129, 140, 248, 0.5);
+            border-bottom: 4px solid #4c1d95; /* Darker purple for 3D effect */
             box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.4);
         }
         .btn-primary:hover {
+            transform: translateY(-2px);
             box-shadow: 0 15px 40px -10px rgba(99, 102, 241, 0.6);
             filter: brightness(1.1);
         }
+        .btn-primary:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
         .btn-secondary {
-            @apply bg-slate-700/50 hover:bg-slate-700 text-slate-100 border border-slate-600;
+            @apply bg-slate-700/50 hover:bg-slate-700 text-slate-100 border-b-4 border-slate-800;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+        }
+        .btn-secondary:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container" class="fixed top-0 left-0 w-full h-full -z-10"></div>
+    <div id="canvas-container"></div>
     <div class="glow-effect -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500 rounded-full"></div>
     <div class="glow-effect -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-500 rounded-full"></div>
     
@@ -312,6 +333,7 @@ build:
             camera.position.z = 15;
             
             renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
 
@@ -329,7 +351,6 @@ build:
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
             particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
             
-            // Custom shader material for points
             const particleMaterial = new THREE.ShaderMaterial({
                 uniforms: {
                     color: { value: new THREE.Color(0x38BDF8) },
@@ -358,7 +379,12 @@ build:
             scene.add(particles);
 
             window.addEventListener('resize', onWindowResize, false);
-            document.addEventListener('mousemove', onMouseMove, false);
+            // Use the main content area for mousemove events to avoid blocking clicks
+            document.querySelector('main').addEventListener('mousemove', onMouseMove, false);
+            document.querySelector('main').addEventListener('mouseleave', () => {
+                 mouse.x = -100;
+                 mouse.y = -100;
+            });
         }
 
         function onMouseMove(event) {
@@ -383,22 +409,23 @@ build:
             const positions = particles.geometry.attributes.position.array;
             const sizes = particles.geometry.attributes.size.array;
             
-            // Create a plane that is always facing the camera at the average depth of the particles
             const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-            plane.applyMatrix4(camera.matrixWorld);
-            
             raycaster.setFromCamera(mouse, camera);
             const mousePos3D = new THREE.Vector3();
-            raycaster.ray.intersectPlane(plane, mousePos3D);
-
-            for (let i = 0; i < particleCount; i++) {
-                const p = new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
-                const dist = p.distanceTo(mousePos3D);
-                
-                const growthFactor = Math.max(0, 1 - dist / 5);
-                const targetSize = baseSize + (growthFactor * growthFactor * baseSize * 250);
-                // Smoothly interpolate to the target size
-                sizes[i] += (targetSize - sizes[i]) * 0.1;
+            if (raycaster.ray.intersectPlane(plane, mousePos3D)) {
+                for (let i = 0; i < particleCount; i++) {
+                    const p = new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+                    const dist = p.distanceTo(mousePos3D);
+                    
+                    const growthFactor = Math.max(0, 1 - dist / 5);
+                    // Reduced the multiplier from 250 to 80 for a more subtle effect
+                    const targetSize = baseSize + (growthFactor * growthFactor * baseSize * 80);
+                    sizes[i] += (targetSize - sizes[i]) * 0.1;
+                }
+            } else {
+                 for (let i = 0; i < particleCount; i++) {
+                     sizes[i] += (baseSize - sizes[i]) * 0.1;
+                 }
             }
             particles.geometry.attributes.size.needsUpdate = true;
 
