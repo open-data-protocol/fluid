@@ -6,21 +6,21 @@
 
 This document provides the complete, official v1.0 specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
 
-### 1. The Strategic Imperative: A Protocol for the Agentic Era
+### The Strategic Imperative: A Protocol for the Agentic Era
 The contemporary enterprise is shifting from process automation to an Agentic Ecosystem, where autonomous AI agents drive operations with unprecedented speed and intelligence. This paradigm shift, enabled by communication standards like the Model Context Protocol (MCP), exposes a foundational vulnerability in modern data architecture: the lack of a common language for defining, governing, and interacting with data assets.
 
 Today's data landscape is a fragmented collection of imperative pipelines, siloed tool configurations, and implicit knowledge. This static, brittle foundation cannot support the dynamic, real-time demands of an agentic workforce. Agents require a data fabric that is not only accessible but also discoverable, trustworthy, and context-aware.
 
 FLUID is the standard designed to create this fabric. It addresses this challenge by providing a declarative, universal protocol for defining Data Products. It is the missing piece of the puzzle, serving as the foundational layer that makes an organization truly MCP-ready. While MCP standardizes how agents communicate, FLUID standardizes the trustworthy Data Products they communicate with.
 
-### 2. What is FLUID?
+### What is FLUID?
 FLUID is an open, declarative specification, written in YAML and managed in version control. It is not a platform or a single tool, but a shared language that enables a decentralized ecosystem of compliant tools to work in concert.
 
 It re-frames the data lifecycle around the concept of a Data Product: a versioned, autonomous asset with a clearly defined interface, contract, and implementation. By unifying the definition of what a data product consumes (its dependencies), what it exposes (its public interface), and how it is built (its implementation logic), FLUID provides a holistic, auditable, and machine-readable blueprint for every data asset in the enterprise.
 
 This document details the full specification for this protocol, providing the technical foundation required to build the governable, scalable, and agent-ready data ecosystems of the future.
 
-## **Root Object**
+## **1.0 Root Object**
 
 | Key             | Type           | Required | Description                                                        |
 |-----------------|---------------|----------|--------------------------------------------------------------------|
@@ -39,7 +39,7 @@ This document details the full specification for this protocol, providing the te
 
 ---
 
-### **4.2 `metadata` Block**
+### **1.1 `metadata` Block**
 
 | Key         | Type         | Required | Description                                   |
 |-------------|--------------|----------|-----------------------------------------------|
@@ -51,7 +51,7 @@ This document details the full specification for this protocol, providing the te
 
 ---
 
-### **4.3 `exposes` Block (Output Port)**
+### **1.2 `exposes` Block (Output Port)**
 
 | Key         | Type         | Required | Description                                   |
 |-------------|--------------|----------|-----------------------------------------------|
@@ -60,7 +60,7 @@ This document details the full specification for this protocol, providing the te
 | contract    | Object       | Yes      | Schema, quality, privacy promises             |
 | accessPolicy| Object       | No       | Who can access and under what conditions      |
 
-#### **4.3.1 `location` Object**
+#### **1.2.1 `location` Object**
 
 | Key        | Type     | Required | Description                                   |
 |------------|----------|----------|-----------------------------------------------|
@@ -71,7 +71,7 @@ This document details the full specification for this protocol, providing the te
 
 ---
 
-### **4.4 `consumes` Block (Input Port)**
+### **1.3 `consumes` Block (Input Port)**
 
 | Key             | Type     | Required | Description                                   |
 |-----------------|----------|----------|-----------------------------------------------|
@@ -85,7 +85,7 @@ This document details the full specification for this protocol, providing the te
 
 ---
 
-### **4.5 `contract` Block**
+### **1.2.3 `contract` Block**
 
 | Key         | Type     | Required | Description                                   |
 |-------------|----------|----------|-----------------------------------------------|
@@ -96,7 +96,7 @@ This document details the full specification for this protocol, providing the te
 | privacy     | List     | No       | Privacy classifications/treatments            |
 | semantics   | Object   | No       | Machine-readable meaning                      |
 
-#### **4.5.1 `contract.schema.columns` Array**
+#### **1.2.3.1 `contract.schema.columns` Array**
 
 | Key      | Type    | Required | Description                |
 |----------|---------|----------|----------------------------|
@@ -104,7 +104,7 @@ This document details the full specification for this protocol, providing the te
 | type     | String  | Yes      | STRING, INT64, etc.        |
 | nullable | Boolean | No       | true by default            |
 
-#### **4.5.2 `contract.quality` Array**
+#### **1.2.3.2 `contract.quality` Array**
 
 | Key      | Type    | Description                                   |
 |----------|---------|-----------------------------------------------|
@@ -113,7 +113,7 @@ This document details the full specification for this protocol, providing the te
 | pattern/set | String/List | Regex or set for validation           |
 | onFailure| Object  | Action (reject_row, quarantine_row, etc.)     |
 
-#### **4.5.3 `contract.privacy` Array**
+#### **1.2.3.3 `contract.privacy` Array**
 
 | Key           | Type    | Description                                   |
 |---------------|---------|-----------------------------------------------|
@@ -123,7 +123,7 @@ This document details the full specification for this protocol, providing the te
 
 ---
 
-### **4.6 `build` Block (Implementation)**
+### **1.4 `build` Block (Implementation)**
 
 | Key             | Type     | Required | Description                                   |
 |-----------------|----------|----------|-----------------------------------------------|
@@ -131,14 +131,14 @@ This document details the full specification for this protocol, providing the te
 | execution       | Object   | Yes      | Orchestration, scheduling, runtime            |
 | stateManagement | Object   | Yes      | How incremental/streaming state is persisted  |
 
-#### **4.6.1 `build.transformation` Block**
+#### **1.4.1 `build.transformation` Block**
 
 | Key        | Type    | Required | Description                                   |
 |------------|---------|----------|-----------------------------------------------|
 | engine     | String  | Yes      | sql, python, dbt, dbt-cloud, spark-sql        |
 | properties | Object  | Yes      | Engine-specific logic                         |
 
-#### **4.6.2 `build.execution` Block**
+#### **1.4.2 `build.execution` Block**
 
 | Key           | Type    | Required | Description                                   |
 |---------------|---------|----------|-----------------------------------------------|
@@ -148,7 +148,7 @@ This document details the full specification for this protocol, providing the te
 | retries       | Object  | No       | Retry config                                  |
 | notifications | Object  | No       | Alerts on success/failure                     |
 
-#### **4.6.3 `build.stateManagement` Block**
+#### **1.4.3 `build.stateManagement` Block**
 
 | Key        | Type    | Required | Description                                   |
 |------------|---------|----------|-----------------------------------------------|
@@ -157,7 +157,7 @@ This document details the full specification for this protocol, providing the te
 
 ---
 
-### **4.7 `accessPolicy` and `dynamicPolicies` Blocks**
+### **1.5 `accessPolicy` and `dynamicPolicies` Blocks**
 
 - **accessPolicy**: Static permissions for known principals.
 - **dynamicPolicies**: Rules evaluated at query time based on agent context.
