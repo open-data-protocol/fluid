@@ -285,7 +285,7 @@ A: Through incremental, value-driven adoption. The federated nature of FLUID is 
 
 ## 📚 Learn More
 
-📖 [FLUID v1.0 Full Specification](#)  
+📖 [FLUID v1.0 Full Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
 🧑‍💻 [Contributing Guide](#)  
 📜 [License (Apache 2.0)](LICENSE.md)
 
