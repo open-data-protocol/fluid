@@ -65,9 +65,9 @@
         }
         .btn {
             font-weight: 700;
-            padding: 0.75rem 1.5rem; /* Adjusted padding for smaller screens */
+            padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
-            font-size: 1rem; /* Adjusted font size */
+            font-size: 1rem;
             transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
             border: none;
             outline: none;
@@ -101,12 +101,12 @@
             border-bottom-width: 2px;
         }
         .btn-secondary {
-            background-color: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-            color: #E2E8F0; /* text-slate-100 */
-            border-bottom: 4px solid #1E293B; /* border-slate-800 */
+            background-color: rgba(51, 65, 85, 0.5);
+            color: #E2E8F0;
+            border-bottom: 4px solid #1E293B;
         }
         .btn-secondary:hover {
-            background-color: #334155; /* bg-slate-700 */
+            background-color: #334155;
             transform: translateY(-2px);
         }
         .btn-secondary:active {
@@ -134,8 +134,9 @@
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-slate-300">
                 <a href="#vision" class="hover:text-sky-400 transition-colors">Vision</a>
-                <a href="#examples" class="hover:text-sky-400 transition-colors">Examples</a>
                 <a href="#concepts" class="hover:text-sky-400 transition-colors">Concepts</a>
+                <a href="#why-fluid" class="hover:text-sky-400 transition-colors">Why FLUID</a>
+                <a href="#examples" class="hover:text-sky-400 transition-colors">Examples</a>
                 <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="hover:text-sky-400 transition-colors">Read the Spec</a>
             </nav>
             
@@ -164,8 +165,9 @@
                 <div class="pt-20 pb-6 px-5">
                     <div class="grid grid-cols-1 gap-y-8 text-center">
                         <a href="#vision" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Vision</a>
-                        <a href="#examples" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Examples</a>
                         <a href="#concepts" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Concepts</a>
+                        <a href="#why-fluid" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Why FLUID</a>
+                        <a href="#examples" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Examples</a>
                         <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="text-base font-medium text-slate-200 hover:text-sky-400">Read the Spec</a>
                         <a href="https://github.com/open-data-protocol/fluid" target="_blank" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-sky-600 hover:bg-sky-700">View on GitHub</a>
                     </div>
@@ -181,7 +183,7 @@
                 <div class="relative inline-block mx-auto mb-8 h-24 w-24 md:h-32 md:w-32">
                     <img src="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png" class="mx-auto h-full w-full fluid-logo" style="filter: drop-shadow(0 4px 24px #38BDF8aa);" alt="FLUID Logo">
                 </div>
-                <h1 id="fluid-title" class="font-sora text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-none mb-4 text-slate-300 select-none">
+                <h1 id="fluid-title" class="font-sora text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-none mb-4 text-slate-300 select-none">
                     <span class="hero-title-char">F</span><span class="hero-title-char">L</span><span class="hero-title-char">U</span><span class="hero-title-char">I</span><span class="hero-title-char">D</span>
                 </h1>
                 <h2 class="font-sora text-2xl sm:text-3xl md:text-5xl font-bold leading-tight mb-8">
@@ -206,7 +208,6 @@
                     <p class="max-w-3xl mx-auto text-slate-400">For business leaders, adopting FLUID is a strategic decision that addresses core enterprise challenges and unlocks new value.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                    <!-- Cards remain the same -->
                     <div class="glass-card p-8 rounded-xl">
                         <div class="text-rose-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
                         <h3 class="font-sora text-xl font-bold mb-2">Reduce Risk & Secure Data</h3>
@@ -226,8 +227,6 @@
             </div>
         </section>
 
-        <!-- Other sections like "What FLUID Stands For", "Why FLUID", etc. would continue here -->
-        <!-- For brevity, the rest of the sections are omitted, but they follow the same responsive principles -->
         <!-- What FLUID Stands For Section -->
         <section class="py-16 md:py-20">
             <div class="container mx-auto px-4 sm:px-6">
@@ -251,7 +250,6 @@
                     <p class="max-w-2xl mx-auto text-slate-400">FLUID is built on a set of foundational principles that enable a truly modern data architecture.</p>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Feature cards -->
                     <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">1. Data as a Product</h3><p class="text-slate-400">Shift from thinking about "pipelines" to "products"—versioned assets with clear interfaces, quality guarantees, and owners.</p></div>
                     <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">2. Declarative, Not Imperative</h3><p class="text-slate-400">Define the desired **end state** of your data product. FLUID-compliant tools figure out the best way to implement it.</p></div>
                     <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">3. Contracts as Code</h3><p class="text-slate-400">Embed schema, quality, and privacy rules directly into version-controlled files. Make governance an automated, proactive process.</p></div>
@@ -263,9 +261,9 @@
         </section>
 
         <!-- Why FLUID Section -->
-        <section id="why-fluid" class="py-20">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-16">
+        <section id="why-fluid" class="py-16 md:py-20">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="text-center mb-12 md:mb-16">
                     <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">The Missing Protocol</h2>
                     <p class="max-w-3xl mx-auto text-slate-400">The modern data stack is powerful but disconnected. Tools for orchestration, transformation, and governance don't speak a common language. FLUID is the missing piece that unifies them.</p>
                 </div>
@@ -290,24 +288,24 @@
         </section>
 
         <!-- Examples Section -->
-        <section id="examples" class="py-20">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-16">
+        <section id="examples" class="py-16 md:py-20 bg-slate-900/50">
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="text-center mb-12 md:mb-16">
                     <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">A Journey Through FLUID</h2>
                     <p class="max-w-2xl mx-auto text-slate-400">Follow the logical layering of data products, from raw source ingestion to a final, consumer-aligned asset.</p>
                 </div>
                 
                 <div x-data="{ tab: 'source' }" class="glass-card rounded-xl overflow-hidden">
-                    <div class="bg-slate-800/50 p-2 flex items-center space-x-2">
-                        <button @click="tab = 'source'" :class="{'bg-sky-500 text-white': tab === 'source', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'source'}" class="flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors">1. Source-Aligned (Ingestion)</button>
-                        <button @click="tab = 'domain'" :class="{'bg-sky-500 text-white': tab === 'domain', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'domain'}" class="flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors">2. Domain-Aligned (Transform)</button>
-                        <button @click="tab = 'consumer'" :class="{'bg-sky-500 text-white': tab === 'consumer', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'consumer'}" class="flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors">3. Consumer-Aligned (Access)</button>
+                    <div class="bg-slate-800/50 p-2 flex flex-col sm:flex-row items-center sm:space-x-2 space-y-2 sm:space-y-0">
+                        <button @click="tab = 'source'" :class="{'bg-sky-500 text-white': tab === 'source', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'source'}" class="w-full sm:w-auto flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">1. Source (Ingestion)</button>
+                        <button @click="tab = 'domain'" :class="{'bg-sky-500 text-white': tab === 'domain', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'domain'}" class="w-full sm:w-auto flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">2. Domain (Transform)</button>
+                        <button @click="tab = 'consumer'" :class="{'bg-sky-500 text-white': tab === 'consumer', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'consumer'}" class="w-full sm:w-auto flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">3. Consumer (Access)</button>
                     </div>
                     
-                    <div x-show="tab === 'source'" class="p-6">
+                    <div x-show="tab === 'source'" class="p-4 sm:p-6">
                         <h3 class="font-sora text-xl font-semibold text-sky-400">Bronze Layer: Contract-Driven Ingestion</h3>
                         <p class="text-slate-400 mb-4">This product ingests raw events from a Kafka topic, but enforces quality and privacy rules *in-flight* before the data ever lands in cloud storage.</p>
-                        <pre class="overflow-x-auto text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
+                        <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
 fluidVersion: "1.1"
 kind: DataProduct
 metadata:
@@ -336,10 +334,10 @@ build:
                         </code></pre>
                     </div>
 
-                    <div x-show="tab === 'domain'" class="p-6" style="display: none;">
+                    <div x-show="tab === 'domain'" class="p-4 sm:p-6" style="display: none;">
                         <h3 class="font-sora text-xl font-semibold text-purple-400">Silver Layer: Transformation with dbt</h3>
                         <p class="text-slate-400 mb-4">This product consumes the Bronze data, delegates transformation to a dbt model, and inherits its contract directly from the dbt `schema.yml`.</p>
-                        <pre class="overflow-x-auto text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
+                        <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
 fluidVersion: "1.1"
 kind: DataProduct
 metadata:
@@ -368,10 +366,10 @@ build:
                         </code></pre>
                     </div>
 
-                    <div x-show="tab === 'consumer'" class="p-6" style="display: none;">
+                    <div x-show="tab === 'consumer'" class="p-4 sm:p-6" style="display: none;">
                         <h3 class="font-sora text-xl font-semibold text-emerald-400">Gold Layer: Secure & Purpose-Built</h3>
                         <p class="text-slate-400 mb-4">This product serves features to an ML agent. Access is tightly controlled by a policy that only grants read access to the specific agent.</p>
-                        <pre class="overflow-x-auto text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
+                        <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
 fluidVersion: "1.1"
 kind: DataProduct
 metadata:
@@ -403,8 +401,8 @@ build:
         </section>
 
         <!-- CTA Section -->
-        <section id="cta" class="py-20">
-            <div class="container mx-auto px-6 text-center">
+        <section id="cta" class="py-16 md:py-20">
+            <div class="container mx-auto px-4 sm:px-6 text-center">
                 <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">Ready to Build the Future?</h2>
                 <p class="max-w-xl mx-auto text-slate-300 mb-10">
                     FLUID is an open-source standard, and we welcome contributions from the community. Join us in defining the next era of data engineering.
@@ -414,14 +412,13 @@ build:
         </section>
     </main>
 
-        <footer class="text-center py-8 border-t border-slate-800">
-            <p class="text-slate-500 px-4">The FLUID Protocol. An open standard for the agentic era.</p>
-        </footer>
-    </main>
+    <footer class="text-center py-8 border-t border-slate-800">
+        <p class="text-slate-500 px-4">The FLUID Protocol. An open standard for the agentic era.</p>
+    </footer>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // All previous JS code is kept the same
+        // All JS code is kept the same
         const title = document.getElementById('fluid-title');
         const chars = title.getElementsByClassName('hero-title-char');
         const colors = ['#38BDF8', '#818CF8', '#A78BFA', '#F472B6', '#EC4899'];
@@ -439,7 +436,7 @@ build:
         let scene, camera, renderer, particles;
         function init() {
             const container = document.getElementById('canvas-container');
-            if (!container) return; // Exit if container not found
+            if (!container) return;
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 15;
@@ -480,7 +477,6 @@ build:
             renderer.render(scene, camera);
         }
         
-        // Defer initialization until the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
             init();
             animate();
