@@ -6,6 +6,7 @@
     <title>FLUID Protocol - The Shared Language for the Agentic Data Fabric</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -199,12 +200,17 @@
                     FLUID is an open, declarative standard for defining Data Products. It replaces brittle pipelines with a trustworthy, governable, and scalable protocol, making your entire data ecosystem ready for the agentic era.
                 </p>
                 <div class="flex justify-center flex-wrap gap-4">
+
+                    <button onclick="window.open('https://github.com/open-data-protocol/fluid/blob/main/why_fluid.pdf','_blank')" class="btn btn-secondary cursor-pointer focus:outline-none active:scale-95 shadow-lg transition-transform">
+                        Why?
+                    </button>
                     <button onclick="window.open('https://github.com/open-data-protocol/fluid/blob/main/specification.md','_blank')" class="btn btn-primary cursor-pointer focus:outline-none active:scale-95 shadow-lg transition-transform">
                         Specification
                     </button>
                     <button onclick="window.open('https://github.com/open-data-protocol/fluid/blob/main/examples.md','_blank')" class="btn btn-secondary cursor-pointer focus:outline-none active:scale-95 shadow-lg transition-transform">
-                        Examples
+                        How
                     </button>
+
                 </div>
             </div>
         </section>
@@ -300,46 +306,72 @@
             </div>
         </section>
 
-        <!-- Example Section -->
-        <section id="example" class="py-20">
+        <!-- Examples Section -->
+        <section id="examples" class="py-20">
             <div class="container mx-auto px-6">
-                 <div class="text-center mb-16">
-                    <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">See it in Action</h2>
-                    <p class="max-w-2xl mx-auto text-slate-400">A single `.fluid.yml` file defines a data product's entire lifecycle, from ingestion to transformation, in one clear, version-controlled manifest.</p>
+                <div class="text-center mb-16">
+                    <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">A Journey Through FLUID</h2>
+                    <p class="max-w-2xl mx-auto text-slate-400">Follow the logical layering of data products, from raw source ingestion to a final, consumer-aligned asset.</p>
                 </div>
-                <div class="glass-card rounded-xl overflow-hidden">
-                    <div class="bg-slate-800/50 p-4 flex items-center justify-between">
-                        <span class="text-slate-400 font-mono text-sm">marketing.silver.transformed_campaign_performance.fluid.yml</span>
-                        <button onclick="copyCode()" class="bg-slate-700 text-slate-300 hover:bg-slate-600 text-xs font-semibold py-1 px-3 rounded-md transition-colors">Copy</button>
+                
+                <div x-data="{ tab: 'source' }" class="glass-card rounded-xl overflow-hidden">
+                    <div class="bg-slate-800/50 p-2 flex items-center space-x-2">
+                        <button @click="tab = 'source'" :class="{'bg-sky-500 text-white': tab === 'source', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'source'}" class="flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors">1. Source-Aligned (Ingestion)</button>
+                        <button @click="tab = 'domain'" :class="{'bg-sky-500 text-white': tab === 'domain', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'domain'}" class="flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors">2. Domain-Aligned (Transform)</button>
+                        <button @click="tab = 'consumer'" :class="{'bg-sky-500 text-white': tab === 'consumer', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'consumer'}" class="flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors">3. Consumer-Aligned (Access)</button>
                     </div>
-                    <pre class="p-6 overflow-x-auto text-sm" id="code-block"><code class="language-yaml">
+                    
+                    <div x-show="tab === 'source'" class="p-6">
+                        <h3 class="font-sora text-xl font-semibold text-sky-400">Bronze Layer: Contract-Driven Ingestion</h3>
+                        <p class="text-slate-400 mb-4">This product ingests raw events from a Kafka topic, but enforces quality and privacy rules *in-flight* before the data ever lands in cloud storage.</p>
+                        <pre class="overflow-x-auto text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
 fluidVersion: "1.1"
 kind: DataProduct
-
 metadata:
-  dataProduct: marketing.silver.transformed_campaign_performance
-  owner: { team: 'marketing-analytics' }
-  description: "A clean, modeled table of campaign performance."
-  tags: { layer: 'silver', tool: 'dbt' }
+  dataProduct: finance.bronze.raw_payments
+  owner: { team: 'data-platform' }
+consumes:
+  - type: kafka
+    connection: secret:onprem-kafka-creds
+    format: { type: 'json' }
+    properties: { topic: 'prod.financial.payments' }
+exposes:
+  location:
+    type: gcs
+    format: { type: 'parquet' }
+    properties: { bucket: 'prod-finance-landing' }
+  contract:
+    schema: { columns: [{name: payment_id, type: STRING}, {name: amount, type: NUMERIC}, {name: user_email_hash, type: STRING}] }
+    quality:
+      - rule: "amount > 0"
+        onFailure: { action: 'reject_row' }
+    privacy:
+      - columns: [user_email]
+        treatment: { type: hashing, properties: { algorithm: SHA256 }, newColumn: 'user_email_hash' }
+build:
+  execution: { trigger: { type: 'streaming' }, runtime: { type: 'gcp-dataflow' } }
+                        </code></pre>
+                    </div>
 
-# An orchestrator knows this product depends on the bronze layer.
+                    <div x-show="tab === 'domain'" class="p-6" style="display: none;">
+                        <h3 class="font-sora text-xl font-semibold text-purple-400">Silver Layer: Transformation with dbt</h3>
+                        <p class="text-slate-400 mb-4">This product consumes the Bronze data, delegates transformation to a dbt model, and inherits its contract directly from the dbt `schema.yml`.</p>
+                        <pre class="overflow-x-auto text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
+fluidVersion: "1.1"
+kind: DataProduct
+metadata:
+  dataProduct: marketing.silver.campaign_performance
+  owner: { team: 'marketing-analytics' }
 consumes:
   - type: fluid-product
-    name: marketing.bronze.raw_campaign_spend
-
-# A catalog knows this is the final asset to document.
+    name: marketing.bronze.raw_spend
 exposes:
   location:
     type: bigquery
-    properties: { project: 'bq-prod-lakehouse', dataset: 'silver', table: 'campaign_performance' }
+    properties: { dataset: 'silver', table: 'campaign_performance' }
   contract:
-    # The contract is inherited directly from the dbt model's schema.yml
     inheritFrom: dbt
     model: 'campaign_performance'
-  accessPolicy:
-    visibility: internal
-
-# An orchestrator reads this to know *how* to build the product.
 build:
   transformation:
     engine: dbt
@@ -349,11 +381,40 @@ build:
       models: ['+campaign_performance']
   execution:
     trigger: { type: 'schedule', properties: { cron: '0 4 * * *' } }
-    runtime:
-      type: airflow
-      properties:
-        dag_id: 'fluid_marketing_elt_flow'
-</code></pre>
+    runtime: { type: 'airflow' }
+                        </code></pre>
+                    </div>
+
+                    <div x-show="tab === 'consumer'" class="p-6" style="display: none;">
+                        <h3 class="font-sora text-xl font-semibold text-emerald-400">Gold Layer: Secure & Purpose-Built</h3>
+                        <p class="text-slate-400 mb-4">This product serves features to an ML agent. Access is tightly controlled by a policy that only grants read access to the specific agent.</p>
+                        <pre class="overflow-x-auto text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
+fluidVersion: "1.1"
+kind: DataProduct
+metadata:
+  dataProduct: ml.gold.churn_features
+  owner: { team: 'ml-engineering' }
+consumes:
+  - type: fluid-product
+    name: customers.silver.trusted_customers
+exposes:
+  location:
+    type: redis
+    connection: secret:ml-feature-store-creds
+  contract:
+    schema: { columns: [{name: customer_id, type: STRING}, {name: ltv, type: NUMERIC}] }
+  accessPolicy:
+    visibility: private
+    grants:
+      - principal: agent:churn-prediction-model-v2
+        permissions: [readData]
+build:
+  transformation:
+    engine: python
+    properties: { entrypoint: 'features/churn.py:calculate' }
+  execution: { trigger: { type: 'schedule', properties: { cron: '0 1 * * *' } } }
+                        </code></pre>
+                    </div>
                 </div>
             </div>
         </section>
