@@ -168,7 +168,7 @@ Defines the public interface of the data product. This is what consumers interac
 | inheritFrom | String   | No           | dbt, fluid-product, or openApi. Populates the contract from a source.|
 | model / spec| String   | If inheriting| The dbt model name or path to the OpenAPI spec file/URL.           |
 | schema      | Object   | Yes          | Defines the columns and data types. See 1.3.2.1.                   |
-| quality     | Object   | No           | List of data quality rules to enforce. See 1.3.2.2.                |
+| quality     | List     | No           | List of data quality rules to enforce. See 1.3.2.2.                |
 | privacy     | List     | No           | List of privacy classifications and treatments. See 1.3.2.3.        |
 | semantics   | Object   | No           | Adds machine-readable meaning to the data. See 1.3.2.4.            |
 
@@ -222,36 +222,15 @@ Defines the public interface of the data product. This is what consumers interac
 
 ### 1.5 build Block (The Implementation)
 
-| Key             | Type   | Required      | Description                                                        |
-|-----------------|--------|--------------|--------------------------------------------------------------------|
-| transformation  | Object | No           | The core data manipulation logic. See 1.5.1.                       |
-| execution       | Object | Yes          | Defines the orchestration, scheduling, and runtime. See 1.5.2.     |
-| stateManagement | Object | If incremental/streaming | Defines how the flow's state is persisted. See 1.5.3. |
-
-#### 1.5.1 build.transformation Block
-
-| Key      | Type   | Required | Description                                                        |
-|----------|--------|----------|--------------------------------------------------------------------|
-| engine   | String | Yes      | The engine to use: sql, python, dbt, dbt-cloud, spark-sql.         |
-| properties| Object| Yes      | Engine-specific properties that contain the transformation logic.   |
-| lineage  | Object | No       | Explicit column-level lineage declarations for complex or Python transformations. |
-
-#### 1.5.2 build.execution Block
-
-| Key          | Type   | Required | Description                                                        |
-|--------------|--------|----------|--------------------------------------------------------------------|
-| trigger      | Object | Yes      | Defines how the build is initiated (schedule, event, manual).      |
-| runtime      | Object | Yes      | The underlying compute platform where the build will run (airflow, gcp-cloud-run). |
-| dependencies | Object | No       | Defines the execution dependencies on other data products.         |
-| retries      | Object | No       | Configuration for handling transient failures: count, delay.       |
-| notifications| Object | No       | Defines how to send alerts (channel, target) on onSuccess or onFailure. |
-
-#### 1.5.3 build.stateManagement Block
-
-| Key      | Type   | Required | Description                                                        |
-|----------|--------|----------|--------------------------------------------------------------------|
-| backend  | String | Yes      | The system to store state: gcs, s3, bigquery_table.                |
-| properties| Object| Yes      | Connection properties for the chosen backend (e.g., bucket, path). |
+| Key             | Type   | Required      | Description                                                                    |
+|-----------------|--------|--------------|---------------------------------------------------------------------------------|
+| engine          | String | Yes          | The engine to use: sql, python, dbt, dbt-cloud, spark-sql.                      |
+| script          | String | Yes          | The specific asset to execute (e.g., a script path or dbt model selector).      |
+| trigger         | Object | Yes      | Defines how the build is initiated (schedule, event, manual).      |
+| runtime         | Object | Yes      | The underlying compute platform where the build will run (airflow, gcp-cloud-run). |
+| dependencies    | Object | No       | Defines the execution dependencies on other data products.         |
+| retries         | Object | No       | Configuration for handling transient failures: count, delay.       |
+| notifications   | Object | No       | Defines how to send alerts (channel, target) on onSuccess or onFailure. |
 
 ---
 
