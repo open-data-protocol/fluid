@@ -26,40 +26,57 @@ Version 1.0 – Official Specification
 
 ---
 
-### Core Principles
+## 🧭 Core Principles
 
-**Data as a Product**: Data is not an afterthought; it is a first-class asset with a clear owner, a versioned interface, and a machine-readable contract.
+- **Data as a Product**  
+    Data is a first-class asset with a clear owner, a versioned interface, and a machine-readable contract.
 
-**Declarative, Not Imperative**: Contracts define the desired end state of a data product. The FLUID-aware framework is responsible for the implementation.
+- **Declarative, Not Imperative**  
+    Contracts define the desired end state of a data product. The FLUID-aware framework is responsible for the implementation.
 
-**Contracts as Code**: Governance (schema, quality, build, privacy) is embedded directly into version-controlled files, enabling automated, proactive enforcement.
+- **Contracts as Code**  
+    Governance (schema, quality, build, privacy) is embedded directly into version-controlled files, enabling automated, proactive enforcement.
 
-**Federated Ownership**: Data products are owned and managed by the domain teams who know the data best, enabling a true, scalable Data Mesh.
+- **Federated Ownership**  
+    Data products are owned and managed by the domain teams who know the data best, enabling a true, scalable Data Mesh.
 
-### Contract Structure: Monolithic vs. Modular
-The FLUID specification is designed for flexibility. A data product contract can be defined in a single, monolithic file or composed from multiple, specialized files.
+---
 
-#### Monolithic Structure (For Simplicity)
-For simple data products owned by a single team, all definitions can be contained within a single root fluid.yml file.
+## 🏗️ Contract Structure: Monolithic vs. Modular
 
+The FLUID specification is designed for flexibility.  
+A data product contract can be defined in a single, **monolithic file** or composed from multiple, specialized files.
+
+### Monolithic Structure (For Simplicity)
+
+For simple data products owned by a single team, all definitions can be contained within a single root `fluid.yml` file.
+
+```
 /dp-simple-product/
 └── 📄 fluid.yml   # All definitions are inline.
+```
 
-#### Modular Structure (For Complexity & Federation)
-For complex, enterprise-grade products with multiple stakeholders, the contract could be broken into logical, linked files. This is the recommended best practice.
+---
 
-The root fluid.yml acts as a "table of contents," referencing detailed configuration files stored in a dedicated .fluid/ directory. This is achieved using the $ref keyword.
+### Modular Structure (For Complexity & Federation)
 
+For complex, enterprise-grade products with multiple stakeholders, the contract can be broken into logical, linked files.  
+This is the recommended best practice.
+
+The root `fluid.yml` acts as a "table of contents," referencing detailed configuration files stored in a dedicated `.fluid/` directory using the `$ref` keyword.
+
+```
 /dp-complex-product/
 │
 ├── 📄 fluid.yml     # The main entrypoint, contains high-level identity.
 │
 └── 📁 .fluid/        # A dedicated folder for all contract details.
-    ├── 📄 consumes.yml
-    ├── 📄 build.yml
-    ├── 📄 exposes.yml
-    ├── 📄 schema.yml
-    └── 📄 quality.yml
+        ├── 📄 consumes.yml
+        ├── 📄 build.yml
+        ├── 📄 exposes.yml
+        ├── 📄 schema.yml
+        └── 📄 quality.yml
+```
 
 ## Preamble
 
