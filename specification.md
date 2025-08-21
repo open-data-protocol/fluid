@@ -26,6 +26,41 @@ Version 1.0 – Official Specification
 
 ---
 
+### Core Principles
+
+**Data as a Product**: Data is not an afterthought; it is a first-class asset with a clear owner, a versioned interface, and a machine-readable contract.
+
+**Declarative, Not Imperative**: Contracts define the desired end state of a data product. The FLUID-aware framework is responsible for the implementation.
+
+**Contracts as Code**: Governance (schema, quality, build, privacy) is embedded directly into version-controlled files, enabling automated, proactive enforcement.
+
+**Federated Ownership**: Data products are owned and managed by the domain teams who know the data best, enabling a true, scalable Data Mesh.
+
+### Contract Structure: Monolithic vs. Modular
+The FLUID specification is designed for flexibility. A data product contract can be defined in a single, monolithic file or composed from multiple, specialized files.
+
+#### Monolithic Structure (For Simplicity)
+For simple data products owned by a single team, all definitions can be contained within a single root fluid.yml file.
+
+/dp-simple-product/
+└── 📄 fluid.yml   # All definitions are inline.
+
+#### Modular Structure (For Complexity & Federation)
+For complex, enterprise-grade products with multiple stakeholders, the contract could be broken into logical, linked files. This is the recommended best practice.
+
+The root fluid.yml acts as a "table of contents," referencing detailed configuration files stored in a dedicated .fluid/ directory. This is achieved using the $ref keyword.
+
+/dp-complex-product/
+│
+├── 📄 fluid.yml     # The main entrypoint, contains high-level identity.
+│
+└── 📁 .fluid/        # A dedicated folder for all contract details.
+    ├── 📄 consumes.yml
+    ├── 📄 build.yml
+    ├── 📄 exposes.yml
+    ├── 📄 schema.yml
+    └── 📄 quality.yml
+
 ## Preamble
 
 This document provides the complete, official v1.0 specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
@@ -34,22 +69,24 @@ This document provides the complete, official v1.0 specification for the FLUID (
 
 ## 1. Specification Root
 
-The FLUID definition is a YAML file (`.fluid.yml`) with the following root-level objects.
+The FLUID definition is a YAML or JSON file file (`.fluid.yml` OR `.fluid.json`) with the following root-level objects.
 
 | Key            | Type           | Required | Description                                                                 |
 |----------------|----------------|----------|-----------------------------------------------------------------------------|
 | fluidVersion   | String         | Yes      | The version of the FLUID specification this file adheres to (e.g., 1.0).    |
 | kind           | String         | Yes      | The type of data product definition. See section 1.1.                       |
-| extends        | String         | No       | Path or URL to a base template FLUID file for standardization.              |
+| id             | String         | Yes      | A globally unique, versioned id for the data product (customer360_v1).      |
+| name           | String         | Yes      | A human-readable name for the data product (e.g., "Customer 360").          |
+| description    | String         | Yes      | A brief description of the product's purpose.                               |
+| domain         | String         | Yes      | The business domain that owns this product (e.g., "Marketing").             |
 | metadata       | Object         | Yes      | Identification, ownership, and classification information. See section 1.2. |
+| consumes       | Object / List  | Yes      | Defines the input data sources needed to build the product. See section 1.4.|
+| build          | Object         | Yes      | Contains the implementation logic for how the product is built. See 1.5.    |
 | exposes        | Object / List  | Yes      | Defines the public output interface(s) of the product. See section 1.3.     |
-| consumes       | Object / List  | No       | Defines the input data sources needed to build the product. See section 1.4.|
-| build          | Object         | No       | Contains the implementation logic for how the product is built. See 1.5.    |
 | accessPolicy   | Object         | No       | Defines the static access control policies for the data product. See 1.6.   |
 | dynamicPolicies| Object         | No       | Defines context-aware access policies that adapt at runtime. See 1.7.       |
 | operations     | Object         | No       | Defines SLAs, lifecycle, and observability characteristics. See 1.8.        |
 | extensions     | Object         | No       | Registers required external plugins. See section 1.9.                       |
-| revision       | String         | No       | (Recommended) The Git commit hash, tag, or version for traceability.        |
 
 ---
 
@@ -65,14 +102,26 @@ The `kind` key specifies the nature of the data product.
 
 ### 1.2 metadata Block
 
-| Key           | Type           | Required | Description                                                                 |
-|---------------|----------------|----------|-----------------------------------------------------------------------------|
-| dataProduct   | String         | Yes      | Globally unique name using dot notation (e.g., finance.gold.balances).      |
-| owner         | Object         | Yes      | Ownership details (e.g., { team: 'finance', email: 'finance@company.com' }).|
-| description   | String         | No       | Purpose of the product (Markdown supported).                                |
-| tags          | Map[String]    | No       | Key-value pairs for categorization (e.g., layer: gold, domain: finance).    |
-| classification| String         | Yes      | Default privacy level: public, internal, confidential, restricted.          |
-| version       | String         | No       | (Recommended) Semantic version of this data product definition (e.g., 1.0.0).|
+| Key               | Type           | Required | Description                                                                 |
+|-------------------|----------------|----------|-----------------------------------------------------------------------------|
+| owner             | Object         | Yes      | Ownership details (e.g., { team: 'finance', email: 'finance@company.com' }).|
+| layer             | String         | No       | The architectural layer (e.g., "Gold", "Silver", "Bronze")                  |
+| status            | String         | No       | The lifecycle status (e.g., "Published", "Development", "Deprecated").      |
+| sensitivity_level | String         | No       | The overall data classification (e.g., "Confidential", "Public").           |
+| cost_center       | String         | No       | An identifier for automated FinOps cost attribution.                        |
+| tags              | Map[String]    | No       | Key-value pairs for categorization (e.g., layer: gold, domain: finance).    |
+| classification    | String         | Yes      | Default privacy level: public, internal, confidential, restricted.          |
+| purpose           | Object         | No       | Detailed, machine-readable description of the business purpose. Se          |
+| version           | String         | No       | (Recommended) Semantic version of this data product definition (e.g., 1.0.0)|
+
+#### 1.2.1 purpose Block
+
+| Key                | Type           | Required | Description                                                                 |
+|--------------------|----------------|----------|-----------------------------------------------------------------------------|
+| business_purpose   | String         | Yes      | A clear statement of why this data product exists.                          |
+| use_cases          | List           | No       | A list of specific business use cases it supports.                          |
+| target_group       | List           | No       | The intended audience for this product.                                     |
+| limitations        | String         | No       | KAny known limitations or constraints of the data.                          |
 
 ---
 
@@ -97,14 +146,14 @@ Defines the public interface of the data product. This is what consumers interac
 
 #### 1.3.2 contract Object
 
-| Key         | Type   | Required      | Description                                                        |
-|-------------|--------|--------------|--------------------------------------------------------------------|
-| inheritFrom | String | No           | dbt, fluid-product, or openApi. Populates the contract from a source.|
-| model / spec| String | If inheriting| The dbt model name or path to the OpenAPI spec file/URL.           |
-| schema      | Object | Yes          | Defines the columns and data types. See 1.3.2.1.                   |
-| quality     | List   | No           | List of data quality rules to enforce. See 1.3.2.2.                |
-| privacy     | List   | No           | List of privacy classifications and treatments. See 1.3.2.3.        |
-| semantics   | Object | No           | Adds machine-readable meaning to the data. See 1.3.2.4.            |
+| Key         | Type     | Required      | Description                                                        |
+|-------------|----------|--------------|--------------------------------------------------------------------|
+| inheritFrom | String   | No           | dbt, fluid-product, or openApi. Populates the contract from a source.|
+| model / spec| String   | If inheriting| The dbt model name or path to the OpenAPI spec file/URL.           |
+| schema      | Object   | Yes          | Defines the columns and data types. See 1.3.2.1.                   |
+| quality     | Object   | No           | List of data quality rules to enforce. See 1.3.2.2.                |
+| privacy     | List     | No           | List of privacy classifications and treatments. See 1.3.2.3.        |
+| semantics   | Object   | No           | Adds machine-readable meaning to the data. See 1.3.2.4.            |
 
 ##### 1.3.2.1 schema.columns Array
 
