@@ -310,7 +310,7 @@
           "description": "Rule name or SQL predicate.",
           "oneOf": [
             { "enum": ["not_null", "unique", "regex_match", "in_set"] },
-            { "pattern": "^(?i)SQL:.*" }
+            { "pattern": "^SQL:.*", "flags": "i" }
           ]
         },
         "columns": {
