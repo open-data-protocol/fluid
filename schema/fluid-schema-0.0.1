@@ -1,0 +1,1040 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-data-protocol.org/fluid/fluid.schema.json",
+  "title": "FLUID (Federated Layered Unified Interchange Definition) Specification",
+  "description": "Machine-validated schema for FLUID data product contracts. Drafted for production use with strong typing, conformance tiers, and extensibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fluidVersion",
+    "kind",
+    "id",
+    "name",
+    "description",
+    "domain",
+    "metadata",
+    "consumes",
+    "build",
+    "exposes"
+  ],
+  "properties": {
+    "fluidVersion": {
+      "type": "string",
+      "description": "Version of the FLUID spec this contract adheres to (semantic version). Major = breaking, minor = additive, patch = clarifications.",
+      "pattern": "^1\\.\\d+\\.\\d+$",
+      "examples": ["1.1.0", "1.2.3"]
+    },
+    "kind": {
+      "type": "string",
+      "description": "The type of data product definition.",
+      "enum": [
+        "DataProduct",
+        "VirtualDataProduct",
+        "EgressFlow",
+        "IngestFlow",
+        "MLModelProduct",
+        "FeatureStoreProduct"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "description": "Globally-unique, versioned data product identifier. Recommended format: <domain>.<name>:<semver> or <name>_vX.",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable product name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the product's purpose."
+    },
+    "domain": {
+      "type": "string",
+      "description": "Owning business domain (e.g., Marketing, Finance)."
+    },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "exposes": {
+      "description": "Public output interface(s).",
+      "oneOf": [
+        { "$ref": "#/$defs/expose" },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/expose" }
+        }
+      ]
+    },
+    "consumes": {
+      "description": "Input sources required to build the product.",
+      "oneOf": [
+        { "$ref": "#/$defs/consume" },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/consume" }
+        }
+      ]
+    },
+    "build": { "$ref": "#/$defs/build" },
+    "accessPolicy": { "$ref": "#/$defs/accessPolicy" },
+    "dynamicPolicies": { "$ref": "#/$defs/dynamicPolicies" },
+    "operations": { "$ref": "#/$defs/operations" },
+    "extensions": { "$ref": "#/$defs/extensions" },
+    "security": { "$ref": "#/$defs/security" },
+    "governance": { "$ref": "#/$defs/governance" },
+    "conformance": { "$ref": "#/$defs/conformance" }
+  },
+
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["team"],
+      "properties": {
+        "team": { "$ref": "#/$defs/nonEmptyString" },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Team contact email."
+        },
+        "slack": { "type": "string", "description": "Slack channel or handle." },
+        "pagerduty": { "type": "string", "description": "PagerDuty service ID." }
+      }
+    },
+
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "classification"],
+      "properties": {
+        "owner": { "$ref": "#/$defs/owner" },
+        "layer": {
+          "type": "string",
+          "enum": ["Bronze", "Silver", "Gold", "Platinum"],
+          "description": "Architectural layer."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Development", "Published", "Deprecated"],
+          "default": "Development"
+        },
+        "sensitivity_level": {
+          "type": "string",
+          "enum": ["Public", "Internal", "Confidential", "Restricted"]
+        },
+        "cost_center": { "type": "string" },
+        "tags": {
+          "type": "object",
+          "description": "Arbitrary key/value tags.",
+          "propertyNames": { "pattern": "^[A-Za-z0-9_.-]+$" },
+          "additionalProperties": { "type": "string" }
+        },
+        "classification": {
+          "type": "string",
+          "description": "Default data classification for the product.",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "purpose": { "$ref": "#/$defs/purpose" },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of this product definition.",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        }
+      }
+    },
+
+    "purpose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["business_purpose"],
+      "properties": {
+        "business_purpose": { "$ref": "#/$defs/nonEmptyString" },
+        "use_cases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "target_group": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "limitations": { "type": "string" }
+      }
+    },
+
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "connection", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Physical/virtual storage or interface.",
+          "enum": [
+            "bigquery",
+            "s3",
+            "snowflake",
+            "gcs",
+            "iceberg",
+            "api",
+            "kafka",
+            "virtual",
+            "delta",
+            "postgres",
+            "redshift",
+            "azure-blob"
+          ]
+        },
+        "connection": {
+          "type": "string",
+          "description": "Reference to secret in a vault. Format recommendation: secret:<name>.",
+          "pattern": "^(secret:).+"
+        },
+        "format": {
+          "type": "object",
+          "description": "Required if not virtual.",
+          "dependentRequired": {},
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "parquet",
+                "csv",
+                "json",
+                "avro",
+                "delta",
+                "iceberg",
+                "orc",
+                "protobuf"
+              ]
+            },
+            "compression": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "properties": {
+          "type": "object",
+          "description": "Technology-specific properties (e.g., project, dataset, table, topic, endpoint).",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "virtual" } } },
+          "then": {
+            "properties": {
+              "format": { "type": "null" }
+            },
+            "required": ["type", "connection", "properties"]
+          },
+          "else": {
+            "required": ["format"]
+          }
+        }
+      ]
+    },
+
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "type": {
+          "type": "string",
+          "description": "Logical type. Vendor-specific types allowed via namespacing (e.g., vendor:snowflake.VARIANT).",
+          "oneOf": [
+            { "enum": ["STRING", "INT64", "NUMERIC", "TIMESTAMP", "JSON", "BOOLEAN", "DATE", "FLOAT64", "BYTES"] },
+            { "pattern": "^[A-Za-z]+:[A-Za-z0-9_.-]+$" }
+          ]
+        },
+        "nullable": { "type": "boolean", "default": true },
+        "description": { "type": "string" },
+        "semantic": {
+          "type": "string",
+          "description": "Reference to ontology term or glossary ID."
+        }
+      }
+    },
+
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["columns"],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/column" }
+        },
+        "primaryKey": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "uniqueKeys": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          }
+        },
+        "indexes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["columns"],
+            "properties": {
+              "name": { "type": "string" },
+              "columns": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "qualityRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "onFailure"],
+      "properties": {
+        "rule": {
+          "type": "string",
+          "description": "Rule name or SQL predicate.",
+          "oneOf": [
+            { "enum": ["not_null", "unique", "regex_match", "in_set"] },
+            { "pattern": "^SQL:.*", "flags": "i" }
+          ]
+        },
+        "columns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "pattern": { "type": "string" },
+        "set": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "onFailure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action"],
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["reject_row", "quarantine_row", "fail_pipeline", "alert"]
+            },
+            "notifications": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/notification" }
+            }
+          }
+        }
+      }
+    },
+
+    "privacyRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["columns", "treatment"],
+      "properties": {
+        "classification": {
+          "type": "string",
+          "enum": ["PII", "SPI", "Confidential"],
+          "description": "Overrides metadata.classification if provided. Precedence: privacy > metadata."
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Use ['*'] for all columns."
+        },
+        "treatment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["hashing", "masking", "encryption", "tokenization"]
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ontology": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to ontology (OWL/RDF/etc)."
+        },
+        "classifications": {
+          "type": "object",
+          "description": "Map column -> ontology/glossary term.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema"],
+      "properties": {
+        "inheritFrom": {
+          "type": "string",
+          "enum": ["dbt", "fluid-product", "openApi"]
+        },
+        "model": {
+          "type": "string",
+          "description": "dbt model name (if inheritFrom=dbt)."
+        },
+        "spec": {
+          "type": "string",
+          "description": "Path/URL to OpenAPI spec (if inheritFrom=openApi)."
+        },
+        "schema": { "$ref": "#/$defs/schema" },
+        "quality": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/qualityRule" }
+        },
+        "privacy": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/privacyRule" }
+        },
+        "semantics": { "$ref": "#/$defs/semantics" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "inheritFrom": { "const": "dbt" } }, "required": ["inheritFrom"] },
+          "then": { "required": ["model"] }
+        },
+        {
+          "if": { "properties": { "inheritFrom": { "const": "openApi" } }, "required": ["inheritFrom"] },
+          "then": { "required": ["spec"] }
+        }
+      ]
+    },
+
+    "expose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "contract"],
+      "properties": {
+        "name": { "type": "string", "description": "Unique within product." },
+        "location": { "$ref": "#/$defs/location" },
+        "contract": { "$ref": "#/$defs/contract" }
+      }
+    },
+
+    "consume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "gcs",
+            "kafka",
+            "s3",
+            "api",
+            "postgres-cdc",
+            "sftp",
+            "fluid-product",
+            "snowflake",
+            "bigquery"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "description": "Upstream FLUID product name (required when type=fluid-product)."
+        },
+        "alias": { "type": "string" },
+        "onUpstreamChange": {
+          "type": "string",
+          "enum": ["fail", "alert", "triggerRebuild"],
+          "default": "alert"
+        },
+        "connection": {
+          "type": "string",
+          "pattern": "^(secret:).+",
+          "description": "Vault secret reference (required for physical types)."
+        },
+        "format": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["json", "csv", "avro", "parquet"] }
+          },
+          "additionalProperties": true
+        },
+        "properties": {
+          "type": "object",
+          "description": "Technology-specific properties (e.g., topic, endpoint, bucket, path).",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "fluid-product" } } },
+          "then": { "required": ["name"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["gcs", "kafka", "s3", "api", "postgres-cdc", "sftp", "snowflake", "bigquery"]
+              }
+            }
+          },
+          "then": { "required": ["connection"] }
+        }
+      ]
+    },
+
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Defines how the build is initiated.",
+      "oneOf": [
+        {
+          "title": "Schedule",
+          "type": "object",
+          "required": ["type", "cron"],
+          "properties": {
+            "type": { "const": "schedule" },
+            "cron": {
+              "type": "string",
+              "description": "Cron expression (Quartz or UNIX).",
+              "pattern": "^([\\s\\S]+)$"
+            },
+            "timezone": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Event",
+          "type": "object",
+          "required": ["type", "eventType"],
+          "properties": {
+            "type": { "const": "event" },
+            "eventType": { "type": "string" },
+            "eventSchema": {
+              "type": "object",
+              "description": "JSON Schema for event payload.",
+              "additionalProperties": true
+            },
+            "source": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Manual",
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "manual" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform"],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": [
+            "airflow",
+            "gcp-cloud-run",
+            "databricks",
+            "spark",
+            "dbt-cloud",
+            "kubernetes",
+            "emr",
+            "step-functions"
+          ]
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource hints (not scheduling guarantees).",
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" },
+            "gpu": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "image": { "type": "string", "description": "Container image or runtime image." },
+        "entrypoint": { "type": "string" },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["productId"],
+      "properties": {
+        "productId": { "type": "string" },
+        "minVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "maxVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "policy": { "type": "string", "enum": ["strict", "compatible"], "default": "compatible" }
+      }
+    },
+
+    "retryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "count": { "type": "integer", "minimum": 0, "default": 0 },
+        "delaySeconds": { "type": "integer", "minimum": 0, "default": 0 },
+        "backoff": { "type": "string", "enum": ["none", "exponential"], "default": "none" }
+      }
+    },
+
+    "notification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "target"],
+      "properties": {
+        "channel": { "type": "string", "enum": ["email", "slack", "webhook", "pagerduty"] },
+        "target": { "type": "string" },
+        "on": {
+          "type": "string",
+          "enum": ["onSuccess", "onFailure", "onStart", "onDegraded"],
+          "default": "onFailure"
+        }
+      }
+    },
+
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "script", "trigger", "runtime"],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": ["sql", "python", "dbt", "dbt-cloud", "spark-sql", "spark-python"]
+        },
+        "script": {
+          "type": "string",
+          "description": "Script path, query, or model selector."
+        },
+        "trigger": { "$ref": "#/$defs/trigger" },
+        "runtime": { "$ref": "#/$defs/runtime" },
+        "dependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dependency" }
+        },
+        "retries": { "$ref": "#/$defs/retryPolicy" },
+        "notifications": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/notification" }
+        }
+      }
+    },
+
+    "accessGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["principal", "permissions"],
+      "properties": {
+        "principal": {
+          "type": "string",
+          "description": "user:<email>, group:<name>, agent:<id>",
+          "pattern": "^(user:[^\\s@]+@[^\\s@]+\\.[^\\s@]+|group:[A-Za-z0-9_.-]+|agent:[A-Za-z0-9_.:-]+)$"
+        },
+        "permissions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "enum": ["readData", "readMetadata", "manage"] }
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "columns": { "type": "array", "items": { "type": "string" } },
+            "rowFilter": { "type": "string", "description": "SQL WHERE clause." },
+            "privacyView": { "type": "string", "enum": ["treated", "cleartext"], "default": "treated" }
+          }
+        }
+      }
+    },
+
+    "accessPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grants"],
+      "properties": {
+        "visibility": { "type": "string", "enum": ["private", "internal"], "default": "internal" },
+        "grants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/accessGrant" },
+          "minItems": 1
+        },
+        "auditLog": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "destination": { "type": "string", "description": "Log sink or endpoint." },
+            "retentionDays": { "type": "integer", "minimum": 1, "default": 365 }
+          }
+        }
+      }
+    },
+
+    "policyRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "condition", "grant"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "language": {
+          "type": "string",
+          "enum": ["CEL", "Rego"],
+          "default": "CEL",
+          "description": "Expression language used for `condition`."
+        },
+        "condition": {
+          "type": "string",
+          "description": "Boolean expression evaluated against the request/agent context (e.g., CEL: request.user.role == \"analyst\")."
+        },
+        "grant": { "$ref": "#/$defs/accessGrant" }
+      }
+    },
+
+    "dynamicPolicies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rules"],
+      "properties": {
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/policyRule" }
+        },
+        "evaluation": {
+          "type": "string",
+          "enum": ["firstMatch", "allMatch"],
+          "default": "firstMatch",
+          "description": "Evaluation strategy for rules."
+        }
+      }
+    },
+
+    "sla": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "latencyMs": { "type": "integer", "minimum": 0 },
+        "freshnessMinutes": { "type": "integer", "minimum": 0 },
+        "costPerQuery": { "type": "number", "minimum": 0 },
+        "accuracyPct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "availabilityPct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "sustainability": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "emissionsPerRunKgCO2e": { "type": "number", "minimum": 0 }
+          }
+        },
+        "feedbackSignals": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retentionPeriodDays": { "type": "integer", "minimum": 0 },
+        "retentionCondition": { "type": "string" },
+        "archival": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "trigger": { "type": "string", "enum": ["time", "event"] },
+            "destination": { "type": "string" }
+          }
+        },
+        "deletionPolicy": {
+          "type": "string",
+          "enum": ["hard-delete", "soft-delete", "anonymize"]
+        }
+      }
+    },
+
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logging": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "level": { "type": "string", "enum": ["DEBUG", "INFO", "WARN", "ERROR"], "default": "INFO" },
+            "destination": { "type": "string" }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Standard metric names to emit.",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Metric type or description"
+          }
+        },
+        "alerting": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "onFailure": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/notification" }
+            },
+            "onDegraded": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/notification" }
+            }
+          }
+        }
+      }
+    },
+
+    "operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sla": { "$ref": "#/$defs/sla" },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "observability": { "$ref": "#/$defs/observability" }
+      }
+    },
+
+    "extensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "customTransformations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/extensionRef" }
+        },
+        "policyEngines": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/extensionRef" }
+        },
+        "observabilityHooks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/extensionRef" }
+        }
+      }
+    },
+
+    "extensionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "config": { "type": "object", "additionalProperties": true }
+      }
+    },
+
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "encryptionAtRest": { "type": "string", "enum": ["None", "AES256", "KMS"], "default": "AES256" },
+        "encryptionInTransit": { "type": "string", "enum": ["None", "TLS1.2+", "mTLS"], "default": "TLS1.2+" },
+        "kmsKey": { "type": "string", "description": "If encryptionAtRest=KMS, reference key name/ARN/resource." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "encryptionAtRest": { "const": "KMS" } } },
+          "then": { "required": ["kmsKey"] }
+        }
+      ]
+    },
+
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Org-wide rules that must be satisfied by this product.",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "requirement"],
+            "properties": {
+              "name": { "type": "string" },
+              "requirement": {
+                "type": "string",
+                "description": "Human-readable requirement (e.g., 'Confidential data must have masking')."
+              },
+              "policyRef": {
+                "type": "string",
+                "description": "Optional reference to external policy (e.g., OPA bundle, Rego package)."
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "conformance": {
+      "type": "string",
+      "description": "Compliance tier to support graduated adoption.",
+      "enum": ["Core", "Extended", "Enterprise"],
+      "default": "Core"
+    }
+  },
+
+  "examples": [
+    {
+      "fluidVersion": "1.1.0",
+      "kind": "DataProduct",
+      "id": "marketing.customer360:1.2.0",
+      "name": "Customer 360",
+      "description": "Unified view of customers for analytics and activation.",
+      "domain": "Marketing",
+      "metadata": {
+        "owner": { "team": "marketing-data", "email": "mdt@example.com" },
+        "layer": "Gold",
+        "status": "Published",
+        "classification": "confidential",
+        "tags": { "subject": "customers", "region": "EU" },
+        "version": "1.2.0",
+        "purpose": {
+          "business_purpose": "Enable personalization and attribution.",
+          "use_cases": ["segmentation", "LTV modeling"],
+          "target_group": ["analysts", "ml-engineers"]
+        }
+      },
+      "consumes": [
+        {
+          "type": "kafka",
+          "alias": "events",
+          "connection": "secret:kafka-prod",
+          "properties": { "topic": "events.customer" }
+        },
+        {
+          "type": "fluid-product",
+          "name": "sales.orders:2.0.0",
+          "alias": "orders",
+          "onUpstreamChange": "triggerRebuild"
+        }
+      ],
+      "build": {
+        "engine": "dbt",
+        "script": "models/marts/customers.sql",
+        "trigger": { "type": "schedule", "cron": "0 * * * *", "timezone": "UTC" },
+        "runtime": { "platform": "dbt-cloud" },
+        "retries": { "count": 3, "delaySeconds": 60, "backoff": "exponential" },
+        "notifications": [{ "channel": "slack", "target": "#data-alerts", "on": "onFailure" }]
+      },
+      "exposes": {
+        "name": "warehouse_table",
+        "location": {
+          "type": "bigquery",
+          "connection": "secret:gcp-dwh",
+          "format": { "type": "parquet" },
+          "properties": { "project": "proj", "dataset": "dwh", "table": "customer360" }
+        },
+        "contract": {
+          "schema": {
+            "columns": [
+              { "name": "customer_id", "type": "STRING", "nullable": false },
+              { "name": "email", "type": "STRING" },
+              { "name": "created_at", "type": "TIMESTAMP" }
+            ],
+            "primaryKey": ["customer_id"]
+          },
+          "quality": [
+            { "rule": "not_null", "columns": ["customer_id"], "onFailure": { "action": "fail_pipeline" } },
+            { "rule": "regex_match", "columns": ["email"], "pattern": "^[^@]+@[^@]+\\.[^@]+$", "onFailure": { "action": "quarantine_row" } }
+          ],
+          "privacy": [
+            { "classification": "PII", "columns": ["email"], "treatment": { "type": "hashing" } }
+          ],
+          "semantics": {
+            "ontology": "https://example.org/ontologies/customer.owl",
+            "classifications": { "customer_id": "Customer", "email": "EmailAddress" }
+          }
+        }
+      },
+      "accessPolicy": {
+        "visibility": "internal",
+        "grants": [
+          { "principal": "group:analysts", "permissions": ["readData", "readMetadata"], "scope": { "privacyView": "treated" } },
+          { "principal": "user:owner@example.com", "permissions": ["manage", "readData", "readMetadata"] }
+        ],
+        "auditLog": { "enabled": true, "destination": "log://central/sec-audit", "retentionDays": 365 }
+      },
+      "dynamicPolicies": {
+        "evaluation": "firstMatch",
+        "rules": [
+          {
+            "name": "Row-level EU filter",
+            "language": "CEL",
+            "condition": "request.user.region == 'EU' && request.purpose == 'analytics'",
+            "grant": {
+              "principal": "group:analysts",
+              "permissions": ["readData"],
+              "scope": { "rowFilter": "region = 'EU'", "privacyView": "treated" }
+            }
+          }
+        ]
+      },
+      "operations": {
+        "sla": { "latencyMs": 60000, "freshnessMinutes": 60, "availabilityPct": 99.5 },
+        "lifecycle": { "retentionPeriodDays": 1095, "deletionPolicy": "anonymize" },
+        "observability": {
+          "logging": { "level": "INFO", "destination": "log://central/data" },
+          "alerting": { "onFailure": [{ "channel": "pagerduty", "target": "dp-c360" }] }
+        }
+      },
+      "extensions": {
+        "policyEngines": [{ "name": "opa", "version": "0.63.0" }]
+      },
+      "security": { "encryptionAtRest": "KMS", "kmsKey": "projects/x/locations/y/keyRings/z/cryptoKeys/k" },
+      "governance": {
+        "rules": [
+          {
+            "name": "Mask PII",
+            "requirement": "All PII columns must have a privacy treatment.",
+            "policyRef": "rego://org/policies/privacy.piimask"
+          }
+        ]
+      },
+      "conformance": "Extended"
+    }
+  ]
+}
