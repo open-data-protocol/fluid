@@ -19,8 +19,8 @@
     "fluidVersion": {
       "type": "string",
       "description": "Version of the FLUID spec this contract adheres to.",
-      "pattern": "^2\\.\\d+(\\.\\d+)?$",
-      "examples": ["2.0.0"]
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "examples": ["0.1.0"]
     },
     "kind": {
       "type": "string",
