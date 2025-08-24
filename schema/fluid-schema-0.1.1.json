@@ -369,7 +369,7 @@
         "platform": { "type": "string", "enum": ["airflow", "dbt-cloud", "databricks", "spark", "kubernetes"] },
         "resources": { "type": "object", "properties": { "cpu": { "type": "string" }, "memory": { "type": "string" } } }
       },
-      "required": ["platform"]
+      "required": []
     },
     "retryPolicy": {
       "type": "object",
@@ -385,7 +385,7 @@
         "channel": { "type": "string", "enum": ["email", "slack", "pagerduty", "webhook"] },
         "target": { "type": "string" }
       },
-      "required": ["channel", "target"]
+      "required": []
     },
     "accessPolicy": {
       "type": "object",
@@ -404,7 +404,7 @@
         "principal": { "type": "string", "description": "e.g., group:analysts, user:name@company.com" },
         "permissions": { "type": "array", "items": { "type": "string", "enum": ["readData", "readMetadata", "manage"] } }
       },
-      "required": ["principal", "permissions"]
+      "required": []
     },
     "operations": {
       "type": "object",
