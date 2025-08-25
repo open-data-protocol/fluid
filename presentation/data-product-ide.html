@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLUID: Data Product IDE</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.12.0/ajv7.min.js"></script>
+	<!-- Using a stable version of d3-dag that correctly attaches to the d3 object -->
+	<script src="https://unpkg.com/d3-dag@0.8.2/dist/d3-dag.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+
+    <!-- CodeMirror Assets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0d1117; 
+            --bg-secondary: #010409; 
+            --bg-tertiary: #161b22;
+            --bg-inset: rgba(120, 120, 120, 0.05);
+            --text-primary: #c9d1d9; 
+            --text-secondary: #8b949e; 
+            --text-accent: #58a6ff;
+            --border-primary: #30363d; 
+            --border-secondary: #21262d;
+            --link-stroke: #4b5563;
+            --link-hover-stroke: #a78bfa;
+            --marker-stroke: #a78bfa;
+        }
+        body.light-theme {
+            --bg-primary: #ffffff; 
+            --bg-secondary: #f6f8fa; 
+            --bg-tertiary: #ffffff;
+            --bg-inset: #f6f8fa;
+            --text-primary: #24292e; 
+            --text-secondary: #57606a; 
+            --text-accent: #0969da;
+            --border-primary: #d0d7de; 
+            --border-secondary: #d8dee4;
+            --link-stroke: #8c959f;
+            --link-hover-stroke: #0969da;
+            --marker-stroke: #0969da;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #22d3ee, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .CodeMirror {
+            font-family: 'SF Mono', 'Courier New', Courier, monospace;
+            font-size: 14px;
+            border: 1px solid var(--border-primary);
+            height: 100%;
+        }
+        .CodeMirror-gutters {
+            background-color: var(--bg-secondary) !important;
+            border-right: 1px solid var(--border-primary) !important;
+        }
+        .error-line { background: rgba(239, 68, 68, 0.15); }
+        .error-gutter-marker { color: #ef4444; text-align: center; width: 100%; font-weight: bold; }
+        .canvas-wrapper {
+            background-color: var(--bg-secondary);
+            border-radius: 0 0 0.5rem 0.5rem;
+            border: 1px solid var(--border-primary);
+            border-top: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .dv-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            background-image: radial-gradient(var(--border-primary) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .node-foreign-object { overflow: visible; transition: opacity 0.2s; }
+        .dv-box {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-primary);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            width: 100%;
+        }
+        .dv-hub { border-top: 4px solid #22d3ee; }
+        .dv-sat { border-top: 4px solid #a78bfa; }
+        .dv-link { border-top: 4px solid #34d399; }
+        .dv-box-title {
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border-primary);
+        }
+        .dv-hub .dv-box-title { color: #22d3ee; }
+        .dv-sat .dv-box-title { color: #a78bfa; }
+        .dv-link .dv-box-title { color: #34d399; }
+        .dv-attr-list { list-style: none; padding: 0.5rem; margin: 0; font-size: 12px; }
+        .dv-attr-list li {
+            padding: 0.35rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        .dv-attr-list li.highlighted {
+            background-color: rgba(88, 166, 255, 0.2) !important;
+        }
+        .dv-attr-list li:nth-child(odd) { background-color: var(--bg-inset); }
+        .dv-type { color: var(--text-secondary); }
+        
+        .attr-icon {
+            cursor: help;
+            display: inline-block;
+        }
+        .pii-row {
+            background-color: rgba(252, 165, 165, 0.1) !important;
+            border-left: 2px solid #ef4444;
+        }
+
+        .controls {
+            position: absolute; bottom: 1rem; right: 1rem; display: flex;
+            gap: 0.5rem; background-color: var(--bg-tertiary); padding: 0.5rem;
+            border-radius: 0.5rem; border: 1px solid var(--border-primary); z-index: 10;
+        }
+        .control-btn, .layout-select, .example-select {
+            height: 36px; background-color: var(--border-primary); color: var(--text-primary);
+            border: none; border-radius: 0.25rem; cursor: pointer; transition: background-color 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .control-btn {
+            width: 36px;
+        }
+        .control-btn:hover, .layout-select:hover, .example-select:hover { background-color: var(--border-secondary); }
+        .layout-select, .example-select {
+            padding: 0 0.5rem;
+            font-size: 14px;
+        }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 800px;
+            background: var(--bg-tertiary); border-top: 4px solid #34d399;
+            border-radius: 1rem; z-index: 1001; opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+        .modal-overlay.active .modal-content { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal-input {
+            background-color: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-primary);
+            border-radius: 0.25rem; padding: 0.5rem; width: 100%;
+        }
+        .tab {
+            padding: 0.5rem 1rem; cursor: pointer; background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-primary); border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+            margin-bottom: -1px; color: var(--text-secondary);
+            transition: all 0.2s;
+            flex-shrink: 0; /* Prevents tabs from shrinking */
+        }
+        .tab:not(.active):hover {
+            background-color: var(--border-primary);
+            transform: translateY(2px);
+        }
+        .tab.active { background-color: var(--bg-secondary); color: var(--text-accent); font-weight: 600; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .tab-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 1rem;
+            background-color: rgba(88, 166, 255, 0.05);
+            border-left: 3px solid var(--text-accent);
+            border-radius: 0.25rem;
+        }
+        #validation-output {
+            padding: 0.75rem; background-color: var(--bg-secondary); border: 1px solid var(--border-primary);
+            border-top: none; border-radius: 0 0 0.5rem 0.5rem; font-family: 'SF Mono', 'Courier New', Courier, monospace;
+            font-size: 12px; min-height: 50px;
+        }
+        .link-group > .link-path-hover {
+            stroke: transparent;
+            stroke-width: 15;
+            fill: none;
+            cursor: pointer;
+        }
+        .link-group > .link-path {
+            stroke: var(--link-stroke);
+            stroke-opacity: 0.8;
+            stroke-width: 2;
+            fill: none;
+            pointer-events: none; /* Clicks go to the hover path */
+            transition: stroke 0.2s, opacity 0.2s;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        .link-group:hover > .link-path {
+            stroke: var(--link-hover-stroke);
+            stroke-width: 3;
+            filter: url(#glow);
+        }
+        #marker-one path, #marker-many path {
+            stroke: var(--marker-stroke);
+        }
+        .clickable-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .clickable-item:hover {
+            background-color: rgba(120, 120, 120, 0.1);
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #4b5563;
+            text-align: center;
+            padding: 2rem;
+        }
+        .clickable-error {
+            cursor: pointer;
+        }
+        .clickable-error:hover {
+            background-color: rgba(120, 120, 120, 0.1);
+        }
+        #minimap {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            width: 200px;
+            height: 150px;
+            border: 1px solid var(--border-primary);
+            background-color: rgba(13, 17, 23, 0.8);
+            border-radius: 0.5rem;
+            z-index: 10;
+        }
+        #minimap-viewport {
+            fill: rgba(88, 166, 255, 0.2);
+            stroke: var(--text-accent);
+            stroke-width: 2px;
+            cursor: move;
+        }
+        #tooltip {
+            position: absolute;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            border: 1px solid var(--border-primary);
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--bg-tertiary);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-primary);
+            right: 0;
+        }
+        .dropdown-content button {
+            color: var(--text-primary);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+        }
+        .dropdown-content button:hover { background-color: var(--border-secondary); }
+        .dropdown:hover .dropdown-content { display: block; }
+        #schema-error-banner {
+            background-color: #4a2424;
+            color: #f8b4b4;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            display: none; /* Initially hidden */
+            border: 1px solid #993d3d;
+        }
+    </style>
+</head>
+<body class="antialiased h-screen flex flex-col">
+
+    <header class="relative text-center py-4 border-b border-gray-800 space-y-3">
+        <div class="absolute top-1/2 left-4 -translate-y-1/2 flex items-center gap-2">
+            <a href="https://open-data-protocol.github.io/fluid/" target="_blank" class="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors" title="Learn more about FLUID">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+                <span class="hidden sm:inline font-semibold">FLUID Project</span>
+            </a>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">FLUID: <span class="text-gradient">Data Product IDE</span></h1>
+        <!-- NEW: Example Selector Dropdown -->
+        <div class="flex justify-center items-center gap-2">
+            <label for="example-select" class="text-sm font-medium text-gray-400">Load Example:</label>
+            <select id="example-select" class="example-select bg-gray-800 border border-gray-700 rounded-md">
+                <option value="gold">Gold: Sales Analytics Mart (BigQuery)</option>
+                <option value="silver">Silver: Sales Data Vault (dbt)</option>
+                <option value="bronze">Bronze: Oracle Sales Raw</option>
+            </select>
+        </div>
+        <div class="absolute top-1/2 right-4 -translate-y-1/2 flex items-center gap-2">
+            <button id="toggle-view-btn" class="control-btn" title="Toggle View">
+                 <!-- <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m5 10V7m-8 5h11"></path></svg> -->
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7m6 0h3m-9-6h7m-7 6h7"></path>
+                    </svg>
+                </button>
+             <button id="upload-btn" class="control-btn" title="Upload YAML File">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            </button>
+            <input type="file" id="file-input" class="hidden" accept=".yml,.yaml">
+            <div class="dropdown">
+                <button id="download-btn-main" class="control-btn" title="Download File">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </button>
+                <div class="dropdown-content">
+                    <button id="download-yml-btn">Download YAML</button>
+                    <button id="download-json-btn">Download JSON</button>
+                </div>
+            </div>
+            <button id="reset-btn" class="control-btn" title="Reset Example">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5m11 2a9 9 0 11-2 6.32M20 4v5h-5"></path></svg>
+            </button>
+             <button id="theme-toggle" class="control-btn" title="Toggle Theme">
+                <svg id="theme-icon-dark" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-icon-light" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main-container" class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-4 p-2 sm:p-4 min-h-0">
+        <section id="editor-panel" class="flex flex-col min-h-[400px] lg:min-h-0">
+            <div class="flex justify-between items-center mb-2">
+                <label class="text-base sm:text-lg font-semibold text-white">Data Product Contract</label>
+            </div>
+            <div id="schema-error-banner"></div>
+            <div class="flex-grow relative min-h-0">
+                 <textarea id="editor-textarea"></textarea>
+            </div>
+            <div id="validation-output">Initializing...</div>
+        </section>
+
+        <section id="canvas-panel" class="flex flex-col min-h-[500px] lg:min-h-0">
+            <nav class="flex border-b border-gray-700 overflow-x-auto">
+                <button class="tab" data-tab="contract" role="tab">Contract</button>
+                <button class="tab active" data-tab="model" role="tab">Model</button>
+                <button class="tab" data-tab="overview" role="tab">Overview</button>
+                <button class="tab" data-tab="consumes" role="tab">Consumes</button>
+                <button class="tab" data-tab="build" role="tab">Build</button>
+                <button class="tab" data-tab="exposes" role="tab">Exposes</button>
+                <button class="tab" data-tab="quality" role="tab">Quality</button>
+            </nav>
+            <div class="canvas-wrapper flex-grow">
+                <div id="contract-pane" class="tab-pane h-full p-4 sm:p-8 overflow-y-auto" role="tabpanel"></div>
+                <div id="model-pane" class="tab-pane active h-full" role="tabpanel">
+                    <svg id="canvas" class="dv-canvas">
+                        <defs>
+                            <!-- Cardinality Markers -->
+                            <marker id="marker-one" viewBox="-2 -6 4 12" refX="0" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 -5 L 0 5" stroke-width="2"></path></marker>
+                            <marker id="marker-many" viewBox="-2 -6 12 12" refX="10" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M0,-5L10,0L0,5" fill="none" stroke-width="2"></path></marker>
+                            <!-- Glow Filter -->
+                            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="3.5" result="coloredBlur"></feGaussianBlur>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"></feMergeNode>
+                                    <feMergeNode in="SourceGraphic"></feMergeNode>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                    </svg>
+                    <svg id="minimap"></svg>
+                </div>
+                <div id="overview-pane" class="tab-pane h-full p-4 sm:p-8 overflow-y-auto" role="tabpanel"></div>
+                <div id="consumes-pane" class="tab-pane h-full p-4 sm:p-8 overflow-y-auto" role="tabpanel"></div>
+                <div id="build-pane" class="tab-pane h-full p-4 sm:p-8 overflow-y-auto" role="tabpanel"></div>
+                <div id="exposes-pane" class="tab-pane h-full p-4 sm:p-8 overflow-y-auto" role="tabpanel"></div>
+                <div id="quality-pane" class="tab-pane h-full p-4 sm:p-8 overflow-y-auto" role="tabpanel"></div>
+                
+                <div id="controls-wrapper" class="controls">
+                    <button id="add-relationship" class="control-btn" title="Add Relationship" aria-label="Add Relationship">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    </button>
+                    <select id="layout-select" class="layout-select" title="Select Layout Algorithm">
+                        <option value="hierarchical">Hierarchical</option>
+                        <option value="force">Force-Directed</option>
+                    </select>
+                    <button id="zoom-in" class="control-btn" title="Zoom In" aria-label="Zoom In"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button>
+                    <button id="zoom-out" class="control-btn" title="Zoom Out" aria-label="Zoom Out"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6"></path></svg></button>
+                    <button id="reset-view" class="control-btn" title="Reset View" aria-label="Reset View"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 20h5v-5M20 4h-5v5"></path></svg></button>
+                    <button id="rerun-layout" class="control-btn" title="Rerun Layout" aria-label="Rerun Layout"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5m11 2a9 9 0 11-2 6.32M20 4v5h-5"></path></svg></button>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <div id="info-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+             <div id="modal-body" class="text-gray-300"></div>
+        </div>
+    </div>
+    <div id="tooltip"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Element Selection ---
+            const editorTextarea = document.getElementById('editor-textarea');
+            const validationOutput = document.getElementById('validation-output');
+            const schemaErrorBanner = document.getElementById('schema-error-banner');
+            const svg = d3.select("#canvas");
+            const g = svg.append("g");
+            const infoModal = document.getElementById('info-modal');
+            const modalBody = document.getElementById('modal-body');
+            const mainContainer = document.getElementById('main-container');
+            const editorPanel = document.getElementById('editor-panel');
+            const canvasPanel = document.getElementById('canvas-panel');
+            const toggleViewBtn = document.getElementById('toggle-view-btn');
+            const controlsWrapper = document.getElementById('controls-wrapper');
+            const tabs = document.querySelectorAll('.tab');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcons = {
+                dark: document.getElementById('theme-icon-dark'),
+                light: document.getElementById('theme-icon-light')
+            };
+            const tooltip = document.getElementById('tooltip');
+            const minimap = d3.select("#minimap");
+            let minimapViewport = minimap.select("#minimap-viewport");
+            if (minimapViewport.empty()) {
+                minimapViewport = minimap.append("rect").attr("id", "minimap-viewport");
+            }
+            const fileInput = document.getElementById('file-input');
+            const uploadBtn = document.getElementById('upload-btn');
+            const downloadYmlBtn = document.getElementById('download-yml-btn');
+            const downloadJsonBtn = document.getElementById('download-json-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const layoutSelect = document.getElementById('layout-select');
+            const addRelationshipBtn = document.getElementById('add-relationship');
+            const exampleSelect = document.getElementById('example-select');
+
+
+            // --- UPDATED: Example Data Products for schema v0.1.1 ---
+            const exampleDataProducts = {
+                bronze: `
+fluidVersion: "0.1.1"
+kind: DataProduct
+id: "bronze_oracle_sales_v1"
+name: "Oracle Sales Source (Bronze)"
+description: "Provides a raw, source-aligned replica of key sales tables from the Oracle ERP system. This data is captured via Change Data Capture (CDC) and delivered with minimal transformations, preserving the original data types and structures."
+domain: "Source Systems"
+
+metadata:
+  layer: Bronze
+  owner:
+    team: "ERP Systems Engineering"
+    email: "erp-systems@example.com"
+    slack: "#erp-alerts"
+  status: Published
+  tags:
+    - oracle
+    - erp
+    - sales
+    - raw
+    - cdc
+
+# This product has no upstream FLUID dependencies as it is a source.
+consumes: []
+
+build:
+  engine: "sql"
+  model: "oracle_erp_connector_sales"
+  config:
+    update_method: "LOGMINER"
+    schema_change_handling: "ALLOW_ALL"
+  trigger:
+    type: "event"
+    eventType: "oracle.cdc.sales.update"
+  runtime:
+    platform: "airflow"
+  retries:
+    count: 3
+    delaySeconds: 600
+    backoff: exponential
+  notifications:
+    - channel: slack
+      target: "#erp-alerts"
+
+exposes:
+  - id: "ORCL_CUSTOMERS"
+    type: "bigquery_table"
+    description: "Raw customer master data from the ERP_CUSTOMERS table."
+    location:
+      format: "iceberg"
+      properties:
+        project: "bronze-layer-project"
+        dataset: "oracle_erp_sales"
+        table: "customers"
+    schema:
+      - { name: "CUST_ID", type: "NUMBER", tags: [primary_key] }
+      - { name: "FNAME", type: "VARCHAR2(100)", tags: [pii] }
+      - { name: "LNAME", type: "VARCHAR2(100)", tags: [pii] }
+      - { name: "EMAIL", type: "VARCHAR2(255)", tags: [pii] }
+      - { name: "CREATED_AT", type: "TIMESTAMP" }
+      - { name: "COUNTRY_CODE", type: "VARCHAR2(3)" }
+      - { name: "_FIVETRAN_SYNCED", type: "TIMESTAMP", tags: [technical] }
+    quality:
+      - name: "cust_id_not_null"
+        rule: "not_null"
+        onFailure: { action: "alert" }
+
+  - id: "ORCL_ORDERS"
+    type: "bigquery_table"
+    description: "Raw order header data from the ERP_ORDERS table."
+    location:
+      format: "iceberg"
+      properties:
+        project: "bronze-layer-project"
+        dataset: "oracle_erp_sales"
+        table: "orders"
+    tags:
+      archetype: table
+      relationships:
+        - to: "ORCL_CUSTOMERS"
+          cardinality: "many-to-one"
+          description: "Each order is placed by a single customer."
+    schema:
+      - { name: "ORDER_ID", type: "NUMBER", tags: [primary_key] }
+      - { name: "CUSTOMER_ID", type: "NUMBER", tags: [foreign_key] }
+      - { name: "ORDER_DATE", type: "DATE" }
+      - { name: "ORDER_TOTAL", type: "NUMBER(10, 2)" }
+      - { name: "STATUS", type: "VARCHAR2(20)" }
+      - { name: "_FIVETRAN_SYNCED", type: "TIMESTAMP", tags: [technical] }
+
+  - id: "ORCL_ORDER_LINES"
+    type: "bigquery_table"
+    description: "Individual line items for each order."
+    location:
+      format: "iceberg"
+      properties:
+        project: "bronze-layer-project"
+        dataset: "oracle_erp_sales"
+        table: "order_lines"
+    tags:
+      archetype: table
+      relationships:
+        - to: "ORCL_ORDERS"
+          cardinality: "many-to-one"
+          description: "Each order line is part of a single order."
+        - to: "ORCL_PRODUCTS"
+          cardinality: "many-to-one"
+          description: "Each order line corresponds to a single product."
+    schema:
+      - { name: "ORDER_LINE_ID", type: "NUMBER", tags: [primary_key] }
+      - { name: "ORDER_ID", type: "NUMBER", tags: [foreign_key] }
+      - { name: "PRODUCT_ID", type: "NUMBER", tags: [foreign_key] }
+      - { name: "QUANTITY", type: "NUMBER" }
+      - { name: "UNIT_PRICE", type: "NUMBER(10, 2)" }
+      - { name: "_FIVETRAN_SYNCED", type: "TIMESTAMP", tags: [technical] }
+
+  - id: "ORCL_PRODUCTS"
+    type: "bigquery_table"
+    description: "Master list of products available for sale."
+    location:
+      format: "iceberg"
+      properties:
+        project: "bronze-layer-project"
+        dataset: "oracle_erp_sales"
+        table: "products"
+    tags:
+      archetype: table
+    schema:
+      - { name: "PRODUCT_ID", type: "NUMBER", tags: [primary_key] }
+      - { name: "PRODUCT_NAME", type: "VARCHAR2(255)" }
+      - { name: "SKU", type: "VARCHAR2(50)" }
+      - { name: "CATEGORY", type: "VARCHAR2(100)" }
+      - { name: "_FIVETRAN_SYNCED", type: "TIMESTAMP", tags: [technical] }
+
+slo:
+  freshnessMinutes: 15
+  availabilityPct: 99.9
+
+accessPolicy:
+  grants:
+    - principal: "group:data-engineers@example.com"
+      permissions: ["readData", "readMetadata", "manage"]
+    - principal: "group:source-admins@example.com"
+      permissions: ["readMetadata"]
+
+operations:
+  lifecycle:
+    retentionPeriodDays: 2555 # 7 years for audit
+    deletionPolicy: "hard-delete"
+
+security:
+  encryptionAtRest: "KMS"
+  encryptionInTransit: "TLS1.2+"
+
+governance:
+  rules:
+    - name: "Source-Alignment"
+      requirement: "Bronze products must be 1:1 replicas of source tables with no transformations."
+    - name: "No PII Access"
+      requirement: "Direct query access to this Bronze product is restricted to service principals."
+`,
+                silver: `
+fluidVersion: "0.1.1"
+kind: DataProduct
+id: "silver_sales_datavault_v1"
+name: "Sales Data Vault (Silver)"
+description: "Builds an integrated, cleansed, and historically accurate Data Vault 2.0 model for sales analytics. It conforms raw data from the Oracle ERP source system into a standardized structure of Hubs, Links, and Satellites, serving as the auditable foundation for all downstream analytics."
+domain: "Sales & Marketing"
+
+metadata:
+  layer: Silver
+  owner:
+    team: "Data Vault Engineering"
+    email: "dv-team@example.com"
+    slack: "#data-vault-eng"
+  status: Published
+  tags:
+    - datavault
+    - silver_layer
+    - dbt
+    - sales
+
+consumes:
+  - id: "oracle_sales_source"
+    ref: "urn:dataproduct:bronze_oracle_sales_v1"
+    description: "Raw, source-aligned sales data captured via CDC from the Oracle ERP system."
+
+build:
+  engine: "dbt"
+  model: "models/data_vault/silver_sales_vault" # This would point to the dbt model directory
+  config:
+    materialized: "incremental"
+    unique_key: "load_dts"
+  trigger:
+    type: schedule
+    cron: "0 1 * * *" # Run daily at 1 AM
+  runtime:
+    platform: "dbt-cloud"
+    resources:
+      cpu: "4"
+      memory: "16Gi"
+  retries:
+    count: 2
+    delaySeconds: 300
+    backoff: exponential
+  notifications:
+    - channel: slack
+      target: "#dv-alerts"
+
+exposes:
+  - id: "hub_customer"
+    type: "bigquery_table"
+    description: "Hub table for unique customer business keys, integrating customers from all sources."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "hub_customer"
+    tags:
+      archetype: hub
+    schema:
+      - { name: "customer_hk", type: "STRING", tags: [primary_key, hash_key] }
+      - { name: "customer_bk", type: "STRING", tags: [business_key] }
+      - { name: "load_dts", type: "TIMESTAMP" }
+      - { name: "record_source", type: "STRING" }
+    quality:
+      - name: "hub_customer_hk_not_null"
+        rule: "not_null"
+        onFailure: { action: "fail_pipeline" }
+      - name: "hub_customer_hk_is_unique"
+        rule: "unique"
+        onFailure: { action: "fail_pipeline" }
+
+  - id: "hub_order"
+    type: "bigquery_table"
+    description: "Hub table for unique order business keys."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "hub_order"
+    tags:
+      archetype: hub
+    schema:
+      - { name: "order_hk", type: "STRING", tags: [primary_key, hash_key] }
+      - { name: "order_bk", type: "STRING", tags: [business_key] }
+      - { name: "load_dts", type: "TIMESTAMP" }
+      - { name: "record_source", type: "STRING" }
+
+  - id: "hub_product"
+    type: "bigquery_table"
+    description: "Hub table for unique product business keys."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "hub_product"
+    tags:
+      archetype: hub
+    schema:
+      - { name: "product_hk", type: "STRING", tags: [primary_key, hash_key] }
+      - { name: "product_bk", type: "STRING", tags: [business_key] }
+      - { name: "load_dts", type: "TIMESTAMP" }
+      - { name: "record_source", type: "STRING" }
+
+  - id: "sat_customer_details"
+    type: "bigquery_table"
+    description: "Satellite storing descriptive attributes for customers (SCD Type 2)."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "sat_customer_details"
+    tags:
+      archetype: satellite
+      relationships:
+        - to: "hub_customer"
+          cardinality: "many-to-one"
+          description: "Each customer can have multiple historical versions of their details."
+    schema:
+      - { name: "customer_hk", type: "STRING", tags: [primary_key, foreign_key] }
+      - { name: "load_dts", type: "TIMESTAMP", tags: [primary_key] }
+      - { name: "hash_diff", type: "STRING", tags: [technical] }
+      - { name: "first_name", type: "STRING", tags: [pii] }
+      - { name: "last_name", type: "STRING", tags: [pii] }
+      - { name: "email", type: "STRING", tags: [pii] }
+      - { name: "country", type: "STRING" }
+    privacy:
+      - classification: PII
+        columns: ["first_name", "last_name", "email"]
+        treatment: { type: "masking" }
+
+  - id: "link_customer_order"
+    type: "bigquery_table"
+    description: "Link table connecting customers to their orders."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "link_customer_order"
+    tags:
+      archetype: link
+      relationships:
+        - to: "hub_customer"
+          cardinality: "many-to-one"
+        - to: "hub_order"
+          cardinality: "many-to-one"
+    schema:
+      - { name: "link_hk", type: "STRING", tags: [primary_key, hash_key] }
+      - { name: "customer_hk", type: "STRING", tags: [foreign_key] }
+      - { name: "order_hk", type: "STRING", tags: [foreign_key] }
+      - { name: "load_dts", type: "TIMESTAMP" }
+      - { name: "record_source", type: "STRING" }
+    quality:
+      - name: "link_fk_integrity"
+        rule: "SQL:customer_hk IS NOT NULL AND order_hk IS NOT NULL"
+        onFailure: { action: "quarantine_row" }
+
+slo:
+  freshnessMinutes: 360 # 6 hours
+  availabilityPct: 99.9
+
+accessPolicy:
+  grants:
+    - principal: "group:gold-layer-builders@example.com"
+      permissions: ["readData"]
+    - principal: "group:data-stewards@example.com"
+      permissions: ["readMetadata"]
+
+operations:
+  lifecycle:
+    retentionPeriodDays: 1825 # 5 years
+    deletionPolicy: "soft-delete"
+
+security:
+  encryptionAtRest: "KMS"
+  encryptionInTransit: "TLS1.2+"
+
+governance:
+  rules:
+    - name: "Silver-Layer-Standard"
+      requirement: "All Silver products must conform raw data into an integrated model."
+    - name: "PII-Masking"
+      requirement: "Direct access to PII columns must be restricted; views should use masked versions."
+`,
+                gold: `
+fluidVersion: "0.1.1"
+kind: DataProduct
+id: "customer_360_gold_v1"
+name: "Customer 360 Gold Model"
+description: "A comprehensive, unified view of the customer, integrating transactional, behavioral, and demographic data. This product serves as the primary source for business intelligence, analytics, and personalization services."
+domain: "Analytics & BI"
+
+metadata:
+  layer: Gold
+  owner:
+    team: "Customer Insights & Analytics"
+    email: "customer-insights@example.com"
+    slack: "#customer-analytics"
+  status: Published
+  tags:
+    - customer_360
+    - analytics
+    - gold_layer
+    - bigquery
+
+consumes:
+  - id: "sales_vault"
+    ref: "urn:dataproduct:silver_sales_datavault_v1"
+    description: "Silver-layer, conformed Data Vault 2.0 model for sales and customer data."
+  - id: "web_analytics_silver"
+    ref: "urn:dataproduct:silver_web_analytics_v1"
+    description: "Silver-layer, sessionized web activity and engagement data."
+
+build:
+  engine: "dbt"
+  model: "models/marts/customer/customer_360.sql"
+  config:
+    materialized: "incremental"
+    unique_key: "customer_id"
+  trigger:
+    type: schedule
+    cron: "0 4 * * *" # Run daily at 4 AM
+  runtime:
+    platform: "dbt-cloud"
+    resources:
+      cpu: "8"
+      memory: "32Gi"
+  retries:
+    count: 2
+    delaySeconds: 600
+    backoff: exponential
+  notifications:
+    - channel: slack
+      target: "#gold-model-alerts"
+
+exposes:
+  - id: "customer_360_master"
+    type: "bigquery_table"
+    description: "The core, wide-table view of a customer, containing all key attributes and aggregated metrics for deep analysis."
+    location:
+      format: "iceberg"
+      properties:
+        project: "analytics-prod"
+        dataset: "gold_models"
+        table: "customer_360_master"
+    tags:
+      archetype: table
+    schema:
+      - { name: "customer_id", type: "STRING", description: "Unique and persistent customer identifier.", nullable: false, tags: [primary_key] }
+      - { name: "email", type: "STRING", description: "Customer's primary email address.", tags: [pii] }
+      - { name: "first_name", type: "STRING", description: "Customer's first name.", tags: [pii] }
+      - { name: "last_name", type: "STRING", description: "Customer's last name.", tags: [pii] }
+      - { name: "first_seen_dts", type: "TIMESTAMP", description: "Timestamp of the customer's first interaction." }
+      - { name: "last_seen_dts", type: "TIMESTAMP", description: "Timestamp of the customer's most recent interaction." }
+      - { name: "lifetime_value", type: "NUMERIC", description: "Total revenue generated by the customer.", semantic: "metric.ltv" }
+      - { name: "total_orders", type: "INT64", description: "Total number of completed orders." }
+      - { name: "avg_session_duration_seconds", type: "INT64", description: "Average duration of web sessions in seconds." }
+      - { name: "last_product_viewed", type: "STRING", description: "The name of the last product the customer viewed." }
+    quality:
+      - name: "customer_id_is_not_null"
+        rule: "not_null"
+        onFailure: { action: "fail_pipeline" }
+      - name: "valid_email_format"
+        rule: "SQL:REGEXP_CONTAINS ..."
+        onFailure: { action: "alert" }
+    privacy:
+      - classification: PII
+        columns: ["email", "first_name", "last_name"]
+        treatment: { type: "masking" }
+    semantics:
+      ontology: "https://ontology.example.com/customer"
+      classifications:
+        customer_id: "Customer"
+        email: "EmailAddress"
+
+  - id: "customer_summary_view"
+    type: "bigquery_view"
+    description: "A simplified, denormalized view for quick access by BI tools, excluding PII."
+    location:
+      properties:
+        project: "analytics-prod"
+        dataset: "gold_views"
+        table: "customer_summary_view"
+    tags:
+      archetype: view
+      relationships:
+        - to: "customer_360_master"
+          cardinality: "one-to-one"
+          description: "Provides a summarized, PII-free view of the master customer table."
+    schema:
+      - { name: "customer_id", type: "STRING" }
+      - { name: "last_seen_dts", type: "TIMESTAMP" }
+      - { name: "lifetime_value", type: "NUMERIC" }
+
+slo:
+  freshnessMinutes: 240 # 4 hours
+  availabilityPct: 99.95
+
+accessPolicy:
+  grants:
+    - principal: "group:business-analysts@example.com"
+      permissions: ["readData", "readMetadata"]
+    - principal: "group:data-scientists@example.com"
+      permissions: ["readData"]
+    - principal: "group:data-engineers@example.com"
+      permissions: ["manage"]
+
+operations:
+  lifecycle:
+    retentionPeriodDays: 2555 # 7 years
+    deletionPolicy: "anonymize"
+
+security:
+  encryptionAtRest: "KMS"
+  encryptionInTransit: "TLS1.2+"
+
+governance:
+  rules:
+    - name: "PII-Masking"
+      requirement: "All PII fields in Gold models must have a masking policy applied in views."
+    - name: "Ownership"
+      requirement: "All Gold products must have a valid team owner and contact email."
+`
+            };
+            
+            // --- CodeMirror Initialization ---
+            const editor = CodeMirror.fromTextArea(document.getElementById('editor-textarea'), {
+                mode: 'yaml', theme: 'material-darker', lineNumbers: true,
+                gutters: ["CodeMirror-linenumbers", "errors"]
+            });
+
+            // --- App State ---
+            let simulation, currentDoc, validator, yamlMap, currentLayout = 'hierarchical';
+            let currentVersion = null;
+
+            // --- Core Functions ---
+            async function loadAndValidateSchema() {
+                const yamlContent = editor.getValue();
+                const versionMatch = yamlContent.match(/^fluidVersion:\s*["']?([0-9]+\.[0-9]+\.[0-9]+)["']?/m);
+                const version = versionMatch ? versionMatch[1] : '0.1.1'; // Default to 0.1.1
+
+                if (version === currentVersion && validator) {
+                    renderAllTabs();
+                    return;
+                }
+                
+                currentVersion = version;
+                const schemaUrl = `https://raw.githubusercontent.com/open-data-protocol/fluid/main/schema/fluid-schema-${version}.json`;
+                validationOutput.innerHTML = `<span>⏳ Loading schema for version ${version}...</span>`;
+
+                try {
+                    const response = await fetch(schemaUrl);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const schema = await response.json();
+                    
+                    const ajv = new window.ajv7({ strictSchema: false });
+                    ajv.addMetaSchema({ $id: "https://json-schema.org/draft/2020-12/schema", $schema: "https://json-schema.org/draft/2020-12/schema" });
+                    validator = ajv.compile(schema);
+                    
+                    schemaErrorBanner.style.display = 'none';
+                    validationOutput.innerHTML = `<span class="text-green-400">✅ Schema for v${version} loaded successfully.</span>`;
+                } catch (error) {
+                    console.error(`Failed to load schema for version ${version}:`, error);
+                    schemaErrorBanner.innerHTML = `<strong>⚠️ Schema Not Found</strong><p>Could not find a valid schema for version <strong>${version}</strong>. Validation is disabled.</p>`;
+                    schemaErrorBanner.style.display = 'block';
+                    validator = null;
+                } finally {
+                    renderAllTabs();
+                }
+            }
+
+            function createYamlMap(yamlText) {
+                const map = new Map();
+                const lines = yamlText.split('\n');
+                const pathStack = [];
+                const arrayCounters = {};
+                map.set('/', 0);
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const trimmedLine = line.trim();
+                    if (trimmedLine === '' || trimmedLine.startsWith('#')) continue;
+                    const indent = line.search(/\S/);
+                    while (pathStack.length > 0 && indent <= pathStack[pathStack.length - 1].indent) {
+                        pathStack.pop();
+                    }
+                    const parentPath = pathStack.map(p => p.key).join('/');
+                    if (trimmedLine.startsWith('- ')) {
+                        const arrayKey = parentPath || 'root';
+                        const index = arrayCounters[arrayKey] = (arrayCounters[arrayKey] || 0);
+                        pathStack.push({ key: index, indent });
+                        arrayCounters[arrayKey]++;
+                    } else {
+                        const keyMatch = trimmedLine.match(/^([^:]+):/);
+                        if (keyMatch) pathStack.push({ key: keyMatch[1], indent });
+                    }
+                    const currentPathString = '/' + pathStack.map(p => p.key).join('/');
+                    if (!map.has(currentPathString)) map.set(currentPathString, i);
+                }
+                return map;
+            }
+            
+            const runValidation = () => {
+                editor.clearGutter("errors");
+                editor.eachLine(line => editor.removeLineClass(line, "background", "error-line"));
+                const yamlContent = editor.getValue();
+                yamlMap = createYamlMap(yamlContent);
+                let data;
+                try {
+                    data = jsyaml.load(yamlContent);
+                } catch (e) {
+                    validationOutput.innerHTML = `<span class="text-red-400">❌ YAML Parse Error: ${e.message}</span>`;
+                    if (e.mark && e.mark.line != null) {
+                        const line = e.mark.line;
+                        editor.addLineClass(line, "background", "error-line");
+                        const marker = document.createElement("div");
+                        marker.className = "error-gutter-marker"; marker.innerHTML = "●";
+                        editor.setGutterMarker(line, "errors", marker);
+                    }
+                    return { valid: false, doc: null };
+                }
+                if (!validator) {
+                    validationOutput.innerHTML = `<span class="text-yellow-400">⚠️ Validation disabled. Schema for v${currentVersion} not available.</span>`;
+                    return { valid: true, doc: data };
+                }
+                const valid = validator(data);
+                if (valid) {
+                    validationOutput.innerHTML = '<span class="text-green-400">✅ Validation successful.</span>';
+                    return { valid: true, doc: data };
+                }
+                const errors = validator.errors.map(err => `<li class="clickable-error p-1 rounded" data-path='${err.instancePath}'><strong>${err.instancePath || 'root'}</strong>: ${err.message}</li>`).join('');
+                validationOutput.innerHTML = `<span class="text-red-400">❌ Validation Failed:</span><ul class="list-disc pl-5 mt-1">${errors}</ul>`;
+                validator.errors.forEach(err => {
+                    const line = yamlMap.get(err.instancePath);
+                    if (line !== undefined) {
+                        editor.addLineClass(line, "background", "error-line");
+                        const marker = document.createElement("div");
+                        marker.className = "error-gutter-marker"; marker.innerHTML = "●"; marker.title = err.message;
+                        editor.setGutterMarker(line, "errors", marker);
+                    }
+                });
+                return { valid: false, doc: data };
+            };
+            
+            const renderAllTabs = () => {
+                const validationResult = runValidation();
+                currentDoc = validationResult.doc;
+                if (!currentDoc) {
+                    g.selectAll("*").remove();
+                    minimap.selectAll("*").remove();
+                    const emptyState = '<div class="empty-state"><svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3 class="text-lg font-semibold">Invalid or Empty YAML</h3><p>Please fix the errors in the editor to see the visualization.</p></div>';
+                    document.getElementById('overview-pane').innerHTML = emptyState;
+                    document.getElementById('consumes-pane').innerHTML = emptyState;
+                    document.getElementById('build-pane').innerHTML = emptyState;
+                    document.getElementById('exposes-pane').innerHTML = emptyState;
+                    document.getElementById('quality-pane').innerHTML = emptyState;
+                    document.getElementById('contract-pane').innerHTML = emptyState;
+                    return;
+                }
+                renderOverviewTab(); 
+                renderConsumesTab(); 
+                renderBuildTab(); 
+                renderExposesTab(); 
+                renderQualityTab(); 
+                renderContractTab();
+                renderModelTab();
+            };
+
+            // --- D3 Rendering ---
+            const renderModelTab = () => {
+                g.selectAll("*").remove();
+                if (simulation) simulation.stop();
+                if (!svg.node() || !currentDoc.exposes) return;
+                currentLayout = layoutSelect.value;
+                if (currentLayout === 'hierarchical') renderHierarchicalLayout();
+                else if (currentLayout === 'force') renderForceLayout();
+            };
+            
+            function getGraphData() {
+                 const nodes = (currentDoc.exposes || []).map(port => ({
+                    id: port.id, archetype: port.tags?.archetype || 'table', schema: port.schema || [],
+                    description: port.description, width: 280, height: 70 + (port.schema || []).length * 28, ...port
+                }));
+                const links = [];
+                const linkSet = new Set();
+                const nodeIds = new Set(nodes.map(n => n.id));
+                nodes.forEach(sourceNode => {
+                    if (sourceNode.tags?.relationships) {
+                        sourceNode.tags.relationships.forEach(rel => {
+                            const targetId = rel.to;
+                            if (nodeIds.has(targetId)) {
+                                const linkKey = `${sourceNode.id}->${targetId}`;
+                                if (!linkSet.has(linkKey)) {
+                                    links.push({ source: sourceNode.id, target: targetId, cardinality: rel.cardinality || 'many-to-one', description: rel.description || '' });
+                                    linkSet.add(linkKey);
+                                }
+                            }
+                        });
+                    }
+                });
+                return { nodes, links };
+            }
+
+            function calculateIntersectionPoint(sourceNode, targetNode) {
+                const { x: sx, y: sy } = sourceNode;
+                const { x: tx, y: ty, width: tw, height: th } = targetNode;
+                const dx = tx - sx, dy = ty - sy;
+                const halfw = tw / 2, halfh = th / 2;
+                const angle = Math.atan2(dy, dx);
+                let x, y;
+                if (Math.abs(dy / dx) < halfh / halfw) {
+                    x = dx > 0 ? tx - halfw : tx + halfw;
+                    y = ty + (x - tx) * Math.tan(angle);
+                } else {
+                    y = dy > 0 ? ty - halfh : ty + halfh;
+                    x = tx + (y - ty) / Math.tan(angle);
+                }
+                return { x, y };
+            }
+
+            function renderForceLayout() {
+                const { nodes, links } = getGraphData();
+                const { width, height } = svg.node().getBoundingClientRect();
+                simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(250).strength(0.8))
+                    .force("charge", d3.forceManyBody().strength(-2200))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(d => d.width / 2 + 40).strength(1));
+                const node = g.append("g").selectAll("foreignObject").data(nodes).join("foreignObject")
+                    .attr("class", "node-foreign-object").attr("width", d => d.width).attr("height", d => d.height)
+                    .call(drag(simulation))
+                    .on("click", (event, d) => { event.stopPropagation(); showEntityModal(d); })
+                    .on("mouseover", (e,d) => handleMouseOver(d, nodes, links))
+                    .on("mouseout", () => handleMouseOut(nodes, links));
+                node.html(d => createEntityHTML(d));
+                const linkGroup = g.append("g").selectAll("g.link-group").data(links).join("g").attr("class", "link-group");
+                linkGroup.append("path").attr("class", "link-path-hover").on("click", (event, d) => showLinkModal(d));
+                linkGroup.append("path").attr("class", "link-path");
+                simulation.on("tick", () => {
+                    linkGroup.each(function(d) {
+                        const startPoint = calculateIntersectionPoint(d.target, d.source);
+                        const endPoint = calculateIntersectionPoint(d.source, d.target);
+                        const pathData = `M${startPoint.x},${startPoint.y}L${endPoint.x},${endPoint.y}`;
+                        d3.select(this).select(".link-path").attr("d", pathData)
+                           .attr("marker-start", `url(#marker-${d.cardinality.split('-to-')[1]})`)
+                           .attr("marker-end", `url(#marker-${d.cardinality.split('-to-')[0]})`);
+                        d3.select(this).select(".link-path-hover").attr("d", pathData);
+                    });
+                    node.attr("x", d => d.x - d.width / 2).attr("y", d => d.y - d.height / 2);
+                    updateMinimap(nodes);
+                });
+            }
+            
+            function renderHierarchicalLayout() {
+                const { nodes, links } = getGraphData();
+                const { width, height } = svg.node().getBoundingClientRect();
+                const nodeMap = new Map(nodes.map(n => [n.id, n]));
+                const dagData = nodes.map(n => ({ id: n.id, parentIds: links.filter(l => l.source === n.id).map(l => l.target) }));
+                let dag;
+                try {
+                    dag = d3.dag.stratify()(dagData);
+                } catch (e) {
+                    console.error("DAG construction failed. This might be due to cycles.", e);
+                    renderForceLayout();
+                    return;
+                }
+                const layout = d3.dag.sugiyama().size([width, height]).nodeSize(node => {
+                    const originalNode = nodeMap.get(node.id);
+                    return originalNode ? [originalNode.width + 60, originalNode.height + 50] : [340, 200];
+                });
+                layout(dag);
+                const renderedNodes = [];
+                dag.each(node => {
+                    const originalNode = nodeMap.get(node.id);
+                    if (originalNode) {
+                        originalNode.x = node.x;
+                        originalNode.y = node.y;
+                        renderedNodes.push(originalNode);
+                    }
+                });
+                const node = g.append("g").selectAll("foreignObject").data(renderedNodes, d => d.id).join("foreignObject")
+                    .attr("class", "node-foreign-object").attr("width", d => d.width).attr("height", d => d.height)
+                    .attr("x", d => d.x - d.width / 2).attr("y", d => d.y - d.height / 2)
+                    .on("click", (event, d) => { event.stopPropagation(); showEntityModal(d); })
+                    .on("mouseover", (e,d) => handleMouseOver(d, nodes, links))
+                    .on("mouseout", () => handleMouseOut(nodes, links));
+                node.html(d => createEntityHTML(d));
+                const linkGroup = g.append("g").selectAll("g.link-group").data(dag.links()).join("g").attr("class", "link-group");
+                linkGroup.append("path").attr("class", "link-path-hover").on("click", (event, d) => {
+                    const originalLink = links.find(l => l.source === d.source.id && l.target === d.target.id);
+                    if(originalLink) showLinkModal(originalLink);
+                });
+                linkGroup.append("path").attr("class", "link-path");
+                const line = d3.line().curve(d3.curveCatmullRom).x(d => d.x).y(d => d.y);
+                linkGroup.each(function(d) {
+                    const sourceNode = nodeMap.get(d.source.id);
+                    const targetNode = nodeMap.get(d.target.id);
+                    if (d.points.length > 1) {
+                        const start = calculateIntersectionPoint({x: d.points[1].x, y: d.points[1].y}, {x: d.points[0].x, y: d.points[0].y, width: sourceNode.width, height: sourceNode.height});
+                        const end = calculateIntersectionPoint({x: d.points[d.points.length - 2].x, y: d.points[d.points.length - 2].y}, {x: d.points[d.points.length - 1].x, y: d.points[d.points.length - 1].y, width: targetNode.width, height: targetNode.height});
+                        d.points[0] = start;
+                        d.points[d.points.length - 1] = end;
+                    }
+                    d3.select(this).select(".link-path").attr("d", line(d.points));
+                    d3.select(this).select(".link-path-hover").attr("d", line(d.points));
+                    const originalLink = links.find(l => l.source === d.source.id && l.target === d.target.id);
+                    const cardinality = originalLink ? originalLink.cardinality : 'many-to-one';
+                    d3.select(this).select(".link-path")
+                        .attr("marker-start", `url(#marker-${cardinality.split('-to-')[1]})`)
+                        .attr("marker-end", `url(#marker-${cardinality.split('-to-')[0]})`);
+                });
+                updateMinimap(renderedNodes);
+            }
+
+            function handleMouseOver(d, allNodes, allLinks) {
+                g.selectAll(".node-foreign-object").style("opacity", 0.25);
+                g.selectAll(".link-group").style("opacity", 0.25);
+                const connectedLinks = allLinks.filter(l => l.source.id === d.id || l.target.id === d.id);
+                const connectedNodeIds = new Set([d.id]);
+                connectedLinks.forEach(l => {
+                    connectedNodeIds.add(l.source.id || l.source);
+                    connectedNodeIds.add(l.target.id || l.target);
+                });
+                g.selectAll(".node-foreign-object").filter(n => connectedNodeIds.has(n.id)).style("opacity", 1);
+                g.selectAll(".link-group").filter(l => (l.source.id === d.id || l.target.id === d.id) || (l.data && (l.data.source === d.id || l.data.target === d.id)))
+                    .style("opacity", 1)
+                    .select(".link-path").style("stroke", "#a78bfa");
+            }
+
+            function handleMouseOut() {
+                g.selectAll(".node-foreign-object").style("opacity", 1);
+                g.selectAll(".link-group").style("opacity", 1)
+                    .select(".link-path").style("stroke", null);
+            }
+
+            const drag = simulation => {
+                function dragstarted(event, d) { if (!event.active && simulation) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active && simulation) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
+                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+            }
+
+            // --- D3 Zoom & Minimap ---
+            const zoomHandler = d3.zoom().scaleExtent([0.2, 3]).on('zoom', (event) => {
+                g.attr('transform', event.transform);
+                updateMinimapViewport(event.transform);
+            });
+            svg.call(zoomHandler);
+
+            function updateMinimap(nodes) {
+                if (!nodes || nodes.length === 0) return;
+                const minimapWidth = 200, minimapHeight = 150;
+                const bounds = g.node().getBBox();
+                if(bounds.width === 0 || bounds.height === 0) return;
+                const scale = Math.min(minimapWidth / bounds.width, minimapHeight / bounds.height) * 0.9;
+                const offsetX = (minimapWidth - bounds.width * scale) / 2;
+                const offsetY = (minimapHeight - bounds.height * scale) / 2;
+                minimap.selectAll("rect.minimap-node").data(nodes, d => d.id).join("rect")
+                    .attr("class", "minimap-node")
+                    .attr("x", d => (d.x - d.width/2 - bounds.x) * scale + offsetX)
+                    .attr("y", d => (d.y - d.height/2 - bounds.y) * scale + offsetY)
+                    .attr("width", d => d.width * scale)
+                    .attr("height", d => d.height * scale)
+                    .attr("fill", d => ({ hub: '#22d3ee', satellite: '#a78bfa', link: '#34d399' }[d.archetype] || '#4b5563'));
+                updateMinimapViewport(d3.zoomTransform(svg.node()));
+            }
+
+            function updateMinimapViewport(transform) {
+                const minimapWidth = 200, minimapHeight = 150;
+                const { width, height } = svg.node().getBoundingClientRect();
+                const bounds = g.node().getBBox();
+                if(bounds.width === 0 || bounds.height === 0) return;
+                const scale = Math.min(minimapWidth / bounds.width, minimapHeight / bounds.height) * 0.9;
+                const offsetX = (minimapWidth - bounds.width * scale) / 2;
+                const offsetY = (minimapHeight - bounds.height * scale) / 2;
+                minimapViewport
+                    .attr("x", (-transform.x / transform.k - bounds.x) * scale + offsetX)
+                    .attr("y", (-transform.y / transform.k - bounds.y) * scale + offsetY)
+                    .attr("width", width / transform.k * scale)
+                    .attr("height", height / transform.k * scale);
+            }
+            
+            minimapViewport.call(d3.drag().on("drag", (event) => {
+                const { width, height } = svg.node().getBoundingClientRect();
+                const bounds = g.node().getBBox();
+                const minimapWidth = 200, minimapHeight = 150;
+                const scale = Math.min(minimapWidth / bounds.width, minimapHeight / bounds.height) * 0.9;
+                const currentTransform = d3.zoomTransform(svg.node());
+                const newX = currentTransform.x - event.dx * currentTransform.k / scale;
+                const newY = currentTransform.y - event.dy * currentTransform.k / scale;
+                svg.call(zoomHandler.transform, d3.zoomIdentity.translate(newX, newY).scale(currentTransform.k));
+            }));
+
+            // --- Tab Rendering Functions ---
+             const renderContractTab = () => {
+                 const doc = currentDoc;
+                 const consumesHtml = (doc.consumes || []).map((c, i) => `<li class="clickable-item" data-path="/consumes/${i}"><strong class="font-semibold text-white">${c.id}</strong>: <code class="text-xs">${c.ref}</code></li>`).join('');
+                 const exposesHtml = (doc.exposes || []).map((e, i) => {
+                     const schemaRows = (e.schema || []).map((s, si) => `
+                         <tr class="clickable-item" data-path="/exposes/${i}/schema/${si}">
+                             <td class="border border-gray-700 p-2 font-mono">${s.name}</td>
+                             <td class="border border-gray-700 p-2 font-mono">${s.type}</td>
+                             <td class="border border-gray-700 p-2">${s.description || ''}</td>
+                             <td class="border border-gray-700 p-2">${(s.tags || []).map(t => `<span class="bg-gray-700 text-xs font-medium px-2 py-1 rounded-full">${t}</span>`).join(' ')}</td>
+                         </tr>`).join('');
+                     return `
+                         <div class="mt-4 clickable-item" data-path="/exposes/${i}">
+                             <h4 class="text-lg font-semibold text-white">${e.id} <span class="text-sm font-normal text-gray-400">(${e.tags?.archetype || 'table'})</span></h4>
+                             <p class="text-sm text-gray-400 italic mt-1">${e.description}</p>
+                             <table class="w-full text-sm mt-2 border-collapse">
+                                 <thead class="bg-gray-800 text-left">
+                                     <tr>
+                                         <th class="border border-gray-700 p-2">Column</th>
+                                         <th class="border border-gray-700 p-2">Type</th>
+                                         <th class="border border-gray-700 p-2">Description</th>
+                                         <th class="border border-gray-700 p-2">Tags</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>${schemaRows}</tbody>
+                             </table>
+                         </div>
+                     `;
+                 }).join('');
+                 const testsHtml = (doc.quality?.tests || []).map((t, i) => `
+                     <div class="bg-gray-800/50 p-3 rounded-lg clickable-item" data-path="/quality/tests/${i}">
+                         <p class="font-semibold text-white">${t.name}</p>
+                         <p class="text-xs text-gray-400 font-mono mb-1">Applies to: ${t.model}</p>
+                         <p class="text-sm">${t.description}</p>
+                     </div>`).join('');
+
+                 document.getElementById('contract-pane').innerHTML = `
+                     <div class="space-y-8 text-gray-300" id="contract-content-wrapper">
+                          <div class="flex justify-between items-start">
+                             <div>
+                                 <h2 class="text-3xl font-bold text-white border-b border-gray-700 pb-2 mb-2 clickable-item" data-path="/name">${doc.name}</h2>
+                                 <p class="text-gray-400 font-mono clickable-item" data-path="/id">${doc.id}</p>
+                             </div>
+                             <button id="download-pdf-btn" class="control-btn bg-cyan-500 hover:bg-cyan-600" title="Download as PDF">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                             </button>
+                         </div>
+                         <section class="clickable-item" data-path="/metadata">
+                             <h3 class="text-xl font-semibold text-white mb-3">1. Identification</h3>
+                             <div class="grid grid-cols-2 gap-4 text-sm">
+                                 <div><strong>Domain:</strong> ${doc.domain}</div>
+                                 <div><strong>Owner:</strong> ${doc.metadata?.owner?.team || doc.metadata?.owner}</div>
+                                 <div><strong>Layer:</strong> ${doc.metadata?.layer}</div>
+                                 <div><strong>Version:</strong> ${doc.fluidVersion}</div>
+                             </div>
+                         </section>
+
+                         <section class="clickable-item" data-path="/description">
+                             <h3 class="text-xl font-semibold text-white mb-3">2. Purpose</h3>
+                             <p class="text-gray-400">${doc.description}</p>
+                         </section>
+
+                         <section>
+                             <h3 class="text-xl font-semibold text-white mb-3 clickable-item" data-path="/consumes">3. Upstream Dependencies (Consumes)</h3>
+                             <ul class="list-disc pl-5 space-y-1 text-gray-400">${consumesHtml || '<li>None</li>'}</ul>
+                         </section>
+
+                         <section>
+                             <h3 class="text-xl font-semibold text-white mb-3 clickable-item" data-path="/exposes">4. Exposed Assets</h3>
+                             ${exposesHtml}
+                         </section>
+
+                         <section>
+                             <h3 class="text-xl font-semibold text-white mb-3 clickable-item" data-path="/slo">5. Service Level Objectives</h3>
+                             <div class="grid grid-cols-3 gap-4 text-center">
+                                <div class="bg-gray-800/50 p-3 rounded-lg"><div class="text-xs text-gray-400">Freshness</div><div class="text-lg font-bold">${doc.slo?.freshnessMinutes} min</div></div>
+                                <div class="bg-gray-800/50 p-3 rounded-lg"><div class="text-xs text-gray-400">Latency</div><div class="text-lg font-bold">${doc.slo?.latencyMs} ms</div></div>
+                                <div class="bg-gray-800/50 p-3 rounded-lg"><div class="text-xs text-gray-400">Availability</div><div class="text-lg font-bold">${doc.slo?.availabilityPct}%</div></div>
+                             </div>
+                         </section>
+                         
+                         <section class="clickable-item" data-path="/build">
+                             <h3 class="text-xl font-semibold text-white mb-3">6. Build Specification</h3>
+                             <div class="text-sm">
+                                 <p><strong>Engine:</strong> <span class="font-mono">${doc.build?.engine}</span></p>
+                                 <p><strong>Model:</strong> <span class="font-mono">${doc.build?.model}</span></p>
+                             </div>
+                         </section>
+                     </div>
+                 `;
+                 document.getElementById('download-pdf-btn').addEventListener('click', downloadContractAsPDF);
+             };
+             const renderOverviewTab = () => {
+                 const doc = currentDoc;
+                 const archetypes = (doc.exposes || []).reduce((acc, p) => {
+                     const arch = p.tags?.archetype || 'other';
+                     acc[arch] = (acc[arch] || 0) + 1;
+                     return acc;
+                 }, {});
+                 const allTags = [...new Set((doc.exposes || []).flatMap(p => (p.tags ? Object.values(p.tags) : [])))];
+
+                 document.getElementById('overview-pane').innerHTML = `
+                     <p class="tab-description">This tab provides a high-level, "at-a-glance" summary of the data product's identity, purpose, and overall scope.</p>
+                     <div class="space-y-6">
+                         <div class="bg-gray-800/50 rounded-lg p-6 clickable-item" data-path="/">
+                             <h3 class="text-2xl font-bold text-white">${doc.name}</h3>
+                             <p class="text-gray-400 font-mono mb-4">${doc.id}</p>
+                             <p class="text-gray-300">${doc.description || 'No description provided.'}</p>
+                         </div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div class="bg-gray-800/50 rounded-lg p-4 clickable-item" data-path="/metadata">
+                                 <h4 class="font-semibold text-lg mb-2">Metadata</h4>
+                                 <dl class="grid grid-cols-2 gap-2 text-sm">
+                                     <dt class="text-gray-400">Domain</dt><dd>${doc.domain}</dd>
+                                     <dt class="text-gray-400">Layer</dt><dd>${doc.metadata?.layer}</dd>
+                                     <dt class="text-gray-400">Owner</dt><dd>${doc.metadata?.owner?.team || 'N/A'}</dd>
+                                     <dt class="text-gray-400">Contact</dt><dd><a href="mailto:${doc.metadata?.owner?.email}" class="text-cyan-400 hover:underline">${doc.metadata?.owner?.email || 'N/A'}</a></dd>
+                                 </dl>
+                             </div>
+                             <div class="bg-gray-800/50 rounded-lg p-4 clickable-item" data-path="/exposes">
+                                 <h4 class="font-semibold text-lg mb-2">Model Statistics</h4>
+                                 <dl class="grid grid-cols-2 gap-2 text-sm">
+                                     <dt class="text-cyan-400">Hubs</dt><dd>${archetypes.hub || 0}</dd>
+                                     <dt class="text-purple-400">Satellites</dt><dd>${archetypes.satellite || 0}</dd>
+                                     <dt class="text-green-400">Links</dt><dd>${archetypes.link || 0}</dd>
+                                     <dt class="text-gray-400">Other</dt><dd>${(archetypes.view || 0) + (archetypes.dimension || 0) + (archetypes.table || 0)}</dd>
+                                 </dl>
+                             </div>
+                         </div>
+                         <div class="bg-gray-800/50 rounded-lg p-4">
+                             <h4 class="font-semibold text-lg mb-2">Tags Used</h4>
+                             <div class="flex flex-wrap gap-2">
+                                 ${(doc.metadata.tags || []).map(tag => `<span class="bg-gray-700 text-xs font-medium px-2.5 py-1 rounded-full">${tag}</span>`).join('') || '<span class="text-sm text-gray-400">No tags defined.</span>'}
+                             </div>
+                         </div>
+                     </div>
+                 `;
+             };
+             const renderConsumesTab = () => {
+                 const items = (currentDoc.consumes || []).map((c, i) => `
+                     <div class="bg-gray-800/50 p-4 rounded-lg clickable-item" data-path="/consumes/${i}">
+                        <div class="flex justify-between items-center">
+                            <p class="font-bold text-white text-lg">${c.id}</p>
+                            <span class="text-xs bg-cyan-900/50 text-cyan-300 px-2 py-1 rounded-full">Upstream Dependency</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">${c.description || 'No description provided.'}</p>
+                        <div class="mt-3 pt-3 border-t border-gray-700/50">
+                            <p class="text-xs text-gray-500 font-mono">URN: ${c.ref}</p>
+                        </div>
+                     </div>`).join('');
+                 document.getElementById('consumes-pane').innerHTML = `<p class="tab-description">This tab lists all the upstream data products that this product depends on for its input.</p><div class="space-y-4">${items || '<div class="empty-state">This data product has no upstream dependencies.</div>'}</div>`;
+             };
+             const renderBuildTab = () => {
+                 const build = currentDoc.build || {};
+                 const trigger = build.trigger || {};
+                 const retries = build.retries || {};
+                 const notifications = (build.notifications || []).map(n => `<li><span class="font-semibold">${n.channel}:</span> <span class="font-mono text-sm">${n.target}</span></li>`).join('');
+
+                 document.getElementById('build-pane').innerHTML = `
+                     <p class="tab-description">This tab details the technical transformation logic, showing how the consumed data is processed to create the exposed outputs.</p>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-800/50 rounded-lg p-4 space-y-4 clickable-item" data-path="/build">
+                            <div>
+                                <p class="text-sm text-gray-400">Engine</p>
+                                <p class="text-lg font-bold font-mono">${build.engine || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Model/Path</p>
+                                <p class="text-lg font-mono">${build.model || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-lg p-4 space-y-4 clickable-item" data-path="/build/trigger">
+                             <div>
+                                <p class="text-sm text-gray-400">Trigger Type</p>
+                                <p class="text-lg font-bold">${trigger.type || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Schedule / Topic</p>
+                                <p class="text-lg font-mono">${trigger.cron || trigger.topic || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-lg p-4 md:col-span-2 clickable-item" data-path="/build/retries">
+                            <h4 class="font-semibold mb-2">Policies</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">Retries</p>
+                                    <p>${retries.count ? `${retries.count} times, ${retries.delaySeconds}s delay (${retries.backoff})` : 'Not configured'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Notifications</p>
+                                    <ul class="list-disc pl-5">${notifications || '<li>Not configured</li>'}</ul>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                     `;
+             };
+             const renderExposesTab = () => {
+                 const items = (currentDoc.exposes || []).map((e, i) => {
+                     const schemaSummary = `${(e.schema || []).length} columns`;
+                     const piiCount = (e.schema || []).filter(s => s.tags?.includes('pii')).length || 0;
+                     return `
+                     <div class="bg-gray-800/50 p-4 rounded-lg clickable-item" data-path="/exposes/${i}">
+                         <div class="flex justify-between items-start">
+                             <div>
+                                 <p class="font-bold text-white">${e.id}</p>
+                                 <p class="text-sm text-gray-400 mt-1">${e.description || 'No description.'}</p>
+                             </div>
+                             <span class="text-xs bg-gray-700 px-2 py-1 rounded-full flex-shrink-0">${e.tags?.archetype || 'table'}</span>
+                         </div>
+                         <div class="flex items-center gap-4 text-xs font-mono text-purple-400 mt-3 pt-3 border-t border-gray-700/50">
+                             <span>${schemaSummary}</span>
+                             ${piiCount > 0 ? `<span class="flex items-center gap-1 text-red-400"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg> ${piiCount} PII</span>` : ''}
+                         </div>
+                     </div>`}).join('');
+                 document.getElementById('exposes-pane').innerHTML = `<p class="tab-description">These are the data assets (tables, views) made available to downstream consumers as the product's outputs.</p><div class="space-y-3">${items || '<div class="empty-state">None defined.</div>'}</div>`;
+             };
+             const renderQualityTab = () => {
+                 const slo = currentDoc.slo || {};
+                 const qualityChecks = (currentDoc.exposes || []).flatMap(e => (e.quality || []).map(q => ({ ...q, portId: e.id })) );
+                 const tests = qualityChecks.map((t, i) => `
+                     <div class="bg-gray-800/50 p-4 rounded-lg clickable-item" data-path="/exposes/${i}/quality/0">
+                         <p class="font-bold text-white">${t.name}</p>
+                         <p class="text-xs text-gray-400 font-mono mb-2">Applies to: ${t.portId}</p>
+                         <p class="text-sm text-gray-300 font-mono bg-black/20 p-2 rounded">${t.rule}</p>
+                         <div class="text-xs mt-2 text-red-400">On Failure: <span class="font-semibold">${t.onFailure.action}</span> ${t.onFailure.target ? `to ${t.onFailure.target}`: ''}</div>
+                     </div>`).join('');
+                 document.getElementById('quality-pane').innerHTML = `
+                     <p class="tab-description">This tab defines the data quality contracts and service-level objectives (SLOs) that guarantee the product's reliability.</p>
+                     <h3 class="text-xl font-bold text-white mb-4">Service Level Objectives (SLOs)</h3>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 clickable-item" data-path="/slo">
+                        <div class="bg-gray-800/50 p-4 rounded-lg text-center"><div class="text-sm text-gray-400">Freshness</div><div class="text-2xl font-bold">${slo.freshnessMinutes || 'N/A'} min</div></div>
+                        <div class="bg-gray-800/50 p-4 rounded-lg text-center"><div class="text-sm text-gray-400">Query Latency</div><div class="text-2xl font-bold">${slo.latencyMs || 'N/A'} ms</div></div>
+                        <div class="bg-gray-800/50 p-4 rounded-lg text-center"><div class="text-sm text-gray-400">Availability</div><div class="text-2xl font-bold">${slo.availabilityPct || 'N/A'}%</div></div>
+                     </div>
+                     <h3 class="text-xl font-bold text-white mb-4">Contract Quality Tests</h3>
+                     <div class="space-y-3">${tests || '<div class="empty-state">No quality tests defined.</div>'}</div>
+                 `;
+             };
+            
+            const createEntityHTML = (entity) => {
+                let iconSvg = '';
+                switch(entity.archetype) {
+                    case 'hub': iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>'; break;
+                    case 'satellite': iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>'; break;
+                    case 'link': iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>'; break;
+                    default: iconSvg = '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M7 12l5-5 5 7"></path></svg>'; break;
+                }
+
+                const attributes = (entity.schema || []).map(col => {
+                    const hasPII = col.tags?.includes('pii');
+                    const iconsHTML = `
+                        <div class="flex items-center justify-end gap-1.5 ml-2">
+                            ${col.tags?.includes('primary_key') ? `<span class="attr-icon" data-tooltip="PK">🗝️</span>` : ''}
+                            ${col.tags?.includes('foreign_key') ? `<span class="attr-icon" data-tooltip="FK">🔗</span>` : ''}
+                            ${hasPII ? `<span class="attr-icon" data-tooltip="PII">👤</span>` : ''}
+                        </div>`;
+                    
+                    const liClass = hasPII ? 'class="pii-row flex justify-between items-center"' : 'class="flex justify-between items-center"';
+                    return `<li ${liClass}>
+                                <span class="truncate" title="${col.description || col.name}">${col.name}</span>
+                                <div class="flex items-center">
+                                    <span class="dv-type">${col.type}</span>
+                                    ${iconsHTML}
+                                </div>
+                            </li>`;
+                }).join('');
+
+                return `
+                    <div style="width:${entity.width}px; height:${entity.height}px; display:flex; flex-direction:column; font-size:12px;">
+                        <div class="dv-box dv-${entity.archetype} h-full flex flex-col">
+                            <div class="dv-box-title">
+                                <div class="flex items-center gap-2">${iconSvg}<span>${entity.id}</span></div>
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                            <ul class="dv-attr-list flex-grow">${attributes}</ul>
+                        </div>
+                    </div>`;
+            };
+
+            // --- Event Listeners ---
+            d3.select('#zoom-in').on('click', () => svg.transition().call(zoomHandler.scaleBy, 1.2));
+            d3.select('#zoom-out').on('click', () => svg.transition().call(zoomHandler.scaleBy, 0.8));
+            d3.select('#reset-view').on('click', () => svg.transition().call(zoomHandler.transform, d3.zoomIdentity));
+            d3.select('#rerun-layout').on('click', () => { renderModelTab() });
+            layoutSelect.addEventListener('change', () => {
+                g.attr("transform", "translate(0,0)");
+                renderModelTab();
+            });
+            
+            let viewState = 'split';
+            toggleViewBtn.addEventListener('click', () => {
+                if(viewState === 'split') {
+                    viewState = 'canvas';
+                    mainContainer.classList.remove('lg:grid-cols-2');
+                    editorPanel.classList.add('hidden');
+                } else if (viewState === 'canvas') {
+                    viewState = 'editor';
+                    canvasPanel.classList.add('hidden');
+                    editorPanel.classList.remove('hidden');
+                } else {
+                    viewState = 'split';
+                    mainContainer.classList.add('lg:grid-cols-2');
+                    canvasPanel.classList.remove('hidden');
+                }
+                setTimeout(() => { editor.refresh(); if (currentDoc) renderModelTab(); }, 150);
+            });
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const isModelTab = tab.dataset.tab === 'model';
+                    controlsWrapper.style.display = isModelTab ? 'flex' : 'none';
+                    minimap.style('display', isModelTab ? 'block' : 'none');
+                    tabPanes.forEach(pane => pane.classList.toggle('active', pane.id === `${tab.dataset.tab}-pane`));
+                });
+            });
+
+            function highlightLineInEditor(event) {
+                const target = event.target.closest('[data-path]');
+                if (!target || !target.dataset.path) return;
+                
+                const line = yamlMap.get(target.dataset.path);
+                if (line !== undefined) {
+                    editor.setSelection({line: line, ch: 0}, {line: line, ch: null});
+                    editor.scrollIntoView({line: line, ch: 0}, 200);
+                    editor.focus();
+                }
+            }
+
+            canvasPanel.addEventListener('click', highlightLineInEditor);
+            validationOutput.addEventListener('click', highlightLineInEditor);
+            
+            document.body.addEventListener('mouseover', e => {
+                const target = e.target.closest('.attr-icon');
+                if (target && target.dataset.tooltip) {
+                    tooltip.textContent = target.dataset.tooltip;
+                    tooltip.style.opacity = '1';
+                }
+            });
+            document.body.addEventListener('mouseout', e => {
+                if (e.target.closest('.attr-icon')) tooltip.style.opacity = '0';
+            });
+             document.body.addEventListener('mousemove', e => {
+                if (tooltip.style.opacity === '1') {
+                    tooltip.style.left = `${e.pageX + 15}px`;
+                    tooltip.style.top = `${e.pageY + 15}px`;
+                }
+            });
+
+            // --- Modal Functions (IMPROVED) ---
+            function showEntityModal(entity) {
+                const entityIndex = currentDoc.exposes.findIndex(e => e.id === entity.id);
+                const schemaHtml = (entity.schema || []).map((col) => `
+                    <div class="grid grid-cols-12 gap-2 items-center schema-row p-2 rounded-md hover:bg-white/5">
+                        <input class="modal-input col-span-3" data-key="name" value="${col.name || ''}" placeholder="Name">
+                        <input class="modal-input col-span-2" data-key="type" value="${col.type || ''}" placeholder="Type">
+                        <input class="modal-input col-span-3" data-key="description" value="${col.description || ''}" placeholder="Description">
+                        <input class="modal-input col-span-3" data-key="tags" value="${(col.tags || []).join(', ')}" placeholder="Tags (comma-separated)">
+                        <button class="text-red-400 hover:text-red-300 remove-schema-row col-span-1 text-2xl font-bold" title="Remove Column">&times;</button>
+                    </div>`).join('');
+
+                modalBody.innerHTML = `
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-white mb-4">Edit Port: ${entity.id}</h2>
+                        <div class="space-y-4 max-h-[60vh] overflow-y-auto p-1 pr-4">
+                            <div><label class="block text-sm font-medium text-gray-400 mb-1">ID</label><input id="edit-id" class="modal-input" value="${entity.id}" /></div>
+                            <div><label class="block text-sm font-medium text-gray-400 mb-1">Description</label><textarea id="edit-desc" class="modal-input" rows="2">${entity.description || ''}</textarea></div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Schema</label>
+                                <div id="schema-editor" class="space-y-2">${schemaHtml}</div>
+                                <button id="add-schema-row" class="mt-2 text-sm text-cyan-400 hover:text-cyan-300">+ Add Column</button>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 mt-6 pt-4 border-t border-gray-700">
+                            <button id="modal-close" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg w-full">Cancel</button>
+                            <button id="modal-save" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg w-full">Save Changes</button>
+                        </div>
+                    </div>`;
+                infoModal.classList.add('active');
+                
+                const schemaEditor = modalBody.querySelector('#schema-editor');
+                modalBody.querySelector('#add-schema-row').addEventListener('click', () => {
+                    const newRow = document.createElement('div');
+                    newRow.className = 'grid grid-cols-12 gap-2 items-center schema-row p-2 rounded-md hover:bg-white/5';
+                    newRow.innerHTML = `
+                        <input class="modal-input col-span-3" data-key="name" placeholder="Name">
+                        <input class="modal-input col-span-2" data-key="type" placeholder="Type">
+                        <input class="modal-input col-span-3" data-key="description" placeholder="Description">
+                        <input class="modal-input col-span-3" data-key="tags" placeholder="Tags (comma-separated)">
+                        <button class="text-red-400 hover:text-red-300 remove-schema-row col-span-1 text-2xl font-bold" title="Remove Column">&times;</button>`;
+                    schemaEditor.appendChild(newRow);
+                });
+
+                schemaEditor.addEventListener('click', e => {
+                    if(e.target.classList.contains('remove-schema-row')) e.target.closest('.schema-row').remove();
+                });
+
+                modalBody.querySelector('#modal-close').addEventListener('click', hideModal);
+                modalBody.querySelector('#modal-save').addEventListener('click', () => saveEntityChanges(entity.id, entityIndex));
+            }
+
+            function showAddRelationshipModal() {
+                if (!currentDoc || !currentDoc.exposes) return;
+                const portOptions = currentDoc.exposes.map(p => `<option value="${p.id}">${p.id} (${p.tags?.archetype})</option>`).join('');
+                modalBody.innerHTML = `
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-white mb-4">Add New Relationship</h2>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium text-gray-400 mb-1">From (Source)</label><select id="new-rel-source" class="modal-input">${portOptions}</select></div>
+                                <div><label class="block text-sm font-medium text-gray-400 mb-1">To (Target)</label><select id="new-rel-target" class="modal-input">${portOptions}</select></div>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-400 mb-1">Cardinality</label><select id="edit-cardinality" class="modal-input"><option value="one-to-one">One-to-One</option><option value="one-to-many">One-to-Many</option><option value="many-to-one" selected>Many-to-One</option><option value="many-to-many">Many-to-Many</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-400 mb-1">Description</label><textarea id="edit-link-desc" class="modal-input" rows="3" placeholder="Describe the relationship..."></textarea></div>
+                        </div>
+                        <div class="flex gap-4 mt-6 pt-4 border-t border-gray-700">
+                            <button id="modal-close" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg w-full">Cancel</button>
+                            <button id="modal-save" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg w-full">Create Relationship</button>
+                        </div>
+                    </div>`;
+                infoModal.classList.add('active');
+                modalBody.querySelector('#modal-close').addEventListener('click', hideModal);
+                modalBody.querySelector('#modal-save').addEventListener('click', saveNewRelationship);
+            }
+
+            function showLinkModal(linkData) {
+                const { source, target, cardinality, description } = linkData;
+                const sourceId = source.id || source;
+                const targetId = target.id || target;
+                modalBody.innerHTML = `
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-white mb-4">Edit Relationship</h2>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium text-gray-400 mb-1">From</label><input class="modal-input bg-gray-800" value="${sourceId}" readonly /></div>
+                                <div><label class="block text-sm font-medium text-gray-400 mb-1">To</label><input class="modal-input bg-gray-800" value="${targetId}" readonly /></div>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-400 mb-1">Cardinality</label><select id="edit-cardinality" class="modal-input"><option value="one-to-one" ${cardinality === 'one-to-one' ? 'selected' : ''}>One-to-One</option><option value="one-to-many" ${cardinality === 'one-to-many' ? 'selected' : ''}>One-to-Many</option><option value="many-to-one" ${cardinality === 'many-to-one' ? 'selected' : ''}>Many-to-One</option><option value="many-to-many" ${cardinality === 'many-to-many' ? 'selected' : ''}>Many-to-Many</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-400 mb-1">Description</label><textarea id="edit-link-desc" class="modal-input" rows="3">${description || ''}</textarea></div>
+                        </div>
+                        <div class="flex gap-4 mt-6 pt-4 border-t border-gray-700">
+                            <button id="modal-close" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg w-full">Cancel</button>
+                            <button id="modal-save" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg w-full">Save Changes</button>
+                        </div>
+                    </div>`;
+                infoModal.classList.add('active');
+                modalBody.querySelector('#modal-close').addEventListener('click', hideModal);
+                modalBody.querySelector('#modal-save').addEventListener('click', () => saveLinkChanges(sourceId, targetId));
+            }
+            
+            function saveNewRelationship() {
+                const sourceId = modalBody.querySelector('#new-rel-source').value;
+                const targetId = modalBody.querySelector('#new-rel-target').value;
+                if (!sourceId || !targetId || sourceId === targetId) return;
+                const sourcePort = currentDoc.exposes.find(p => p.id === sourceId);
+                if (!sourcePort) return;
+                if (!sourcePort.tags) sourcePort.tags = {};
+                if (!sourcePort.tags.relationships) sourcePort.tags.relationships = [];
+                const newRel = { to: targetId, cardinality: modalBody.querySelector('#edit-cardinality').value, description: modalBody.querySelector('#edit-link-desc').value };
+                const existingRelIndex = sourcePort.tags.relationships.findIndex(r => r.to === targetId);
+                if (existingRelIndex > -1) sourcePort.tags.relationships[existingRelIndex] = newRel;
+                else sourcePort.tags.relationships.push(newRel);
+                editor.setValue(jsyaml.dump(currentDoc, { skipInvalid: true, indent: 2 }));
+                hideModal();
+            }
+
+            function saveLinkChanges(sourceId, targetId) {
+                const sourcePort = currentDoc.exposes.find(p => p.id === sourceId);
+                if (!sourcePort || !sourcePort.tags?.relationships) return;
+                const relToUpdate = sourcePort.tags.relationships.find(r => r.to === targetId);
+                if (relToUpdate) {
+                    relToUpdate.cardinality = modalBody.querySelector('#edit-cardinality').value;
+                    relToUpdate.description = modalBody.querySelector('#edit-link-desc').value;
+                }
+                editor.setValue(jsyaml.dump(currentDoc, { skipInvalid: true, indent: 2 }));
+                hideModal();
+            }
+
+            function saveEntityChanges(originalId, entityIndex) {
+                const newId = modalBody.querySelector('#edit-id').value;
+                const newSchema = Array.from(modalBody.querySelectorAll('.schema-row')).map(row => {
+                    const name = row.querySelector('[data-key="name"]').value;
+                    const type = row.querySelector('[data-key="type"]').value;
+                    if (!name || !type) return null;
+                    const col = { name, type };
+                    const desc = row.querySelector('[data-key="description"]').value;
+                    if (desc) col.description = desc;
+                    const tags = row.querySelector('[data-key="tags"]').value.split(',').map(t => t.trim()).filter(Boolean);
+                    if (tags.length > 0) col.tags = tags;
+                    return col;
+                }).filter(Boolean);
+
+                if (entityIndex > -1) {
+                    currentDoc.exposes[entityIndex].id = newId;
+                    currentDoc.exposes[entityIndex].description = modalBody.querySelector('#edit-desc').value;
+                    currentDoc.exposes[entityIndex].schema = newSchema;
+                    if (originalId !== newId) {
+                        currentDoc.exposes.forEach(port => {
+                            port.tags?.relationships?.forEach(rel => {
+                                if (rel.to === originalId) rel.to = newId;
+                            });
+                        });
+                    }
+                }
+                editor.setValue(jsyaml.dump(currentDoc, { skipInvalid: true, indent: 2 }));
+                hideModal();
+            }
+
+            function hideModal() { infoModal.classList.remove('active'); }
+            infoModal.addEventListener('click', (e) => { if (e.target === infoModal) hideModal(); });
+            
+            function downloadContractAsPDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = currentDoc;
+                if (!doc) return;
+                const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
+                pdf.setFontSize(22).setFont("helvetica", "bold").text(doc.name, 40, 60);
+                pdf.setFontSize(12).setFont("helvetica", "normal").setTextColor(150).text(doc.id, 40, 80);
+                let y = 120;
+                const addSection = (title, contentFn) => {
+                    if (y > 700) { pdf.addPage(); y = 60; }
+                    pdf.setFontSize(16).setFont("helvetica", "bold").setTextColor(40).text(title, 40, y);
+                    y += 25;
+                    pdf.setFontSize(10).setFont("helvetica", "normal").setTextColor(100);
+                    contentFn();
+                };
+                addSection("1. Identification", () => {
+                    pdf.autoTable({ startY: y, body: [['Domain', doc.domain], ['Owner', doc.metadata?.owner?.team], ['Layer', doc.metadata?.layer], ['Version', doc.fluidVersion]], theme: 'grid' });
+                    y = pdf.autoTable.previous.finalY + 20;
+                });
+                addSection("2. Purpose", () => {
+                    const text = pdf.splitTextToSize(doc.description || 'N/A', 515);
+                    pdf.text(text, 40, y);
+                    y += text.length * 12 + 10;
+                });
+                addSection("3. Upstream Dependencies", () => {
+                   pdf.autoTable({ startY: y, head: [['ID', 'Reference (URN)']], body: (doc.consumes || []).map(c => [c.id, c.ref]), theme: 'striped' });
+                   y = pdf.autoTable.previous.finalY + 20;
+                });
+                addSection("4. Exposed Assets", () => {
+                    (doc.exposes || []).forEach(e => {
+                        if (y > 650) { pdf.addPage(); y = 60; }
+                        pdf.setFontSize(12).setFont("helvetica", "bold").setTextColor(40).text(`${e.id} (${e.tags?.archetype || 'table'})`, 40, y);
+                        y+= 15;
+                        pdf.setFontSize(9).setTextColor(150).text(e.description || '', 40, y);
+                        y+= 15;
+                        pdf.autoTable({ startY: y, head: [['Column', 'Type', 'Description', 'Tags']], body: (e.schema || []).map(s => [s.name, s.type, s.description || '', (s.tags || []).join(', ')]), theme: 'grid' });
+                        y = pdf.autoTable.previous.finalY + 20;
+                    });
+                });
+                pdf.save(`${currentDoc.id || 'data-product'}.pdf`);
+            }
+
+            // --- File & Storage Listeners ---
+            addRelationshipBtn.addEventListener('click', showAddRelationshipModal);
+            uploadBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => editor.setValue(e.target.result);
+                    reader.readAsText(file);
+                }
+            });
+
+            function downloadFile(content, fileName, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = fileName;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a); URL.revokeObjectURL(url);
+            }
+
+            downloadYmlBtn.addEventListener('click', () => downloadFile(editor.getValue(), `${currentDoc.id || 'data-product'}.yml`, 'text/yaml'));
+            downloadJsonBtn.addEventListener('click', () => {
+                try {
+                    const jsonContent = JSON.stringify(jsyaml.load(editor.getValue()), null, 2);
+                    downloadFile(jsonContent, `${currentDoc.id || 'data-product'}.json`, 'application/json');
+                } catch (e) { console.error("JSON conversion failed"); }
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                if (window.confirm('Are you sure you want to reset the editor to the selected example? Any unsaved changes will be lost.')) {
+                    loadSelectedExample();
+                }
+            });
+
+            let debounceTimer;
+            editor.on('change', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => loadAndValidateSchema(), 500);
+            });
+            
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-theme');
+                const isLight = document.body.classList.contains('light-theme');
+                editor.setOption('theme', isLight ? 'eclipse' : 'material-darker');
+                themeIcons.dark.classList.toggle('hidden', isLight);
+                themeIcons.light.classList.toggle('hidden', !isLight);
+            });
+
+            function loadSelectedExample() {
+                const selectedValue = exampleSelect.value;
+                const yamlContent = exampleDataProducts[selectedValue];
+                if (yamlContent) editor.setValue(yamlContent.trim());
+            }
+            exampleSelect.addEventListener('change', loadSelectedExample);
+
+
+            // --- App Initialization ---
+            loadSelectedExample();
+        });
+    </script>
+</body>
+</html>
