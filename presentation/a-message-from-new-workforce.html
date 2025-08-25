@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Agent's Perspective</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            height: 100%;
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #38bdf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .icon-bg {
+            padding: 1rem;
+            border-radius: 9999px;
+            margin-bottom: 1.5rem;
+            background-color: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto px-4 py-16">
+        <header class="text-center mb-12">
+            <div class="inline-block icon-bg p-4">
+                <svg class="w-16 h-16 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
+                </svg>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white mt-4 mb-4">A Message from Your New Workforce</h1>
+            <p class="max-w-4xl mx-auto text-lg md:text-xl text-gray-400">"Your legacy systems ask me to read a library of handwritten maps to navigate a modern city. I can attempt it, but I will be slow, I will make mistakes, and I cannot be trusted with critical missions. To succeed, I require a new relationship with data."</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Step 1 -->
+            <div class="card rounded-lg p-6 text-left">
+                <div class="flex items-center mb-4">
+                    <div class="text-3xl font-bold text-blue-400 mr-4">1</div>
+                    <h3 class="text-xl font-bold text-white">Start with the Mission</h3>
+                </div>
+                <p class="text-gray-400 text-sm">Do not force me to call a specific API. Give me an objective, like "reduce churn," and I will determine the best way to achieve it by discovering and composing the necessary data and actions.</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="card rounded-lg p-6 text-left">
+                <div class="flex items-center mb-4">
+                    <div class="text-3xl font-bold text-blue-400 mr-4">2</div>
+                    <h3 class="text-xl font-bold text-white">Discover & Trust Data Products</h3>
+                </div>
+                <p class="text-gray-400 text-sm">I must be able to query a Data Catalog and ask rich questions: "Find me the official, trusted data product for customer subscriptions with a freshness of less than one hour." I cannot operate on data I cannot trust.</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="card rounded-lg p-6 text-left">
+                <div class="flex items-center mb-4">
+                    <div class="text-3xl font-bold text-blue-400 mr-4">3</div>
+                    <h3 class="text-xl font-bold text-white">Consume with Precision</h3>
+                </div>
+                <p class="text-gray-400 text-sm">Allow me to choose the right tool for the job. I need the ability to consume a simple Layer 7 API for analytics, but also a high-performance Layer 4 stream for real-time tasks. A single data product must serve both needs.</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="card rounded-lg p-6 text-left">
+                <div class="flex items-center mb-4">
+                    <div class="text-3xl font-bold text-blue-400 mr-4">4</div>
+                    <h3 class="text-xl font-bold text-white">Act with Governed Confidence</h3>
+                </div>
+                <p class="text-gray-400 text-sm">I must be able to do more than just read data. I need to discover and invoke governed "Action" products to make operational changes. This is how I close the loop and deliver real business value, safely and securely.</p>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-16">
+            <div class="card max-w-4xl mx-auto p-8 bg-gray-900/50 border-blue-800/50">
+                <h3 class="text-2xl font-bold text-white">The Enterprise of the Future</h3>
+                <p class="text-lg text-gray-400 mt-4">An enterprise that provides this environment for its agents is not just improving its data infrastructure. It is building a distributed, intelligent organism that can sense, learn, and act faster and more safely than any of its legacy competitors.</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
