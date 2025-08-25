@@ -3,489 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLUID Protocol - The Shared Language for the Agentic Data Fabric</title>
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png">
+    <title>Presentation Shell</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FIX: Added GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #02042B;
-            color: #E2E8F0;
-            overflow-x: hidden;
-            cursor: default;
+            background-color: #000000;
+            color: #e5e5e5;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-        #canvas-container {
+
+        #slide-frame {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; 
-            pointer-events: none;
-        }
-        .font-sora {
-            font-family: 'Sora', sans-serif;
-        }
-        .glass-card {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(56, 73, 106, 0.5);
-        }
-        .gradient-text {
-            background: linear-gradient(90deg, #38BDF8, #A78BFA);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 0.75rem;
-            border: 1px solid transparent;
-            background: linear-gradient(135deg, rgba(56, 73, 106, 0.5), rgba(15, 23, 42, 0.1)) border-box;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: destination-out;
-            mask-composite: exclude;
-        }
-        .glow-effect {
-            position: absolute;
-            pointer-events: none;
-            z-index: -2;
-            opacity: 0.15;
-            filter: blur(120px);
-        }
-        .hero-title-char {
-            display: inline-block;
-            transition: color 0.2s ease-out, transform 0.2s ease-out;
-            cursor: pointer;
-        }
-        .btn {
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
             border: none;
-            outline: none;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            z-index: 10;
+            background-color: #000000;
+            z-index: 1;
         }
-        @media (min-width: 768px) { /* md breakpoint */
-            .btn {
-                padding: 0.75rem 2.25rem;
-                font-size: 1.125rem;
+        
+        /* --- UI Elements --- */
+
+        #presentation-title {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #737373;
+            z-index: 20;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #logo-container {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 20;
+        }
+        #logo-container img {
+            height: 40px;
+            opacity: 0.5;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #logo-container:hover img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        @keyframes pulsate {
+            0% {
+                transform: translateY(-50%) scale(1);
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+            }
+            50% {
+                transform: translateY(-50%) scale(1.05);
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+            }
+            100% {
+                transform: translateY(-50%) scale(1);
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
             }
         }
-        .btn:active {
-            transform: scale(0.97);
-        }
-        .btn-primary {
-            background: linear-gradient(90deg, #38BDF8, #6D28D9);
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(17, 24, 39, 0.5);
+            backdrop-filter: blur(5px);
             color: white;
-            border-bottom: 4px solid #4c1d95;
-            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.4);
+            border-radius: 50%;
+            border: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.4; /* Slightly more visible by default */
+            transition: all 0.3s ease;
+            z-index: 10;
+            animation: pulsate 3s infinite ease-in-out;
         }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px -10px rgba(99, 102, 241, 0.6);
-            filter: brightness(1.1);
+        .nav-arrow:hover {
+            opacity: 1 !important;
+            transform: translateY(-50%) scale(1.1);
+            background-color: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.5);
+            animation: none; /* Pause pulsation on hover for a clean scale effect */
         }
-        .btn-primary:active {
-            transform: translateY(2px);
-            border-bottom-width: 2px;
+        .nav-arrow:disabled {
+            opacity: 0 !important;
+            transform: translateY(-50%) scale(0.9);
+            cursor: not-allowed;
+            animation: none;
         }
-        .btn-secondary {
-            background-color: rgba(51, 65, 85, 0.5);
-            color: #E2E8F0;
-            border-bottom: 4px solid #1E293B;
+        #prev-btn { left: 1.5rem; }
+        #next-btn { right: 1.5rem; }
+        .nav-arrow svg { width: 24px; height: 24px; }
+
+        #top-controls {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            z-index: 10;
         }
-        .btn-secondary:hover {
-            background-color: #334155;
-            transform: translateY(-2px);
+        #slide-counter {
+            font-weight: 700;
+            color: #a3a3a3;
+            background-color: rgba(17, 24, 39, 0.7);
+            padding: 0.35rem 1rem;
+            border-radius: 1rem;
+            border: 1px solid #334155;
         }
-        .btn-secondary:active {
-            transform: translateY(2px);
-            border-bottom-width: 2px;
+        #fullscreen-btn {
+            width: 44px; height: 44px;
+            background-color: rgba(17, 24, 39, 0.7);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #334155;
+            transition: background-color 0.3s ease;
+        }
+        #fullscreen-btn:hover { background-color: #334155; }
+        #fullscreen-btn svg { width: 20px; height: 20px; }
+
+        #progress-bar-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: transparent;
+            z-index: 20;
+        }
+        #progress-bar {
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #FBBF24, #F59E0B);
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            transition: width 0.3s ease;
         }
     </style>
 </head>
-<body x-data="{ mobileMenuOpen: false }" @keydown.escape.window="mobileMenuOpen = false">
+<body>
+    <iframe id="slide-frame" title="Current Slide"></iframe>
 
-    <div id="canvas-container"></div>
-    <div class="glow-effect -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500 rounded-full"></div>
-    <div class="glow-effect -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-500 rounded-full"></div>
-    
-    <!-- Header with Mobile Menu -->
-    <header x-data="{ scrolled: false }" @scroll.window="scrolled = (window.scrollY > 10)" 
-            :class="{ 'glass-card': scrolled }" 
-            class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-        <div class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-            <a href="#" class="flex items-center space-x-3 z-50">
-                <img src="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png" alt="FLUID Logo" class="h-8 w-8" onerror="this.style.display='none'">
-                <span class="font-sora text-2xl font-bold text-slate-100">FLUID</span>
-            </a>
-            
-            <!-- Desktop Navigation -->
-            <nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-slate-300">
-                <a href="#vision" class="hover:text-sky-400 transition-colors">Vision</a>
-                <a href="#concepts" class="hover:text-sky-400 transition-colors">Concepts</a>
-                <a href="#why-fluid" class="hover:text-sky-400 transition-colors">Why FLUID</a>
-                <a href="#examples" class="hover:text-sky-400 transition-colors">Examples</a>
-                <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="hover:text-sky-400 transition-colors">Read the Spec</a>
-            </nav>
-            
-            <!-- Mobile Menu Button -->
-            <div class="md:hidden flex items-center">
-                <button @click="mobileMenuOpen = !mobileMenuOpen" class="z-50 text-slate-300 focus:outline-none">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+    <h1 id="presentation-title"></h1>
 
-        <!-- Mobile Menu Panel -->
-        <div x-show="mobileMenuOpen" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 transform -translate-y-2"
-             x-transition:enter-end="opacity-100 transform translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 transform translate-y-0"
-             x-transition:leave-end="opacity-0 transform -translate-y-2"
-             @click.away="mobileMenuOpen = false"
-             class="md:hidden glass-card absolute top-0 inset-x-0 p-2 transition transform origin-top-right">
-            <div class="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-slate-800/80 divide-y-2 divide-slate-700">
-                <div class="pt-20 pb-6 px-5">
-                    <div class="grid grid-cols-1 gap-y-8 text-center">
-                        <a href="#vision" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Vision</a>
-                        <a href="#concepts" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Concepts</a>
-                        <a href="#why-fluid" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Why FLUID</a>
-                        <a href="#examples" @click="mobileMenuOpen = false" class="text-base font-medium text-slate-200 hover:text-sky-400">Examples</a>
-                        <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="text-base font-medium text-slate-200 hover:text-sky-400">Read the Spec</a>
-                        <a href="https://github.com/open-data-protocol/fluid" target="_blank" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-sky-600 hover:bg-sky-700">View on GitHub</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Navigation Arrows -->
+    <button id="prev-btn" class="nav-arrow" title="Previous (Left Arrow)">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+    </button>
+    <button id="next-btn" class="nav-arrow" title="Next (Right Arrow)">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+    </button>
 
-    <main class="relative z-10">
-        <!-- Hero Section -->
-        <section id="vision" class="min-h-screen flex items-center pt-28 md:pt-32 pb-16">
-            <div class="container mx-auto px-4 sm:px-6 text-center">
-                <div class="relative inline-block mx-auto mb-8 h-24 w-24 md:h-32 md:w-32">
-                    <img src="https://raw.githubusercontent.com/open-data-protocol/fluid/main/fluid-logo.png" class="mx-auto h-full w-full fluid-logo" style="filter: drop-shadow(0 4px 24px #38BDF8aa);" alt="FLUID Logo">
-                </div>
-                <h1 id="fluid-title" class="font-sora text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-none mb-4 text-slate-300 select-none">
-                    <span class="hero-title-char">F</span><span class="hero-title-char">L</span><span class="hero-title-char">U</span><span class="hero-title-char">I</span><span class="hero-title-char">D</span>
-                </h1>
-                <h2 class="font-sora text-2xl sm:text-3xl md:text-5xl font-bold leading-tight mb-8">
-                    The <span class="gradient-text">Shared Data Product Language</span><br>for the Agentic Data Fabric
-                </h2>
-                <p class="max-w-3xl mx-auto text-base sm:text-lg md:text-xl text-slate-300 mb-12">
-                    FLUID is an open, declarative standard for defining Data Products. It replaces brittle pipelines with a trustworthy, governable, and scalable protocol, making your entire data ecosystem ready for the agentic era.
-                </p>
-                <div class="flex justify-center flex-wrap gap-4">
-                    <a href="https://raw.githubusercontent.com/open-data-protocol/fluid/main/why-fluid.pdf" download="why-fluid.pdf" class="btn btn-secondary">Why?</a>
-                    <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="btn btn-primary">Specification</a>
-                    <a href="https://github.com/open-data-protocol/fluid/blob/main/examples.md" target="_blank" class="btn btn-secondary">How</a>
-                </div>
-            </div>
-        </section>
+    <!-- Top-right Controls -->
+    <div id="top-controls">
+        <div id="slide-counter"></div>
+        <button id="fullscreen-btn" title="Toggle Fullscreen (F)">
+            <svg id="fullscreen-icon-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+            <svg id="fullscreen-icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9V4.5M15 9h4.5M15 9l5.25-5.25M15 15v4.5M15 15h4.5M15 15l5.25 5.25" /></svg>
+        </button>
+    </div>
 
-        <!-- C-Suite Strategic Imperative Section -->
-        <section id="strategy" class="py-16 md:py-20 bg-slate-900/50">
-            <div class="container mx-auto px-4 sm:px-6">
-                <div class="text-center mb-12 md:mb-16">
-                    <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">The Strategic Imperative</h2>
-                    <p class="max-w-3xl mx-auto text-slate-400">For business leaders, adopting FLUID is a strategic decision that addresses core enterprise challenges and unlocks new value.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                    <div class="glass-card p-8 rounded-xl">
-                        <div class="text-rose-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
-                        <h3 class="font-sora text-xl font-bold mb-2">Reduce Risk & Secure Data</h3>
-                        <p class="text-slate-300">Convert hidden data risk into an auditable asset. By embedding security, privacy, and quality contracts into code, you prevent data breaches and compliance failures by design, not as a reactive afterthought.</p>
-                    </div>
-                    <div class="glass-card p-8 rounded-xl">
-                        <div class="text-amber-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg></div>
-                        <h3 class="font-sora text-xl font-bold mb-2">Lower TCO & Increase Efficiency</h3>
-                        <p class="text-slate-300">Eliminate redundant engineering efforts by establishing a "data product factory." Build a trusted data asset once, and empower dozens of teams to reuse it, drastically lowering the total cost of ownership of your data platform.</p>
-                    </div>
-                    <div class="glass-card p-8 rounded-xl">
-                        <div class="text-teal-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></div>
-                        <h3 class="font-sora text-xl font-bold mb-2">Accelerate Innovation Velocity</h3>
-                        <p class="text-slate-300">Unleash your teams by providing a self-service catalog of reliable, discoverable data products. The time-to-market for new analytics and AI features collapses from months to days, allowing you to outpace the competition.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <a id="logo-container" href="#" target="_blank">
+        <img id="logo-img" alt="Logo">
+    </a>
 
-        <!-- What FLUID Stands For Section -->
-        <section class="py-16 md:py-20">
-            <div class="container mx-auto px-4 sm:px-6">
-                <div class="glass-card rounded-xl p-8 md:p-12 text-center">
-                    <h2 class="font-sora text-2xl md:text-3xl font-bold mb-6 text-slate-100">What is FLUID?</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
-                        <div><h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Federated</h3><p class="text-slate-300">Enabling a Data Mesh where ownership is distributed across domains, with FLUID files co-located with the data products they define.</p></div>
-                        <div><h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Layered</h3><p class="text-slate-300">Building reliable data products in logical layers, from raw to refined (Bronze, Silver, Gold), creating clear, traceable lineage.</p></div>
-                        <div><h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Unified</h3><p class="text-slate-300">Bringing a product's interface (`exposes`), dependencies (`consumes`), and implementation (`build`) into a single definition.</p></div>
-                        <div><h3 class="font-sora text-xl font-bold text-sky-400 mb-2">Interchange Definition</h3><p class="text-slate-300">Serving as a universal language for defining and sharing data products between humans, tools, and autonomous agents.</p></div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
 
-        <!-- Core Concepts -->
-        <section id="concepts" class="py-16 md:py-20 bg-slate-900/50">
-             <div class="container mx-auto px-4 sm:px-6">
-                <div class="text-center mb-12 md:mb-16">
-                    <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">A New Way of Thinking</h2>
-                    <p class="max-w-2xl mx-auto text-slate-400">FLUID is built on a set of foundational principles that enable a truly modern data architecture.</p>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">1. Data as a Product</h3><p class="text-slate-400">Shift from thinking about "pipelines" to "products"—versioned assets with clear interfaces, quality guarantees, and owners.</p></div>
-                    <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">2. Declarative, Not Imperative</h3><p class="text-slate-400">Define the desired **end state** of your data product. FLUID-compliant tools figure out the best way to implement it.</p></div>
-                    <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">3. Contracts as Code</h3><p class="text-slate-400">Embed schema, quality, and privacy rules directly into version-controlled files. Make governance an automated, proactive process.</p></div>
-                    <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">4. Federated Ownership</h3><p class="text-slate-400">FLUID files are decentralized and co-located with the domain teams that own them, enabling a true, scalable Data Mesh.</p></div>
-                    <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">5. Compliant Ecosystem</h3><p class="text-slate-400">FLUID is a standard that **delegates execution** to the tools you already use, fostering an open, composable ecosystem.</p></div>
-                    <div class="feature-card p-6 rounded-lg"><h3 class="font-sora text-xl font-semibold mb-2">6. Adaptive & Context-Aware</h3><p class="text-slate-400">Through dynamic policies, access rights can change based on the consuming agent's context, such as its intent or risk profile.</p></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Why FLUID Section -->
-        <section id="why-fluid" class="py-16 md:py-20">
-            <div class="container mx-auto px-4 sm:px-6">
-                <div class="text-center mb-12 md:mb-16">
-                    <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">The Missing Protocol</h2>
-                    <p class="max-w-3xl mx-auto text-slate-400">The modern data stack is powerful but disconnected. Tools for orchestration, transformation, and governance don't speak a common language. FLUID is the missing piece that unifies them.</p>
-                </div>
-                <div class="grid md:grid-cols-3 gap-8 text-center">
-                    <div class="glass-card p-8 rounded-xl">
-                        <div class="text-sky-400 mb-4 inline-block"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
-                        <h3 class="font-sora text-xl font-semibold mb-2">Orchestrators</h3>
-                        <p class="text-slate-400">Know *how* to run tasks, but not *what* the data contracts are.</p>
-                    </div>
-                    <div class="glass-card p-8 rounded-xl">
-                         <div class="text-purple-400 mb-4 inline-block"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18h2a4 4 0 0 0 4-4v-3"></path><path d="M8 6H6a4 4 0 0 0-4 4v3"></path><path d="M12 12v4"></path><path d="M12 8v1"></path><path d="M12 20v1"></path><path d="M12 3v1"></path><path d="m15 12-3-3-3 3"></path></svg></div>
-                        <h3 class="font-sora text-xl font-semibold mb-2">Transformation Tools</h3>
-                        <p class="text-slate-400">Know *what* the contracts are, but not *how* data was ingested or *who* can access it.</p>
-                    </div>
-                    <div class="glass-card p-8 rounded-xl">
-                         <div class="text-emerald-400 mb-4 inline-block"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v.01"></path><path d="M15 9.34a4 4 0 1 0 0 5.32"></path><path d="M9 9.34a4 4 0 1 1 0 5.32"></path></svg></div>
-                        <h3 class="font-sora text-xl font-semibold mb-2">Data Catalogs</h3>
-                        <p class="text-slate-400">Know *who* should have access, but can't enforce it and are often out of date.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Examples Section -->
-        <section id="examples" class="py-16 md:py-20 bg-slate-900/50">
-            <div class="container mx-auto px-4 sm:px-6">
-                <div class="text-center mb-12 md:mb-16">
-                    <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">A Journey Through FLUID</h2>
-                    <p class="max-w-2xl mx-auto text-slate-400">Follow the logical layering of data products, from raw source ingestion to a final, consumer-aligned asset.</p>
-                </div>
-                
-                <div x-data="{ tab: 'source' }" class="glass-card rounded-xl overflow-hidden">
-                    <div class="bg-slate-800/50 p-2 flex flex-col sm:flex-row items-center sm:space-x-2 space-y-2 sm:space-y-0">
-                        <button @click="tab = 'source'" :class="{'bg-sky-500 text-white': tab === 'source', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'source'}" class="w-full sm:w-auto flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">1. Source (Ingestion)</button>
-                        <button @click="tab = 'domain'" :class="{'bg-sky-500 text-white': tab === 'domain', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'domain'}" class="w-full sm:w-auto flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">2. Domain (Transform)</button>
-                        <button @click="tab = 'consumer'" :class="{'bg-sky-500 text-white': tab === 'consumer', 'bg-slate-700/50 text-slate-300 hover:bg-slate-700': tab !== 'consumer'}" class="w-full sm:w-auto flex-1 text-center font-semibold py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">3. Consumer (Access)</button>
-                    </div>
-                    
-                    <div x-show="tab === 'source'" class="p-4 sm:p-6">
-                        <h3 class="font-sora text-xl font-semibold text-sky-400">Bronze Layer: Contract-Driven Ingestion</h3>
-                        <p class="text-slate-400 mb-4">This product ingests raw events from a Kafka topic, but enforces quality and privacy rules *in-flight* before the data ever lands in cloud storage.</p>
-                        <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
-fluidVersion: "1.1"
-kind: DataProduct
-metadata:
-  dataProduct: finance.bronze.raw_payments
-  owner: { team: 'data-platform' }
-consumes:
-  - type: kafka
-    connection: secret:onprem-kafka-creds
-    format: { type: 'json' }
-    properties: { topic: 'prod.financial.payments' }
-exposes:
-  location:
-    type: gcs
-    format: { type: 'parquet' }
-    properties: { bucket: 'prod-finance-landing' }
-  contract:
-    schema: { columns: [{name: payment_id, type: STRING}, {name: amount, type: NUMERIC}, {name: user_email_hash, type: STRING}] }
-    quality:
-      - rule: "amount > 0"
-        onFailure: { action: 'reject_row' }
-    privacy:
-      - columns: [user_email]
-        treatment: { type: hashing, properties: { algorithm: SHA256 }, newColumn: 'user_email_hash' }
-build:
-  execution: { trigger: { type: 'streaming' }, runtime: { type: 'gcp-dataflow' } }
-                        </code></pre>
-                    </div>
-
-                    <div x-show="tab === 'domain'" class="p-4 sm:p-6" style="display: none;">
-                        <h3 class="font-sora text-xl font-semibold text-purple-400">Silver Layer: Transformation with dbt</h3>
-                        <p class="text-slate-400 mb-4">This product consumes the Bronze data, delegates transformation to a dbt model, and inherits its contract directly from the dbt `schema.yml`.</p>
-                        <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
-fluidVersion: "1.1"
-kind: DataProduct
-metadata:
-  dataProduct: marketing.silver.campaign_performance
-  owner: { team: 'marketing-analytics' }
-consumes:
-  - type: fluid-product
-    name: marketing.bronze.raw_spend
-exposes:
-  location:
-    type: bigquery
-    properties: { dataset: 'silver', table: 'campaign_performance' }
-  contract:
-    inheritFrom: dbt
-    model: 'campaign_performance'
-build:
-  transformation:
-    engine: dbt
-    properties:
-      projectDir: './dbt/marketing_project/'
-      command: 'build'
-      models: ['+campaign_performance']
-  execution:
-    trigger: { type: 'schedule', properties: { cron: '0 4 * * *' } }
-    runtime: { type: 'airflow' }
-                        </code></pre>
-                    </div>
-
-                    <div x-show="tab === 'consumer'" class="p-4 sm:p-6" style="display: none;">
-                        <h3 class="font-sora text-xl font-semibold text-emerald-400">Gold Layer: Secure & Purpose-Built</h3>
-                        <p class="text-slate-400 mb-4">This product serves features to an ML agent. Access is tightly controlled by a policy that only grants read access to the specific agent.</p>
-                        <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
-fluidVersion: "1.1"
-kind: DataProduct
-metadata:
-  dataProduct: ml.gold.churn_features
-  owner: { team: 'ml-engineering' }
-consumes:
-  - type: fluid-product
-    name: customers.silver.trusted_customers
-exposes:
-  location:
-    type: redis
-    connection: secret:ml-feature-store-creds
-  contract:
-    schema: { columns: [{name: customer_id, type: STRING}, {name: ltv, type: NUMERIC}] }
-  accessPolicy:
-    visibility: private
-    grants:
-      - principal: agent:churn-prediction-model-v2
-        permissions: [readData]
-build:
-  transformation:
-    engine: python
-    properties: { entrypoint: 'features/churn.py:calculate' }
-  execution: { trigger: { type: 'schedule', properties: { cron: '0 1 * * *' } } }
-                        </code></pre>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section id="cta" class="py-16 md:py-20">
-            <div class="container mx-auto px-4 sm:px-6 text-center">
-                <h2 class="font-sora text-3xl md:text-4xl font-bold mb-4">Ready to Build the Future?</h2>
-                <p class="max-w-xl mx-auto text-slate-300 mb-10">
-                    FLUID is an open-source standard, and we welcome contributions from the community. Join us in defining the next era of data engineering.
-                </p>
-                 <a href="https://github.com/open-data-protocol/fluid/blob/main/contribute.md" target="_blank" class="btn btn-primary inline-block">Join the Community & Contribute</a>
-            </div>
-        </section>
-    </main>
-
-    <footer class="text-center py-8 border-t border-slate-800">
-        <p class="text-slate-500 px-4">The FLUID Protocol. An open standard for the agentic era.</p>
-    </footer>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const title = document.getElementById('fluid-title');
-            const chars = title.getElementsByClassName('hero-title-char');
-            const colors = ['#38BDF8', '#818CF8', '#A78BFA', '#F472B6', '#EC4899'];
-            Array.from(chars).forEach((char, index) => {
-                char.addEventListener('mouseover', () => {
-                    char.style.color = colors[index % colors.length];
-                    char.style.transform = 'scale(1.1)';
-                });
-                char.addEventListener('mouseleave', () => {
-                    char.style.color = '';
-                    char.style.transform = 'scale(1)';
-                });
-            });
+            const slideFrame = document.getElementById('slide-frame');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slideCounter = document.getElementById('slide-counter');
+            const progressBar = document.getElementById('progress-bar');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const fullscreenIconOpen = document.getElementById('fullscreen-icon-open');
+            const fullscreenIconClose = document.getElementById('fullscreen-icon-close');
+            const presentationTitleEl = document.getElementById('presentation-title');
+            const logoImg = document.getElementById('logo-img');
+            const logoContainer = document.getElementById('logo-container');
 
-            let scene, camera, renderer, particles;
+            // --- CONFIGURATION ---
+            // Edit this object to configure your presentation.
+            // To make a slide have NO title, set its title to: null
+            const CONFIG = {
+                "title": "FLUID - Data Products",
+                "logoUrl": "./logo.png",
+                "logoLink": "https://github.com/open-data-protocol/fluid", // Link for the logo
+                "slides": [
+                    { "file": "./presentation/intro.html", "title": "." },
+                    { "file": "./presentation/new-way-of-thinking.html", "title": "." },
+                    { "file": "./presentation/anatomy-of-a-data-product.html", "title": "anatomy-of-a-data-product" },
+                    { "file": "./presentation/restructure.html", "title": "Multi-file Structure" },
+                    { "file": "./presentation/cicd-for-data-products.html", "title": "cicd-for-data-products" },
+                    { "file": "./presentation/a-message-from-new-workforce.html", "title": "A message from your Agent workforce" },
+                    { "file": "./presentation/data-product-ide.html", "title": "Data Product IDE" },
+                    { "file": "./presentation/contribute.html", "title": "contribute" }
+                ]
+            };
+            // ---------------------
+
+            let slides = [];
+            let currentSlideIndex = 0;
+
             function init() {
-                const container = document.getElementById('canvas-container');
-                if (!container) return; // Exit if container not found
-                
-                // --- Mobile performance optimization ---
-                const isMobile = window.innerWidth < 768;
-                const particleCount = isMobile ? 800 : 2500; // Use fewer particles on mobile
+                try {
+                    document.title = CONFIG.title || 'Presentation';
+                    logoImg.src = CONFIG.logoUrl || '';
+                    logoContainer.href = CONFIG.logoLink || '#';
+                    if (!CONFIG.logoUrl) logoContainer.style.display = 'none';
 
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                camera.position.z = 15;
-                renderer = new THREE.WebGLRenderer({ alpha: true });
-                renderer.setPixelRatio(window.devicePixelRatio);
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                container.appendChild(renderer.domElement);
-                
-                const particlesGeometry = new THREE.BufferGeometry();
-                const posArray = new Float32Array(particleCount * 3);
-                for (let i = 0; i < particleCount * 3; i++) {
-                    posArray[i] = (Math.random() - 0.5) * 50;
+                    slides = CONFIG.slides;
+                    if (slides.length > 0) {
+                        loadSlide(0);
+                    } else {
+                        showError("No slides found in the CONFIG object.");
+                    }
+                } catch (error) {
+                    showError("Could not process the CONFIG object.");
+                    console.error("Error initializing presentation:", error);
                 }
-                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-                const particleMaterial = new THREE.PointsMaterial({
-                    size: 0.03,
-                    color: 0x38BDF8,
-                    transparent: true,
-                    opacity: 0.6,
-                    blending: THREE.AdditiveBlending
+            }
+
+            function loadSlide(index) {
+                if (index < 0 || index >= slides.length) return;
+                
+                const oldIndex = currentSlideIndex;
+                currentSlideIndex = index;
+                const currentSlide = slides[currentSlideIndex];
+                
+                // Fade out old content
+                gsap.to(slideFrame, {
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: "power2.in",
+                    onComplete: () => {
+                        slideFrame.src = currentSlide.file;
+                        // Fade in new content
+                        gsap.to(slideFrame, {
+                            opacity: 1,
+                            duration: 0.5,
+                            ease: "power2.out",
+                            delay: 0.1
+                        });
+                    }
                 });
-                particles = new THREE.Points(particlesGeometry, particleMaterial);
-                scene.add(particles);
-                window.addEventListener('resize', onWindowResize, false);
-            }
 
-            function onWindowResize() {
-                if (!camera || !renderer) return;
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-
-            function animate() {
-                if (!particles || !renderer || !scene || !camera) return;
-                requestAnimationFrame(animate);
-                const time = Date.now() * 0.00005;
-                particles.rotation.y = time * 0.2;
-                particles.rotation.x = time * 0.1;
-                renderer.render(scene, camera);
+                // Update the title
+                if (currentSlide.title === null) {
+                    presentationTitleEl.style.display = 'none';
+                } else {
+                    presentationTitleEl.style.display = 'block';
+                    presentationTitleEl.textContent = currentSlide.title || CONFIG.title || '';
+                }
+                
+                updateUI();
             }
             
+            function showError(message) {
+                slideFrame.srcdoc = `<div class="bg-gray-900 text-red-500 h-full flex items-center justify-center text-center p-8 text-lg">${message}</div>`;
+                updateUI();
+            }
+
+            function updateUI() {
+                const totalSlides = slides.length;
+                slideCounter.textContent = totalSlides > 0 ? `${currentSlideIndex + 1} / ${totalSlides}` : `0 / 0`;
+                prevBtn.disabled = currentSlideIndex === 0;
+                nextBtn.disabled = currentSlideIndex === slides.length - 1;
+                const progress = totalSlides > 1 ? (currentSlideIndex / (totalSlides - 1)) * 100 : (totalSlides === 1 ? 100 : 0);
+                progressBar.style.width = `${progress}%`;
+            }
+
+            function changeSlide(direction) {
+                const newIndex = currentSlideIndex + direction;
+                if (newIndex >= 0 && newIndex < slides.length) {
+                    loadSlide(newIndex);
+                }
+            }
+            
+            function toggleFullscreen() {
+                try {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                } catch (err) {
+                    console.error("Fullscreen API error:", err);
+                    fullscreenBtn.style.display = 'none'; // Hide button if API fails
+                }
+            }
+
+            // Event Listeners
+            prevBtn.addEventListener('click', () => changeSlide(-1));
+            nextBtn.addEventListener('click', () => changeSlide(1));
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') changeSlide(1);
+                else if (e.key === 'ArrowLeft') changeSlide(-1);
+                else if (e.key.toLowerCase() === 'f') toggleFullscreen();
+            });
+            
+            document.addEventListener('fullscreenchange', () => {
+                const isFullscreen = !!document.fullscreenElement;
+                fullscreenIconOpen.classList.toggle('hidden', isFullscreen);
+                fullscreenIconClose.classList.toggle('hidden', !isFullscreen);
+            });
+
             init();
-            animate();
         });
     </script>
 </body>
