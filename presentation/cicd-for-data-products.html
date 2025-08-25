@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLUID Data Product: CI/CD & Governance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            overflow-x: hidden;
+        }
+        .card {
+            background-color: #161b22;
+            border: 2px solid #30363d;
+            transition: all 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+        .interactive-card {
+            cursor: pointer;
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #58a6ff, #a05195);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .layer {
+            border: 2px dashed #30363d;
+            border-radius: 1rem;
+            padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+            position: relative;
+        }
+        .layer-title {
+            position: absolute;
+            top: -1rem;
+            left: 1rem;
+            background-color: #0d1117;
+            padding: 0 0.5rem;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            z-index: 50;
+            opacity: 0;
+            transition: transform 1s ease-out, opacity 1s ease-out;
+        }
+        .highlight-glow {
+            box-shadow: 0 0 15px var(--glow-color, #58a6ff);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            transition: all 0.5s ease;
+        }
+        .code-block {
+            background-color: #0d1117;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            white-space: pre;
+            border: 1px solid #30363d;
+            text-align: left;
+            overflow-x: auto;
+        }
+        .code-block .key { color: #79c0ff; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .comment { color: #8b949e; }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        .dp-type-badge {
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            border-width: 1px;
+        }
+        .source-aligned { color: #fca5a5; border-color: #fca5a5; background-color: rgba(252, 165, 165, 0.1); }
+        .domain-aligned { color: #93c5fd; border-color: #93c5fd; background-color: rgba(147, 197, 253, 0.1); }
+        .consumer-aligned { color: #d8b4fe; border-color: #d8b4fe; background-color: rgba(216, 180, 254, 0.1); }
+        .data-feed {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            height: 150px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .step-navigator {
+            position: fixed;
+            top: 50%;
+            left: 2rem;
+            transform: translateY(-50%);
+            z-index: 100;
+        }
+        .step-item {
+            padding: 0.75rem;
+            border-left: 4px solid #30363d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .step-item.active {
+            border-left-color: #58a6ff;
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col items-center justify-start min-h-screen p-4">
+
+    <div class="w-full max-w-7xl mx-auto text-center my-6">
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white mb-2">Data-as-Code: The <span class="text-gradient">FLUID</span> CI/CD Flow</h1>
+        <p class="text-lg text-gray-400">How a single commit automates orchestration, quality, and governance.</p>
+    </div>
+
+    <div class="flex w-full max-w-screen-2xl mx-auto">
+        <!-- Step Navigator -->
+        <div id="step-navigator" class="step-navigator w-64 hidden md:block">
+            <h3 class="text-lg font-bold mb-4 text-gray-400">Storyline</h3>
+            <div id="steps-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-grow md:ml-72">
+            <div id="animation-canvas" class="w-full mx-auto p-4 relative">
+                <!-- Developer & Git Layer -->
+                <div class="layer mb-8">
+                    <span class="layer-title">Developer Workflow</span>
+                    <div class="flex flex-col md:flex-row justify-around items-center text-center p-4 space-y-4 md:space-y-0 md:space-x-8">
+                        <div id="code-editor" class="card p-4 w-full md:w-1/2 interactive-card" data-modal-id="code-editor">
+                            <h3 class="font-bold text-lg mb-2">FLUID.yml</h3>
+                            <div class="code-block">
+<span class="key">name:</span> <span class="string">user_churn_prediction</span>
+<span class="key">type:</span> <span class="string">consumer_aligned</span>
+<span class="key">owner:</span> <span class="string">growth_team</span>
+<span class="key">schedule:</span> <span class="string">'0 3 * * *'</span>
+<span class="key">consumes:</span>
+  <span class="key">- ref:</span> <span class="string">urn:dp:user_activity:v1</span>
+  <span class="key">- ref:</span> <span class="string">urn:dp:subscriptions:v2</span>
+<span class="key">build:</span>
+  <span class="key">engine:</span> <span class="string">spark</span>
+  <span class="key">script:</span> <span class="string">./models/churn.py</span>
+<span class="key">exposes:</span>
+  <span class="key">- id:</span> <span class="string">predictions</span>
+    <span class="key">access_policies:</span>
+      <span class="key">- role:</span> <span class="string">GrowthTeamRole</span>
+        <span class="key">masking:</span>
+          <span class="key">user_id:</span> <span class="string">hash_sha256</span>
+    <span class="key">schema:</span>
+      <span class="key">- name:</span> <span class="string">user_id</span>
+        <span class="key">tags:</span> <span class="string">[pii]</span>
+      <span class="key">- name:</span> <span class="string">churn_risk</span>
+        <span class="key">tags:</span> <span class="string">[non-pii]</span>
+    <span class="key">slo:</span>
+      <span class="key">freshness:</span> <span class="string">24h</span>
+                            </div>
+                        </div>
+                        <div id="git-repo" class="card p-4 w-full md:w-1/3 interactive-card" data-modal-id="git-repo">
+                            <div class="h-16 w-16 text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-lg mt-2">Git Commit</h3>
+                            <p class="text-sm text-gray-400">main branch</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FLUID-Aware Plane -->
+                <div class="layer mb-8">
+                    <span class="layer-title">FLUID-Aware Plane</span>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-4">
+                        <div id="app-orchestrator" class="card p-4 opacity-40 interactive-card" data-modal-id="app-orchestrator">
+                            <h3 class="font-bold text-lg mb-2">Orchestrator</h3>
+                            <p class="text-sm text-gray-400 mb-4">Interprets `build` contract to generate and run pipelines.</p>
+                            <div id="orchestrator-status" class="status-badge bg-gray-700 text-gray-300">Idle</div>
+                        </div>
+                        <div id="app-quality" class="card p-4 opacity-40 interactive-card" data-modal-id="app-quality">
+                            <h3 class="font-bold text-lg mb-2">Data Quality Engine</h3>
+                            <p class="text-sm text-gray-400 mb-4">Interprets `exposes` contract to generate and run tests.</p>
+                            <div id="quality-status" class="status-badge bg-gray-700 text-gray-300">Idle</div>
+                        </div>
+                        <div id="app-catalog" class="card p-4 opacity-40 interactive-card" data-modal-id="app-catalog">
+                            <h3 class="font-bold text-lg mb-2">Data Catalog</h3>
+                            <p class="text-sm text-gray-400 mb-4">Interprets entire contract to update documentation and lineage.</p>
+                            <div id="catalog-status" class="status-badge bg-gray-700 text-gray-300">Idle</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gateway Layer -->
+                <div class="layer mb-8">
+                    <span class="layer-title">Access & Governance</span>
+                    <div id="gateway" class="card p-4 w-full md:w-1/2 mx-auto opacity-40 interactive-card" data-modal-id="gateway">
+                        <h3 class="font-bold text-lg mb-2">Data Product Gateway</h3>
+                        <p class="text-sm text-gray-400">Single entry point for all data access. Enforces policies defined in contracts.</p>
+                    </div>
+                </div>
+
+                <!-- Execution Plane -->
+                <div class="layer mb-8">
+                    <span class="layer-title">Execution & Asset Plane</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+                        <div id="exec-spark" class="card p-4 opacity-40 interactive-card" data-modal-id="exec-spark">
+                            <h3 class="font-bold text-lg mb-2">Data Proc / Spark</h3>
+                            <p class="text-sm text-gray-400 mb-4">Executes the `spark` build logic defined in the contract.</p>
+                        </div>
+                        <div id="exec-monitoring" class="card p-4 opacity-40 interactive-card" data-modal-id="exec-monitoring">
+                            <h3 class="font-bold text-lg mb-2">Monitoring & Logging</h3>
+                            <p class="text-sm text-gray-400 mb-4">Captures logs, metrics, and traces from execution engines.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Operational DP Layer -->
+                <div class="layer mb-8">
+                    <span class="layer-title">Operational Data Products</span>
+                    <div id="op-dp-logs" class="card p-4 w-full md:w-1/2 mx-auto opacity-40 interactive-card" data-modal-id="op-dp-logs">
+                        <h3 class="font-bold text-lg mb-2">Execution Logs DP</h3>
+                        <p class="text-sm text-gray-400">Operational logs are themselves turned into a data product for monitoring platform health.</p>
+                    </div>
+                </div>
+
+                <!-- Consumer Plane -->
+                <div class="layer">
+                    <span class="layer-title">Consumer Plane</span>
+                     <div id="mcp-agent" class="card p-4 w-full md:w-1/2 mx-auto opacity-40 interactive-card" data-modal-id="mcp-agent">
+                        <h3 class="font-bold text-lg mb-2">MCP Agent</h3>
+                        <p class="text-sm text-gray-400">Discovers and securely consumes data products via the Catalog and Gateway.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="w-full max-w-4xl mx-auto mt-8 hidden" id="data-feed-container">
+                <h3 class="text-xl font-bold text-center mb-4 text-white">Live Data Feed: <span class="text-gradient">user_churn_prediction</span></h3>
+                <div id="data-feed" class="data-feed"></div>
+            </div>
+
+            <div class="mt-8 flex justify-center space-x-4">
+                <button id="play-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg">
+                    ▶ Play "Data-as-Code" Flow
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal HTML -->
+    <div id="modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 opacity-0 pointer-events-none">
+        <div id="modal-content" class="modal-content bg-gray-900 rounded-lg shadow-xl w-full max-w-3xl relative border border-blue-500 transform scale-95">
+            <div class="p-6">
+                <button id="modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+                <h3 id="modal-title" class="text-2xl font-bold text-white mb-4"></h3>
+                <div id="modal-body" class="text-gray-300 max-h-[70vh] overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('animation-canvas');
+        const playButton = document.getElementById('play-button');
+        const stepsList = document.getElementById('steps-list');
+
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
+        const modalClose = document.getElementById('modal-close');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+
+        const elements = {
+            codeEditor: document.getElementById('code-editor'),
+            gitRepo: document.getElementById('git-repo'),
+            orchestrator: document.getElementById('app-orchestrator'),
+            quality: document.getElementById('app-quality'),
+            catalog: document.getElementById('app-catalog'),
+            orchestratorStatus: document.getElementById('orchestrator-status'),
+            qualityStatus: document.getElementById('quality-status'),
+            catalogStatus: document.getElementById('catalog-status'),
+            gateway: document.getElementById('gateway'),
+            execSpark: document.getElementById('exec-spark'),
+            execMonitoring: document.getElementById('exec-monitoring'),
+            opDpLogs: document.getElementById('op-dp-logs'),
+            assetFolder: document.getElementById('asset-folder'),
+            mcpAgent: document.getElementById('mcp-agent'),
+            dataFeedContainer: document.getElementById('data-feed-container'),
+            dataFeed: document.getElementById('data-feed'),
+        };
+
+        const steps = [
+            { id: 1, text: "<strong>Step 1: Commit.</strong> A developer commits a `FLUID.yml` contract, defining dependencies, build logic, and privacy policies." },
+            { id: 2, text: "<strong>Step 2: Trigger.</strong> The commit triggers a webhook, notifying all FLUID-aware applications on the platform simultaneously." },
+            { id: 3, text: "<strong>Step 3: Interpret & Provision.</strong> The Orchestrator creates a pipeline. The Quality Engine generates tests. The Catalog ingests the metadata." },
+            { id: 4, text: "<strong>Step 4: Execute & Publish.</strong> The Orchestrator invokes Spark, which emits logs as it runs. The final data product is published to the Data Gateway." },
+            { id: 5, text: "<strong>Step 5: Validate & Expose.</strong> The Quality Engine tests the data and privacy policies via the Gateway. On success, the Gateway makes the product discoverable." },
+            { id: 6, text: "<strong>Step 6: Consume.</strong> An MCP Agent discovers the new product in the Catalog and securely accesses its data through the Gateway, which enforces the `GrowthTeamRole` access policy." }
+        ];
+
+        const modalDetails = {
+            'code-editor': {
+                title: 'FLUID Contract: The Single Source of Truth',
+                content: `<div class="space-y-6">
+                            <p>The <strong>FLUID.yml</strong> file is a declarative contract that defines a data product. FLUID-aware applications read this contract to automate the entire data lifecycle.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center text-center">
+                                <!-- Consumes -->
+                                <div class="col-span-2">
+                                    <h4 class="font-bold text-blue-400 mb-2">Consumes (Inputs)</h4>
+                                    <div class="code-block"><span class="key">- ref:</span> <span class="string">urn:dp:user_activity:v1</span>\n<span class="key">- ref:</span> <span class="string">urn:dp:subscriptions:v2</span></div>
+                                    <p class="text-xs text-gray-400 mt-2">Declares all dependencies, creating an explicit lineage graph.</p>
+                                </div>
+                                <!-- Arrow -->
+                                <div class="text-4xl text-gray-500">→</div>
+                                <!-- Build -->
+                                <div class="col-span-2">
+                                    <h4 class="font-bold text-green-400 mb-2">Build (Transformation)</h4>
+                                    <div class="code-block"><span class="key">engine:</span> <span class="string">spark</span>\n<span class="key">script:</span> <span class="string">./models/churn.py</span></div>
+                                    <p class="text-xs text-gray-400 mt-2">Specifies the tool and logic to create the output data product.</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-center text-4xl text-gray-500 my-2">↓</div>
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center text-center">
+                                 <div class="col-span-2 md:col-start-3">
+                                     <h4 class="font-bold text-purple-400 mb-2">Exposes (Outputs)</h4>
+                                     <div class="code-block"><span class="key">- id:</span> <span class="string">predictions</span>
+    <span class="key">access_policies:</span>
+      <span class="key">- role:</span> <span class="string">GrowthTeamRole</span>
+        <span class="key">masking:</span>
+          <span class="key">user_id:</span> <span class="string">hash_sha256</span>
+    <span class="key">schema:</span>
+      <span class="key">- name:</span> <span class="string">user_id</span>
+        <span class="key">tags:</span> <span class="string">[pii]</span>
+      <span class="key">- name:</span> <span class="string">churn_risk</span>
+        <span class="key">tags:</span> <span class="string">[non-pii]</span>
+    <span class="key">slo:</span>
+      <span class="key">freshness:</span> <span class="string">24h</span></div>
+                                     <p class="text-xs text-gray-400 mt-2">Defines the public API, quality guarantees, and privacy policies for all consumers.</p>
+                                 </div>
+                            </div>
+                         </div>`
+            },
+            'git-repo': { title: 'Git Repository', content: '<p>Acts as the single source of truth for all data product definitions. A `git commit` is the catalyst for all automated actions on the data platform.</p>'},
+            'app-orchestrator': { 
+                title: 'Orchestrator (e.g., Airflow)', 
+                content: `<div class="text-left">
+                            <p class="mb-4">This application reads the <code class="text-xs bg-gray-700 p-1 rounded">build</code> and <code class="text-xs bg-gray-700 p-1 rounded">schedule</code> sections of the contract to automatically generate and manage a data pipeline (DAG).</p>
+                            <h4 class="font-bold text-lg text-blue-400 mb-2">Generated DAG</h4>
+                            <div class="p-4 bg-gray-800 rounded-md text-center">
+                                <div class="flex justify-center items-center space-x-2 text-sm">
+                                    <div class="p-2 border border-gray-600 rounded">Schedule: 0 3 * * *</div>
+                                    <div class="text-gray-500">→</div>
+                                    <div class="p-2 border border-gray-600 rounded">Extract Sources</div>
+                                    <div class="text-gray-500">→</div>
+                                    <div class="p-2 border border-green-500 rounded bg-green-900/50">Build Model</div>
+                                    <div class="text-gray-500">→</div>
+                                    <div class="p-2 border border-gray-600 rounded">Publish to Gateway</div>
+                                </div>
+                            </div>
+                         </div>`
+            },
+            'app-quality': { 
+                title: 'Data Quality Engine', 
+                content: `<div class="text-left">
+                            <p class="mb-4">This application reads the <code class="text-xs bg-gray-700 p-1 rounded">exposes</code> section to automatically generate and run data quality checks against the output data.</p>
+                            <h4 class="font-bold text-lg text-blue-400 mb-2">Automated Test Results</h4>
+                            <div class="p-4 bg-gray-800 rounded-md space-y-3">
+                                <div class="flex justify-between items-center"><span>Schema Validation (user_id, churn_risk)</span><span class="status-badge bg-green-800 text-green-300">PASS</span></div>
+                                <div class="flex justify-between items-center"><span>Freshness SLO (&lt; 24h)</span><span class="status-badge bg-green-800 text-green-300">PASS</span></div>
+                            </div>
+                            <h4 class="font-bold text-lg text-blue-400 mt-6 mb-2">Privacy & PII Checks</h4>
+                            <div class="p-4 bg-gray-800 rounded-md space-y-3">
+                                <div class="flex justify-between items-center"><span>Policy: 'GrowthTeamRole' access</span><span class="status-badge bg-green-800 text-green-300">ENFORCED</span></div>
+                                <div class="flex justify-between items-center text-sm pl-4"><span>↳ Field 'user_id' is hashed</span><span class="status-badge bg-green-800 text-green-300">PASS</span></div>
+                                <div class="flex justify-between items-center text-sm pl-4"><span>↳ Raw PII fields are excluded</span><span class="status-badge bg-green-800 text-green-300">PASS</span></div>
+                            </div>
+                         </div>`
+            },
+            'app-catalog': {
+                title: 'Data Catalog',
+                content: `<div class="text-left">
+                            <p class="mb-4">This application automatically populates a searchable taxonomy of all data products in the enterprise, making them discoverable and trustworthy.</p>
+                            <div class="mb-6">
+                                <h4 class="font-bold text-lg text-blue-400 mb-2">Two-Way Binding</h4>
+                                <div class="flex items-center justify-around text-center text-sm">
+                                    <div class="w-1/3">
+                                        <div class="text-4xl mb-2">📄</div>
+                                        <p class="font-bold">FLUID.yml</p>
+                                    </div>
+                                    <div class="w-1/3 text-gray-400">
+                                        <p class="mb-1">Git Commit →</p>
+                                        <p>← Links to Source</p>
+                                    </div>
+                                    <div class="w-1/3">
+                                        <div class="text-4xl mb-2">📚</div>
+                                        <p class="font-bold">Data Catalog</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">A commit to Git updates the catalog. The catalog always links back to the source YAML, ensuring a single source of truth.</p>
+                            </div>
+                            <div>
+                                <input id="catalog-search" type="text" placeholder="Search by name, domain, or type..." class="w-full p-2 rounded-md bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <div id="catalog-list" class="mt-4 space-y-2 max-h-64 overflow-y-auto"></div>
+                            </div>
+                         </div>`
+            },
+            'gateway': { title: 'Data Product Gateway', content: '<p>The Gateway is the single, policy-enforced entry point for all data product consumption. It authenticates and authorizes every request, ensuring that only agents with the correct roles (e.g., `GrowthTeamRole`) can access the data, as defined in the `access_policy` of the FLUID contract.</p>'},
+            'exec-spark': { title: 'Execution Engine: Spark', content: '<p>A scalable processing engine that is invoked by the Orchestrator. It runs the actual data transformation code (e.g., `churn.py`) specified in the data product\'s `build` contract.</p>'},
+            'exec-dbt': { 
+                title: 'Execution Engine: dbt Core', 
+                content: `<div class="text-left">
+                            <p class="mb-4">An alternative execution engine for SQL-based transformations. If the contract specified <code class="text-xs bg-gray-700 p-1 rounded">engine: dbt</code>, the Orchestrator would invoke dbt to run the corresponding models instead of Spark.</p>
+                            <h4 class="font-bold text-lg text-blue-400 mb-2">Example: Data Vault 2.0 Transformation</h4>
+                            <p class="mb-4 text-sm">FLUID can orchestrate complex modeling techniques like Data Vault. The dbt engine would execute models from the standardized asset folder to create auditable, scalable structures.</p>
+                            <div class="text-center text-xs">
+                                <div class="p-2 rounded-md bg-gray-800 border-gray-600 border inline-block source-aligned">Raw Source Data</div>
+                                <div class="text-2xl text-gray-400">↓</div>
+                                <div class="p-2 rounded-md bg-gray-800 border-gray-600 border inline-block">dbt Staging Models</div>
+                                <div class="text-2xl text-gray-400">↓</div>
+                                <div class="flex justify-center space-x-4">
+                                    <div class="p-2 rounded-md bg-gray-800 border-gray-600 border inline-block domain-aligned">Hubs (Business Keys)</div>
+                                    <div class="p-2 rounded-md bg-gray-800 border-gray-600 border inline-block domain-aligned">Links (Relationships)</div>
+                                    <div class="p-2 rounded-md bg-gray-800 border-gray-600 border inline-block domain-aligned">Satellites (Context)</div>
+                                </div>
+                            </div>
+                         </div>`
+            },
+            'folder-structure': {
+                title: 'Standardized Data Product Assets',
+                content: `<p class="mb-4">A standardized directory is automatically created for each data product, ensuring consistency and discoverability.</p>
+                         <div class="code-block text-left">
+/user_churn_prediction\n
+├── 📄 <span class="string">FLUID.yml</span>         <span class="comment"># The single source of truth</span>\n
+├── 📁 <span class="string">models/</span>\n
+│   └── 🐍 <span class="string">churn.py</span>          <span class="comment"># Spark script from 'build'</span>\n
+├── 📁 <span class="string">tests/</span>\n
+│   └── 🐍 <span class="string">test_schema.py</span>    <span class="comment"># Auto-generated from 'exposes'</span>\n
+└── 📁 <span class="string">docs/</span>\n
+    └── 📄 <span class="string">README.md</span>         <span class="comment"># Auto-generated from contract</span>
+                         </div>`
+            },
+            'mcp-agent': { title: 'MCP Agent', content: '<p>A consumer of the data product. It discovers the product\'s endpoint and contract via the Data Catalog, then securely requests data from the Gateway, which validates the agent\'s permissions before returning a response.</p>'},
+            'exec-monitoring': { title: 'Monitoring & Logging', content: '<p>As execution engines like Spark run, they emit a stream of logs, metrics (e.g., CPU usage, records processed), and traces. This operational data is captured by a dedicated service.</p>' },
+            'op-dp-logs': { title: 'Operational Data Product: Execution Logs', content: '<p>The raw logs from the monitoring service are themselves treated as a data product. They are cleaned, structured, and exposed with their own FLUID contract. This allows platform engineers and other agents to monitor the health, cost, and performance of the entire data mesh.</p>' }
+        };
+
+        let isAnimating = false;
+        let animationInterval;
+        let feedInterval;
+
+        const getCoords = (el) => {
+            if (!el) return null;
+            const rect = el.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            return {
+                x: rect.left - canvasRect.left + rect.width / 2,
+                y: rect.top - canvasRect.top + rect.height / 2,
+            };
+        };
+
+        const createParticle = (startEl, endEl, delay = 0, color = '#a05195') => {
+            if (!startEl || !endEl) return;
+            const start = getCoords(startEl);
+            const end = getCoords(endEl);
+            if (!start || !end) return;
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            p.style.backgroundColor = color;
+            canvas.appendChild(p);
+            p.style.left = `${start.x}px`;
+            p.style.top = `${start.y}px`;
+            p.style.opacity = '0';
+
+            setTimeout(() => {
+                p.style.opacity = '1';
+                p.style.transform = `translate(${end.x - start.x}px, ${end.y - start.y}px)`;
+            }, delay);
+
+            setTimeout(() => {
+                p.style.opacity = '0';
+                setTimeout(() => p.remove(), 500);
+            }, delay + 1000);
+        };
+
+        const highlightElement = (el, color = '#58a6ff') => {
+            if (!el) return;
+            el.style.opacity = '1';
+            el.style.borderColor = color;
+            el.classList.add('highlight-glow');
+            el.style.setProperty('--glow-color', color);
+        };
+        
+        const setStatus = (el, text, bgColor, textColor) => {
+            if (!el) return;
+            el.textContent = text;
+            el.style.backgroundColor = bgColor;
+            el.style.color = textColor;
+        };
+
+        const resetAll = () => {
+            clearInterval(animationInterval);
+            clearInterval(feedInterval);
+            if(elements.dataFeedContainer) elements.dataFeedContainer.classList.add('hidden');
+            isAnimating = false;
+            const allCards = canvas.querySelectorAll('.card');
+            allCards.forEach(card => {
+                if(card) {
+                    card.style.opacity = '0.4';
+                    card.style.borderColor = '#30363d';
+                    card.classList.remove('highlight-glow');
+                }
+            });
+            
+            setStatus(elements.orchestratorStatus, 'Idle', '#4b5563', '#e5e7eb');
+            setStatus(elements.qualityStatus, 'Idle', '#4b5563', '#e5e7eb');
+            setStatus(elements.catalogStatus, 'Idle', '#4b5563', '#e5e7eb');
+
+            updateUIForStep(0);
+            if(playButton) playButton.disabled = false;
+        };
+
+        const updateUIForStep = (step) => {
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                item.classList.toggle('active', index === step - 1);
+            });
+        };
+
+        const staticActions = [
+            // Step 1: Commit
+            () => {
+                highlightElement(elements.codeEditor, '#E20074');
+                highlightElement(elements.gitRepo, '#E20074');
+            },
+            // Step 2: Trigger
+            () => {
+                staticActions[0]();
+                highlightElement(elements.orchestrator, '#58a6ff');
+                highlightElement(elements.quality, '#58a6ff');
+                highlightElement(elements.catalog, '#58a6ff');
+            },
+            // Step 3: Interpret & Provision
+            () => {
+                staticActions[1]();
+                setStatus(elements.orchestratorStatus, 'Building DAG...', '#f59e0b', '#fff');
+                setStatus(elements.qualityStatus, 'Generating Tests...', '#f59e0b', '#fff');
+                setStatus(elements.catalogStatus, 'Updating Docs...', '#f59e0b', '#fff');
+                highlightElement(elements.assetFolder, '#a78bfa');
+            },
+            // Step 4: Execute & Publish
+            () => {
+                staticActions[2]();
+                highlightElement(elements.execSpark, '#3b82f6');
+                highlightElement(elements.execMonitoring, '#3b82f6');
+                setStatus(elements.orchestratorStatus, 'Running', '#3b82f6', '#fff');
+                highlightElement(elements.gateway, '#3b82f6');
+                highlightElement(elements.opDpLogs, '#a78bfa');
+            },
+            // Step 5: Validate & Expose
+            () => {
+                staticActions[3]();
+                setStatus(elements.orchestratorStatus, 'Success', '#16a34a', '#fff');
+                highlightElement(elements.orchestrator, '#16a34a');
+                setStatus(elements.qualityStatus, 'Testing...', '#3b82f6', '#fff');
+            },
+            // Step 6: Consume
+            () => {
+                staticActions[4]();
+                setStatus(elements.qualityStatus, 'Passing', '#16a34a', '#fff');
+                highlightElement(elements.quality, '#16a34a');
+                highlightElement(elements.mcpAgent, '#d8b4fe');
+                highlightElement(elements.catalog, '#16a34a');
+                highlightElement(elements.gateway, '#16a34a');
+                if(elements.dataFeedContainer) elements.dataFeedContainer.classList.remove('hidden');
+            }
+        ];
+        
+        const particleActions = [
+            () => createParticle(elements.codeEditor, elements.gitRepo, 0, '#E20074'), // Step 1
+            () => { // Step 2
+                createParticle(elements.gitRepo, elements.orchestrator, 0);
+                createParticle(elements.gitRepo, elements.quality, 100);
+                createParticle(elements.gitRepo, elements.catalog, 200);
+            },
+            () => createParticle(elements.orchestrator, elements.assetFolder, 0, '#a78bfa'), // Step 3
+            () => { // Step 4
+                createParticle(elements.orchestrator, elements.execSpark);
+                setTimeout(() => createParticle(elements.execSpark, elements.gateway, 0, '#3b82f6'), 500);
+                setTimeout(() => createParticle(elements.execSpark, elements.execMonitoring, 0, '#facc15'), 250);
+                setTimeout(() => createParticle(elements.execMonitoring, elements.opDpLogs, 0, '#facc15'), 750);
+            },
+            () => createParticle(elements.quality, elements.gateway), // Step 5
+            () => { // Step 6
+                createParticle(elements.mcpAgent, elements.catalog, 0, '#d8b4fe');
+                setTimeout(() => createParticle(elements.catalog, elements.mcpAgent, 0, '#d8b4fe'), 500);
+                setTimeout(() => createParticle(elements.mcpAgent, elements.gateway, 0, '#d8b4fe'), 1000);
+            }
+        ];
+
+        const runStep = (step) => {
+            if (step < 1 || step > steps.length) return;
+            
+            clearInterval(animationInterval);
+            clearInterval(feedInterval);
+            if(elements.dataFeedContainer) elements.dataFeedContainer.classList.add('hidden');
+
+            const allCards = canvas.querySelectorAll('.card');
+            allCards.forEach(card => {
+                if(card) {
+                    card.style.opacity = '0.4';
+                    card.style.borderColor = '#30363d';
+                    card.classList.remove('highlight-glow');
+                }
+            });
+            highlightElement(elements.codeEditor);
+            highlightElement(elements.gitRepo);
+
+            updateUIForStep(step);
+            
+            if (staticActions[step - 1]) {
+                staticActions[step - 1]();
+            }
+
+            if (particleActions[step - 1]) {
+                particleActions[step - 1]();
+                animationInterval = setInterval(particleActions[step - 1], 2000);
+            }
+            
+            if (step === 6) {
+                feedInterval = setInterval(() => {
+                    const hash = btoa(Math.random()).substring(0, 12);
+                    const risk = (Math.random() * 0.9).toFixed(4);
+                    const newEntry = document.createElement('div');
+                    newEntry.innerHTML = `{ <span class="text-blue-400">user_id:</span> <span class="text-green-400">"${hash}..."</span>, <span class="text-blue-400">churn_risk:</span> <span class="text-green-400">${risk}</span> }`;
+                    if(elements.dataFeed) {
+                        elements.dataFeed.appendChild(newEntry);
+                        elements.dataFeed.scrollTop = elements.dataFeed.scrollHeight;
+                    }
+                }, 1000);
+            }
+        };
+
+        const runFullAnimation = async () => {
+            if (isAnimating) return;
+            resetAll();
+            isAnimating = true;
+            playButton.disabled = true;
+            
+            for (let i = 1; i <= steps.length; i++) {
+                if (!isAnimating) break;
+                runStep(i);
+                await new Promise(res => setTimeout(res, 2500));
+            }
+
+            if (!isAnimating) return;
+            await new Promise(res => setTimeout(res, 4000));
+            if (isAnimating) {
+               resetAll();
+            }
+        };
+        
+        const setup = () => {
+            stepsList.innerHTML = '';
+            steps.forEach(step => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'step-item';
+                stepEl.innerHTML = `<p class="text-sm">${step.text}</p>`;
+                stepEl.addEventListener('click', () => {
+                    isAnimating = false;
+                    playButton.disabled = false;
+                    runStep(step.id);
+                });
+                stepsList.appendChild(stepEl);
+            });
+
+            playButton.addEventListener('click', runFullAnimation);
+            
+            function showModal(id) {
+                const details = modalDetails[id];
+                if (!details) return;
+                modalTitle.textContent = details.title;
+                modalBody.innerHTML = details.content;
+
+                if (id === 'app-catalog') {
+                    const searchInput = document.getElementById('catalog-search');
+                    const catalogList = document.getElementById('catalog-list');
+                    const mockData = [
+                        { name: 'user_churn_prediction', domain: 'growth', type: 'Consumer', typeClass: 'consumer-aligned' },
+                        { name: 'user_activity', domain: 'cx', type: 'Domain', typeClass: 'domain-aligned' },
+                        { name: 'subscriptions', domain: 'billing', type: 'Domain', typeClass: 'domain-aligned' },
+                        { name: 'raw_app_clicks', domain: 'mobile_app', type: 'Source', typeClass: 'source-aligned' },
+                        { name: 'billing_codes', domain: 'finance', type: 'Source', typeClass: 'source-aligned' },
+                    ];
+
+                    const renderList = (filter = '') => {
+                        catalogList.innerHTML = '';
+                        mockData
+                            .filter(item => item.name.includes(filter) || item.domain.includes(filter) || item.type.toLowerCase().includes(filter))
+                            .forEach(item => {
+                                const li = document.createElement('div');
+                                li.className = 'p-3 bg-gray-800 rounded-md flex justify-between items-center';
+                                li.innerHTML = `<div>
+                                                    <p class="font-bold">${item.name}</p>
+                                                    <p class="text-xs text-gray-400">Domain: ${item.domain}</p>
+                                                </div>
+                                                <span class="dp-type-badge ${item.typeClass}">${item.type}</span>`;
+                                catalogList.appendChild(li);
+                            });
+                    };
+                    
+                    if (searchInput) {
+                        searchInput.addEventListener('input', (e) => renderList(e.target.value.toLowerCase()));
+                        renderList();
+                    }
+                }
+
+                modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-95');
+            }
+
+            function hideModal() {
+                modalOverlay.classList.add('opacity-0', 'pointer-events-none');
+                modalContent.classList.add('scale-95');
+            }
+
+            document.querySelectorAll('.interactive-card').forEach(card => {
+                card.addEventListener('click', () => showModal(card.dataset.modalId));
+            });
+
+            modalClose.addEventListener('click', hideModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    hideModal();
+                }
+            });
+
+            resetAll();
+        };
+
+        setup();
+    });
+    </script>
+</body>
+</html>
