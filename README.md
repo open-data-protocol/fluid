@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="fluid-logo.png" width="400" alt="FLUID Logo"/>
+  <img src="./logo.png" width="400" alt="FLUID Logo"/>
 </p>
 
 # Federated Layered Unified Interchange Definition (FLUID)
