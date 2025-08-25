@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A New Fluid Way of Thinking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+        }
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .section-subtitle {
+            font-size: 1.25rem;
+            text-align: center;
+            color: #a3a3a3;
+            max-width: 800px;
+            margin: 0 auto 4rem auto;
+        }
+        .card {
+            background-color: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            height: 100%;
+        }
+        .interactive-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .interactive-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+        }
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .card-description {
+            color: #a3a3a3;
+        }
+        .shock-value {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            font-weight: 500;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%;
+            max-width: 800px;
+            background-color: #161b22;
+            background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 40%);
+            border-radius: 1rem;
+            border: 1px solid #30363d;
+            padding: 2.5rem;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            cursor: pointer;
+            color: #8b949e;
+            font-size: 1.75rem;
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .modal-body h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e5e5e5;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #30363d;
+        }
+        .modal-body p {
+            color: #a3a3a3;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <canvas id="background-canvas"></canvas>
+
+    <div class="main-container">
+        <a href="https://open-data-protocol.github.io/fluid/" target="_blank" rel="noopener noreferrer" class="mb-6">
+            <!-- To use your local logo, change the src to a relative path e.g., src="./fluid-logo.png" -->
+            <img src="../logo.png" alt="FLUID Logo" class="h-24 hover:opacity-80 transition-opacity">
+        </a>
+        <h1 class="section-title">A New Way of Thinking</h1>
+        <p class="section-subtitle">A truly modern data architecture is fluid. It's built on a foundation of clear principles that enable the speed, trust, and scale required for the agentic era.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+            <div class="card interactive-card" data-modal-id="dp-product">
+                <div class="card-icon">📦</div>
+                <h3 class="card-title">1. Data as a Product</h3>
+                <p class="card-description">Shift from chaotic pipelines to versioned, trustworthy assets with clear owners and quality guarantees.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="dp-declarative">
+                <div class="card-icon">🎯</div>
+                <h3 class="card-title">2. Declarative, Not Imperative</h3>
+                <p class="card-description">Define the desired **end state** of your data. Let context-aware tools figure out the best way to implement it.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="dp-contracts">
+                <div class="card-icon">📜</div>
+                <h3 class="card-title">3. Contracts as Code</h3>
+                <p class="card-description">Embed schema, quality, and access scopes into version control. Make governance an automated, proactive process.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="dp-federated">
+                <div class="card-icon">🌐</div>
+                <h3 class="card-title">4. Federated Ownership</h3>
+                <p class="card-description">Decentralize data ownership to the domain teams who know it best, enabling a true, scalable Data Mesh.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="dp-compliant">
+                <div class="card-icon">🧩</div>
+                <h3 class="card-title">5. Compliant Ecosystem</h3>
+                <p class="card-description">**Delegate execution** to the tools you already use, fostering an open, composable, and future-proof ecosystem.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="dp-adaptive">
+                <div class="card-icon">🛡️</div>
+                <h3 class="card-title">6. Adaptive & Context-Aware</h3>
+                <p class="card-description">Enable dynamic access policies that change based on the consuming agent's context, intent, or risk profile.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modal-close-btn" class="modal-close-btn">&times;</span>
+            <h2 id="modal-title" class="modal-title"></h2>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // Background Animation
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        const nodeCount = 50;
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        for (let i = 0; i < nodeCount; i++) {
+            nodes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 1.5 + 1
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(59, 130, 246, 0.5)";
+            
+            nodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+
+                if (node.x > canvas.width || node.x < 0) node.vx *= -1;
+                if (node.y > canvas.height || node.y < 0) node.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.strokeStyle = "rgba(59, 130, 246, 0.05)";
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i; j < nodes.length; j++) {
+                    const dist = Math.sqrt(Math.pow(nodes[i].x - nodes[j].x, 2) + Math.pow(nodes[i].y - nodes[j].y, 2));
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Modal Logic
+        const modalContainer = document.getElementById('modal-container');
+        const modalTitleEl = document.getElementById('modal-title');
+        const modalBodyEl = document.getElementById('modal-body');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        const modalData = {
+            'dp-product': {
+                title: '📦 Data as a Product',
+                content: `
+                    <h3>The Old World: Data as an Afterthought</h3>
+                    <p>For decades, data was the exhaust fume of an application. It was an unstructured, untrustworthy byproduct stored in a data lake, which quickly became a data swamp. We spent 80% of our time on "data cleaning" because the data had no owner, no SLA, and no guarantees.</p>
+                    <div class="shock-value">Your data lake is a liability. It's a graveyard of context-free data that cannot be trusted by an AI. Feeding this data to an agent is like giving a pilot a map from 1985 and hoping they find the airport.</div>
+                    <h3>The FLUID Reality: Data is the Product</h3>
+                    <p>With FLUID, data is a first-class citizen. Each data asset is a "Data Product" with a clear owner, a versioned interface, and a machine-readable contract defining its schema, quality, and freshness. Agents don't guess; they consume reliable, trustworthy products with guaranteed SLAs.</p>
+                `
+            },
+            'dp-declarative': {
+                title: '🎯 Declarative, Not Imperative',
+                content: `
+                    <h3>The Old World: Imperative Pipelines</h3>
+                    <p>We built brittle, imperative pipelines using thousands of lines of Python or Bash scripts. These scripts were "glue code" that dictated the exact steps to move and transform data. They were impossible to understand, a nightmare to debug, and a single change could cause cascading failures.</p>
+                    <div class="shock-value">Your Airflow DAGs and Python scripts are technical debt. They are a tangled mess that prevents agility. You cannot scale an agentic enterprise on a foundation of bespoke, imperative code.</div>
+                    <h3>The FLUID Reality: Define the "What", Not the "How"</h3>
+                    <p>FLUID is declarative. You define the desired end state of your data product in a simple YAML file: what it consumes, what it exposes, and what its contract is. The FLUID-compliant ecosystem—the "Agentic Executor"—is responsible for figuring out the most efficient way to build it. This separates intent from implementation, making your data architecture clean, resilient, and understandable.</p>
+                `
+            },
+            'dp-contracts': {
+                title: '📜 Contracts as Code',
+                content: `
+                    <h3>The Old World: Governance by Wiki</h3>
+                    <p>Data governance was a set of policies written in a Word document or a Wiki page, completely disconnected from the data itself. It was a manual, reactive process that relied on hope and human oversight. As a result, it consistently failed.</p>
+                    <div class="shock-value">Your governance documents are worthless to an AI agent. An agent cannot read your Confluence page. Without machine-readable contracts, your governance is a fantasy that provides a false sense of security.</div>
+                    <h3>The FLUID Reality: Automated, Proactive Governance</h3>
+                    <p>With FLUID, governance is code. The schema, data quality rules, and required access **scopes** are defined directly within the version-controlled .fluid.yml file. The FLUID file declares *what* access is needed, while the actual enforcement of *who* gets that access is handled by a separate system like an AI Gateway. This makes governance an automated, proactive, and inseparable part of the data product itself—the only way to govern at machine speed.</p>
+                `
+            },
+            'dp-federated': {
+                title: '🌐 Federated Ownership',
+                content: `
+                    <h3>The Old World: The Central Data Team Bottleneck</h3>
+                    <p>We created central data teams to own all data infrastructure. While well-intentioned, this created a massive bottleneck. The central team lacked the business context to build meaningful data assets, and every request from the business was stuck in a multi-month backlog.</p>
+                    <div class="shock-value">Your central data team, as it exists today, is an obstacle to agility. It cannot scale to meet the demands of an agentic enterprise. The model is broken.</div>
+                    <h3>The FLUID Reality: True Data Mesh</h3>
+                    <p>FLUID enables a true, federated data mesh. Ownership of data products is distributed to the domain teams who have the most context. The marketing team owns the marketing data products; the finance team owns the finance data products. FLUID provides the standard that allows these decentralized teams to build interoperable, trustworthy products, eliminating the central bottleneck and enabling true scalability.</p>
+                `
+            },
+            'dp-compliant': {
+                title: '🧩 Compliant Ecosystem',
+                content: `
+                    <h3>The Old World: Vendor Lock-in</h3>
+                    <p>We bought monolithic, all-in-one data platforms that promised to solve everything but instead locked us into a single vendor's ecosystem. Or, we stitched together dozens of open-source tools with custom glue code, creating a maintenance nightmare.</p>
+                    <div class="shock-value">You are trapped. Whether by a single vendor or by your own custom code, your current stack lacks the flexibility to adapt. You cannot swap out a tool without a multi-year migration project.</div>
+                    <h3>The FLUID Reality: A Composable, Open Standard</h3>
+                    <p>FLUID is not an execution engine; it's an open standard that delegates execution to the tools you already use and trust. An orchestrator like Airflow can have a "FLUID provider" that automatically generates DAGs. A catalog like Collibra can have a "FLUID connector" that automatically ingests lineage. This fosters a compliant, composable ecosystem where you can pick the best tool for the job without being locked in.</p>
+                `
+            },
+            'dp-adaptive': {
+                title: '🛡️ Adaptive & Context-Aware',
+                content: `
+                    <h3>The Old World: Static, Role-Based Access</h3>
+                    <p>Security was simple and rigid: a user had a role, and that role had fixed permissions. This model is completely blind to context and intent. It cannot distinguish between a low-risk query from a trusted analyst and a high-risk query from a potentially compromised agent.</p>
+                    <div class="shock-value">Your static access policies are a security vulnerability. They treat all requests the same, exposing you to massive risk in a world where the "user" is an autonomous agent capable of making thousands of requests per second.</div>
+                    <h3>The FLUID Reality: Dynamic, Intent-Driven Access</h3>
+                    <p>FLUID defines access policies as code that can be dynamic and context-aware. It allows the data platform to make intelligent, real-time decisions. Should this agent be allowed to access PII in this context? Is this query pattern anomalous? FLUID enables a zero-trust security model for data, where access is granted based on the specific intent and risk profile of the consuming agent at the moment of the request.</p>
+                `
+            },
+        };
+
+        document.querySelectorAll('.interactive-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const modalId = card.dataset.modalId;
+                const data = modalData[modalId];
+                if (data) {
+                    modalTitleEl.innerHTML = data.title;
+                    modalBodyEl.innerHTML = data.content;
+                    modalContainer.classList.add('active');
+                }
+            });
+        });
+
+        const closeModal = () => {
+            modalContainer.classList.remove('active');
+        };
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+</html>
