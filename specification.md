@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="fluid-logo.png" width="200" alt="FLUID Logo"/>
+  <img src="logo.png" width="200" alt="FLUID Logo"/>
 </p>
 
 ## 📚 Fluid Protocol Specification (v1.0)
