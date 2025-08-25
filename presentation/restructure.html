@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLUID Showcase: Structuring an Enterprise Data Product</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- Add JSZip for zip file creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            overflow-x: hidden;
+            background-image: radial-gradient(#161b22 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #38bdf8;
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.1);
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #22d3ee, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .code-block {
+            background-color: #010409;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'SF Mono', 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            white-space: pre;
+            border: 1px solid #30363d;
+            text-align: left;
+            overflow-x: auto;
+        }
+        .code-block .key { color: #79c0ff; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .comment { color: #8b949e; font-style: italic; }
+        .folder-item {
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .folder-item:hover { color: #58a6ff; }
+        .folder-item .icon { transition: fill 0.2s; }
+        .folder-item:hover .icon { fill: #58a6ff; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto;
+            background: #161b22;
+            border-top: 4px solid #38bdf8;
+            border-radius: 1rem;
+            padding: 2rem 2.5rem; z-index: 1001; opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            position: relative;
+        }
+        .modal-overlay.active .modal-content { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal-close-btn {
+            position: absolute; top: 1rem; right: 1rem; cursor: pointer;
+            color: #8b949e; font-size: 1.75rem; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 9999px; transition: background-color 0.2s, color 0.2s;
+        }
+        .modal-close-btn:hover { background-color: #21262d; color: #c9d1d9; }
+        .modal-title { font-size: 1.75rem; font-weight: 900; margin-bottom: 1.5rem; }
+        .modal-body h3 {
+            font-size: 1.125rem; font-weight: 700; color: #e5e5e5;
+            margin-top: 1.5rem; margin-bottom: 0.75rem;
+            border-bottom: 1px solid #30363d; padding-bottom: 0.5rem;
+        }
+        .modal-body p { color: #a3a3a3; line-height: 1.7; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto px-4 py-16">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white mb-4">Structuring an Enterprise Data Product</h1>
+            <p class="max-w-4xl mx-auto text-lg md:text-xl text-gray-400">This page demonstrates the "gold standard" for structuring a complex data product using FLUID's multi-file approach. Explore the interactive example and use the tools below to structure your own data products.</p>
+        </header>
+<!-- 
+        <div class="card rounded-lg p-8 mb-16 max-w-4xl mx-auto w-full">
+            <h2 class="text-3xl font-bold mb-2 text-white text-center">Data Product Tools</h2>
+            <p class="text-gray-400 mb-6 text-center">Use these tools to bootstrap your own structured data product.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> -->
+                <!-- Boilerplate Downloader -->
+<!--                 <div class="text-center">
+                    <button id="download-boilerplate-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                        <span>Download Boilerplate .zip</span>
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2">Get a complete, multi-file starter project.</p>
+                </div> -->
+                <!-- File Splitter -->
+<!--                 <div class="text-center">
+                     <input type="file" id="file-input" class="hidden" accept=".yml,.yaml">
+                    <button id="upload-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span>Upload & Split File</span>
+                    </button>
+                     <p class="text-xs text-gray-500 mt-2">Split your own monolithic `fluid.yml` file.</p>
+                </div>
+            </div>
+            <p id="upload-status" class="text-center text-sm text-gray-500 mt-4 h-5"></p>
+        </div> -->
+
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div class="card rounded-lg p-8">
+                <h2 class="text-3xl font-bold mb-2 text-white">Meet the Team</h2>
+                <p class="text-gray-400 mb-6">A multi-file structure allows different teams to own different parts of the data product contract.</p>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-900/50 rounded-lg">
+                        <h3 class="font-bold text-cyan-400">Data Modeler</h3>
+                        <p class="text-sm text-gray-400">Owns the logical and physical data model. Responsible for `exposes.yml` and all `schema_*.yml` files.</p>
+                    </div>
+                    <div class="p-4 bg-gray-900/50 rounded-lg">
+                        <h3 class="font-bold text-purple-400">Data Engineer</h3>
+                        <p class="text-sm text-gray-400">Owns the implementation logic. Responsible for `build.yml` and `consumes.yml`.</p>
+                    </div>
+                    <div class="p-4 bg-gray-900/50 rounded-lg">
+                        <h3 class="font-bold text-green-400">Governance Lead</h3>
+                        <p class="text-sm text-gray-400">Owns the quality and access rules. Responsible for `quality.yml` and `accessPolicy.yml`.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card rounded-lg p-8 border-cyan-500/50">
+                <h2 class="text-3xl font-bold mb-2"><span class="text-gradient">The Gold Standard Structure</span></h2>
+                <p class="text-gray-400 mb-6">This structure separates the high-level definition (`fluid.yml`) from its detailed implementation files, which live in a `.fluid` directory.</p>
+                
+                <div class="code-block w-full mb-6">/dp-trusted-customer-360/
+├── <span class="folder-item" data-modal-id="root-fluid"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>fluid.yml</span>
+└── 📁 .fluid/
+    ├── <span class="folder-item" data-modal-id="consumes"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>consumes.yml</span>
+    ├── <span class="folder-item" data-modal-id="build"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>build.yml</span>
+    ├── <span class="folder-item" data-modal-id="exposes"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>exposes.yml</span>
+    ├── <span class="folder-item" data-modal-id="quality"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>quality.yml</span>
+    ├── <span class="folder-item" data-modal-id="schema-hub"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>schema_hub_customer.yml</span>
+    ├── <span class="folder-item" data-modal-id="schema-sat"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>schema_sat_details.yml</span>
+    └── <span class="folder-item" data-modal-id="schema-link"><svg class="icon w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20"><path d="M17 6v12c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h8l4 4zM8 16h4v-2H8v2zm0-4h4v-2H8v2zm0-4h4V6H8v2z"/></svg>schema_link_invoice.yml</span>
+                </div>
+            </div>
+        </main>
+
+        <div class="text-center mt-20 pt-10 border-t border-gray-800 w-full max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-300 mb-4">Dive Deeper into the Specification</h2>
+            <p class="text-slate-400 mb-8">Explore the official documentation and resources to learn more about the FLUID specification and how to build your own data products.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+                    <span>Read the Full Specification</span>
+                </a>
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.1.1.json" target="_blank" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    <span>Download Schema (v0.1.1)</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+            <h2 id="modal-title" class="modal-title"></h2>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalContainer = document.getElementById('modal-container');
+            const modalTitleEl = document.getElementById('modal-title');
+            const modalBodyEl = document.getElementById('modal-body');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const fileInput = document.getElementById('file-input');
+            const uploadBtn = document.getElementById('upload-btn');
+            const downloadBoilerplateBtn = document.getElementById('download-boilerplate-btn');
+            const uploadStatus = document.getElementById('upload-status');
+            let lastActiveElement;
+            let splitFilesData = null;
+
+            const modalData = new Map([
+                ['root-fluid', {
+                    title: 'File: fluid.yml (Root)',
+                    content: `<h3>Rationale</h3><p>This is the main entrypoint. It defines the product's core identity and composes the detailed implementation files, which are managed by different stakeholders.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">fluidVersion:</span> <span class="string">"0.1.1"</span>\n<span class="key">kind:</span> <span class="string">DataProduct</span>\n<span class="key">id:</span> <span class="string">trusted_customer_360_v1</span>\n<span class="key">name:</span> <span class="string">"Trusted Customer 360"</span>\n<span class="key">domain:</span> <span class="string">"Sales & Marketing"</span>\n<span class="key">metadata:</span>\n  <span class="key">layer:</span> <span class="string">"Silver"</span>\n  <span class="key">owner:</span>\n    <span class="key">team:</span> <span class="string">"Customer Analytics"</span>\n\n<span class="key">consumes:</span>\n  <span class="key">$ref:</span> <span class="string">'./.fluid/consumes.yml'</span>\n<span class="key">build:</span>\n  <span class="key">$ref:</span> <span class="string">'./.fluid/build.yml'</span>\n<span class="key">exposes:</span>\n  <span class="key">$ref:</span> <span class="string">'./.fluid/exposes.yml'</span></div>`
+                }],
+                ['consumes', {
+                    title: 'File: .fluid/consumes.yml',
+                    content: `<h3>Rationale</h3><p>This file declares the product's upstream dependencies. Crucially, it references the unique URNs of other data products, creating a machine-readable lineage graph across the entire data mesh.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="comment"># Consume the CRM contacts product from the Sales domain</span>\n<span class="key">- id:</span> <span class="string">crm_contacts</span>\n  <span class="key">ref:</span> <span class="string">"urn:product:sales:raw_crm_contacts_v1"</span>\n\n<span class="comment"># Consume the billing invoices product from the Finance domain</span>\n<span class="key">- id:</span> <span class="string">billing_invoices</span>\n  <span class="key">ref:</span> <span class="string">"urn:product:finance:raw_billing_invoices_v1"</span></div>`
+                }],
+                ['build', {
+                    title: 'File: .fluid/build.yml',
+                    content: `<h3>Rationale</h3><p>This defines the modern DataOps toolchain. It tells the platform to use 'dbt' as the transformation engine, targeting a BigQuery dataset. It also specifies that the orchestration should be handled by a specific Composer (Airflow) DAG, linking the contract to the CI/CD and scheduling systems.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">engine:</span> <span class="string">"dbt"</span>\n<span class="key">target:</span> <span class="string">"bigquery"</span>\n<span class="key">model:</span> <span class="string">"customer_360"</span> <span class="comment"># Corresponds to a dbt model/tag</span>\n\n<span class="key">schedule:</span>\n  <span class="key">engine:</span> <span class="string">"composer"</span>\n  <span class="key">dag_id:</span> <span class="string">"dag_build_customer_360"</span>\n  <span class="key">interval:</span> <span class="string">"0 4 * * *"</span> <span class="comment"># Daily at 4 AM</span></div>`
+                }],
+                ['exposes', {
+                    title: 'File: .fluid/exposes.yml',
+                    content: `<h3>Rationale</h3><p>This defines the public interface using Data Vault 2.0 principles. Each DV component (Hub, Satellite, Link) is exposed as a separate, addressable "port." Each port has its own schema and is governed by a shared set of quality rules, providing a clear, well-structured output for consumers.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">- id:</span> <span class="string">hub_customer</span>\n  <span class="key">type:</span> <span class="string">"bigquery_table"</span>\n  <span class="key">description:</span> <span class="string">"Hub for unique customer entities."</span>\n  <span class="key">schema:</span>\n    <span class="key">$ref:</span> <span class="string">'./schema_hub_customer.yml'</span>\n  <span class="key">slo:</span>\n    <span class="key">$ref:</span> <span class="string">'./quality.yml'</span>\n\n<span class="key">- id:</span> <span class="string">sat_customer_details</span>\n  <span class="key">type:</span> <span class="string">"bigquery_table"</span>\n  <span class="key">description:</span> <span class="string">"Descriptive data for customers."</span>\n  <span class="key">schema:</span>\n    <span class="key">$ref:</span> <span class="string">'./schema_sat_details.yml'</span>\n  <span class="key">slo:</span>\n    <span class="key">$ref:</span> <span class="string">'./quality.yml'</span>\n\n<span class="key">- id:</span> <span class="string">link_customer_invoice</span>\n  <span class="key">type:</span> <span class="string">"bigquery_table"</span>\n  <span class="key">description:</span> <span class="string">"Link between customers and their invoices."</span>\n  <span class="key">schema:</span>\n    <span class="key">$ref:</span> <span class="string">'./schema_link_invoice.yml'</span>\n  <span class="key">slo:</span>\n    <span class="key">$ref:</span> <span class="string">'./quality.yml'</span></div>`
+                }],
+                ['quality', {
+                    title: 'File: .fluid/quality.yml',
+                    content: `<h3>Rationale</h3><p>This centralized quality contract applies to all output ports. It defines the service level objectives (SLOs) for freshness and specifies critical data quality checks, such as the uniqueness and integrity of the business keys, which are fundamental to a reliable Data Vault model.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">freshness:</span> <span class="string">"24h"</span>\n<span class="key">validations:</span>\n  <span class="key">- name:</span> <span class="string">"Hub business key is unique and not null"</span>\n    <span class="key">check:</span> <span class="string">'uniqueness(customer_bk) = 100% AND not_null(customer_bk) = 100%'</span>\n    <span class="key">onFailure:</span> <span class="string">"HaltPipeline"</span>\n\n  <span class="key">- name:</span> <span class="string">"All satellite records must have a parent hub record"</span>\n    <span class="key">check:</span> <span class="string">'referential_integrity(sat_customer_details.customer_hk, hub_customer.customer_hk)'</span></div>`
+                }],
+                ['schema-hub', {
+                    title: 'File: .fluid/schema_hub_customer.yml',
+                    content: `<h3>Rationale</h3><p>The schema for the Customer Hub. It contains the hash key (primary key), the business key (what the business uses to identify a customer), the load date, and the record source, following standard Data Vault 2.0 modeling patterns.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">- name:</span> <span class="string">"customer_hk"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[primary_key, hash_key]</span>\n<span class="key">- name:</span> <span class="string">"customer_bk"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[business_key]</span>\n<span class="key">- name:</span> <span class="string">"load_date"</span>\n  <span class="key">type:</span> <span class="string">"TIMESTAMP"</span>\n<span class="key">- name:</span> <span class="string">"record_source"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span></div>`
+                }],
+                ['schema-sat', {
+                    title: 'File: .fluid/schema_sat_details.yml',
+                    content: `<h3>Rationale</h3><p>The schema for the Customer Satellite. It contains the descriptive, temporal data about the customer and is linked to the Hub via the \`customer_hk\` (foreign key).</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">- name:</span> <span class="string">"customer_hk"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[primary_key, foreign_key]</span>\n<span class="key">- name:</span> <span class="string">"hash_diff"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[primary_key]</span>\n<span class="key">- name:</span> <span class="string">"full_name"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n<span class="key">- name:</span> <span class="string">"email"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[pii]</span>\n<span class="key">- name:</span> <span class="string">"load_date"</span>\n  <span class="key">type:</span> <span class="string">"TIMESTAMP"</span></div>`
+                }],
+                ['schema-link', {
+                    title: 'File: .fluid/schema_link_invoice.yml',
+                    content: `<h3>Rationale</h3><p>The schema for the Link table, which establishes a relationship between two Hubs (in this case, Customer and Invoice). It contains only the foreign hash keys of the hubs it connects, creating a purely structural, auditable record of the association.</p><h3 class="mt-6">File Content</h3><div class="code-block"><span class="key">- name:</span> <span class="string">"link_customer_invoice_hk"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[primary_key, hash_key]</span>\n<span class="key">- name:</span> <span class="string">"customer_hk"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[foreign_key]</span>\n<span class="key">- name:</span> <span class="string">"invoice_hk"</span>\n  <span class="key">type:</span> <span class="string">"STRING"</span>\n  <span class="key">tags:</span> <span class="string">[foreign_key]</span>\n<span class="key">- name:</span> <span class="string">"load_date"</span>\n  <span class="key">type:</span> <span class="string">"TIMESTAMP"</span></div>`
+                }],
+            ]);
+
+            function showModal(id) {
+                const details = modalData.get(id);
+                if (!details) return;
+                lastActiveElement = document.activeElement;
+                modalTitleEl.innerHTML = details.title;
+                modalBodyEl.innerHTML = details.content;
+                modalContainer.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                modalCloseBtn.focus();
+            }
+
+            function hideModal() {
+                modalContainer.classList.remove('active');
+                document.body.style.overflow = '';
+                if (lastActiveElement) lastActiveElement.focus();
+            }
+
+            document.querySelectorAll('[data-modal-id]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showModal(item.dataset.modalId);
+                });
+            });
+
+            modalCloseBtn.addEventListener('click', hideModal);
+            modalContainer.addEventListener('click', (e) => {
+                if (e.target === modalContainer) hideModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') hideModal();
+            });
+
+            // --- File Splitter & Boilerplate Logic ---
+            uploadBtn.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const content = e.target.result;
+                            const doc = jsyaml.load(content);
+                            splitFilesData = splitFluidFile(doc);
+                            
+                            if (splitFilesData.log.length > 1) {
+                                uploadStatus.textContent = `⚠️ Split complete with warnings. Check fluid.log in the zip.`;
+                                uploadStatus.className = "text-center text-sm text-yellow-400 mt-4 h-5";
+                            } else {
+                                uploadStatus.textContent = `✅ Successfully split '${file.name}'. Ready to download.`;
+                                uploadStatus.className = "text-center text-sm text-green-400 mt-4 h-5";
+                            }
+                            
+                            const downloadBtn = document.getElementById('download-zip-btn');
+                            downloadBtn.disabled = false;
+                            downloadBtn.classList.remove('cursor-not-allowed', 'bg-gray-700', 'text-gray-400');
+                            downloadBtn.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
+                        } catch (err) {
+                            console.error("Error parsing YAML:", err);
+                            uploadStatus.textContent = `❌ Error: Could not parse the uploaded YAML file.`;
+                            uploadStatus.className = "text-center text-sm text-red-400 mt-4 h-5";
+                            splitFilesData = null;
+                            const downloadBtn = document.getElementById('download-zip-btn');
+                            downloadBtn.disabled = true;
+                            downloadBtn.classList.add('cursor-not-allowed', 'bg-gray-700', 'text-gray-400');
+                            downloadBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'text-white');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            downloadBoilerplateBtn.addEventListener('click', () => {
+                const boilerplateDoc = jsyaml.load(document.getElementById('boilerplate-yaml').textContent);
+                const boilerplateSplit = splitFluidFile(boilerplateDoc);
+                createAndDownloadZip(boilerplateSplit);
+            });
+
+            function splitFluidFile(doc) {
+                const files = {};
+                const root = {};
+                const schemas = {};
+                const log = [`Log generated at: ${new Date().toISOString()}`];
+
+                if (!doc || typeof doc !== 'object') {
+                    log.push("ERROR: Invalid YAML document. Root is not an object.");
+                    return { files: {}, log };
+                }
+
+                const exposesArray = doc.exposes ? (Array.isArray(doc.exposes) ? doc.exposes : [doc.exposes]) : [];
+                if (!doc.exposes) log.push("WARNING: 'exposes' section is missing.");
+
+                const exposesWithoutSchemas = exposesArray.map(port => {
+                    if (!port || typeof port !== 'object') {
+                        log.push(`WARNING: Found an invalid item in the 'exposes' array.`);
+                        return port;
+                    }
+                    const portCopy = {...port};
+                    if (portCopy.schema) {
+                        if (!port.id) {
+                            log.push(`WARNING: A port in 'exposes' is missing an 'id'. Cannot generate a unique schema filename for it.`);
+                        }
+                        const schemaName = `schema_${port.id || 'unknown'}.yml`;
+                        schemas[schemaName] = portCopy.schema;
+                        portCopy.schema = { '$ref': `./${schemaName}` };
+                    } else {
+                        log.push(`INFO: Port '${port.id || 'unknown'}' has no schema to split.`)
+                    }
+                    return portCopy;
+                });
+
+                const topLevelSections = ['consumes', 'build', 'exposes', 'quality', 'slo', 'accessPolicy', 'operations', 'security', 'governance'];
+                for (const key in doc) {
+                    if (topLevelSections.includes(key)) {
+                        if (doc[key]) {
+                            if (key === 'exposes') {
+                                files[`${key}.yml`] = jsyaml.dump(exposesWithoutSchemas, { indent: 2 });
+                            } else {
+                                files[`${key}.yml`] = jsyaml.dump(doc[key], { indent: 2 });
+                            }
+                            root[key] = { '$ref': `./.fluid/${key}.yml` };
+                        }
+                    } else {
+                        root[key] = doc[key];
+                    }
+                }
+                
+                for(const schemaName in schemas) {
+                    files[schemaName] = jsyaml.dump(schemas[schemaName], { indent: 2 });
+                }
+
+                files['fluid.yml'] = jsyaml.dump(root, { indent: 2 });
+                return { files, log };
+            }
+
+            function createAndDownloadZip({ files, log }) {
+                const zip = new JSZip();
+                const fluidDir = zip.folder(".fluid");
+
+                zip.file("fluid.log", log.join('\n'));
+
+                for (const fileName in files) {
+                    if (fileName === 'fluid.yml') {
+                        zip.file(fileName, files[fileName]);
+                    } else {
+                        fluidDir.file(fileName, files[fileName]);
+                    }
+                }
+
+                zip.generateAsync({ type: "blob" }).then(content => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(content);
+                    link.download = "fluid_data_product.zip";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            }
+        });
+    </script>
+
+    <!-- Hidden text area for boilerplate YAML -->
+    <textarea id="boilerplate-yaml" style="display:none;">
+fluidVersion: "0.1.1"
+kind: DataProduct
+id: "silver_sales_datavault_v1"
+name: "Sales Data Vault (Silver)"
+description: "Builds an integrated, cleansed, and historically accurate Data Vault 2.0 model for sales analytics. It conforms raw data from the Oracle ERP source system into a standardized structure of Hubs, Links, and Satellites, serving as the auditable foundation for all downstream analytics."
+domain: "Sales & Marketing"
+metadata:
+  layer: Silver
+  owner:
+    team: "Data Vault Engineering"
+    email: "dv-team@example.com"
+    slack: "#data-vault-eng"
+  status: Published
+  tags:
+    - datavault
+    - silver_layer
+    - dbt
+    - sales
+consumes:
+  - id: "oracle_sales_source"
+    ref: "urn:dataproduct:bronze_oracle_sales_v1"
+    description: "Raw, source-aligned sales data captured via CDC from the Oracle ERP system."
+build:
+  engine: "dbt"
+  model: "models/data_vault/silver_sales_vault"
+  config:
+    materialized: "incremental"
+    unique_key: "load_dts"
+  trigger:
+    type: schedule
+    cron: "0 1 * * *"
+  runtime:
+    platform: "dbt-cloud"
+    resources:
+      cpu: "4"
+      memory: "16Gi"
+  retries:
+    count: 2
+    delaySeconds: 300
+    backoff: exponential
+  notifications:
+    - channel: slack
+      target: "#dv-alerts"
+exposes:
+  - id: "hub_customer"
+    type: "bigquery_table"
+    description: "Hub table for unique customer business keys, integrating customers from all sources."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "hub_customer"
+    tags:
+      archetype: hub
+    schema:
+      - { name: "customer_hk", type: "STRING", tags: [primary_key, hash_key] }
+      - { name: "customer_bk", type: "STRING", tags: [business_key] }
+      - { name: "load_dts", type: "TIMESTAMP" }
+      - { name: "record_source", type: "STRING" }
+    quality:
+      - name: "hub_customer_hk_not_null"
+        rule: "not_null"
+        onFailure: { action: "fail_pipeline" }
+      - name: "hub_customer_hk_is_unique"
+        rule: "unique"
+        onFailure: { action: "fail_pipeline" }
+  - id: "sat_customer_details"
+    type: "bigquery_table"
+    description: "Satellite storing descriptive attributes for customers (SCD Type 2)."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "sat_customer_details"
+    tags:
+      archetype: satellite
+      relationships:
+        - to: "hub_customer"
+          cardinality: "many-to-one"
+          description: "Each customer can have multiple historical versions of their details."
+    schema:
+      - { name: "customer_hk", type: "STRING", tags: [primary_key, foreign_key] }
+      - { name: "load_dts", type: "TIMESTAMP", tags: [primary_key] }
+      - { name: "hash_diff", type: "STRING", tags: [technical] }
+      - { name: "first_name", type: "STRING", tags: [pii] }
+      - { name: "last_name", type: "STRING", tags: [pii] }
+      - { name: "email", type: "STRING", tags: [pii] }
+      - { name: "country", type: "STRING" }
+    privacy:
+      - classification: PII
+        columns: ["first_name", "last_name", "email"]
+        treatment: { type: "masking" }
+  - id: "link_customer_order"
+    type: "bigquery_table"
+    description: "Link table connecting customers to their orders."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-layer-project"
+        dataset: "sales_vault"
+        table: "link_customer_order"
+    tags:
+      archetype: link
+      relationships:
+        - to: "hub_customer"
+          cardinality: "many-to-one"
+        - to: "hub_order"
+          cardinality: "many-to-one"
+    schema:
+      - { name: "link_hk", type: "STRING", tags: [primary_key, hash_key] }
+      - { name: "customer_hk", type: "STRING", tags: [foreign_key] }
+      - { name: "order_hk", type: "STRING", tags: [foreign_key] }
+      - { name: "load_dts", type: "TIMESTAMP" }
+      - { name: "record_source", type: "STRING" }
+    quality:
+      - name: "link_fk_integrity"
+        rule: "SQL:customer_hk IS NOT NULL AND order_hk IS NOT NULL"
+        onFailure: { action: "quarantine_row" }
+slo:
+  freshnessMinutes: 360
+  availabilityPct: 99.9
+accessPolicy:
+  grants:
+    - principal: "group:gold-layer-builders@example.com"
+      permissions: ["readData"]
+    - principal: "group:data-stewards@example.com"
+      permissions: ["readMetadata"]
+operations:
+  lifecycle:
+    retentionPeriodDays: 1825
+    deletionPolicy: "soft-delete"
+security:
+  encryptionAtRest: "KMS"
+  encryptionInTransit: "TLS1.2+"
+governance:
+  rules:
+    - name: "Silver-Layer-Standard"
+      requirement: "All Silver products must conform raw data into an integrated model."
+    - name: "PII-Masking"
+      requirement: "Direct access to PII columns must be restricted; views should use masked versions."
+    </textarea>
+</body>
+</html>
