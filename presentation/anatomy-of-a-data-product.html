@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLUID Specification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+        }
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .section-subtitle {
+            font-size: 1.25rem;
+            text-align: center;
+            color: #94a3b8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .spec-card {
+            background-color: rgba(17, 17, 17, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            height: 100%;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .spec-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+        }
+        .spec-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+        .spec-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .spec-analogy {
+            font-style: italic;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+        .spec-description {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%;
+            max-width: 900px;
+            background-color: #161b22;
+            background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 40%);
+            border-radius: 1rem;
+            border: 1px solid #30363d;
+            padding: 1.5rem;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            cursor: pointer;
+            color: #8b949e;
+            font-size: 1.75rem;
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .modal-body h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e5e5e5;
+            margin-bottom: 0.75rem;
+        }
+        .modal-body p {
+            color: #94a3b8;
+            line-height: 1.7;
+        }
+        .shock-value {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-weight: 500;
+            color: #fca5a5;
+        }
+        .modal-tabs {
+            display: flex;
+            border-bottom: 1px solid #30363d;
+            margin-bottom: 1rem;
+        }
+        .modal-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #94a3b8;
+        }
+        .modal-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .code-block {
+            background-color: #0d1117;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            border: 1px solid #30363d;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .code-block .highlight {
+            background-color: rgba(59, 130, 246, 0.15);
+            display: block;
+            margin: -0.5rem -1rem;
+            padding: 0.5rem 1rem;
+            border-left: 4px solid #3b82f6;
+        }
+        .code-block .key { color: #79c0ff; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .comment { color: #8b949e; }
+        .git-log .commit {
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .git-log .commit:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .git-log .hash { color: #f59e0b; font-family: monospace; }
+        .git-log .author { color: #94a3b8; }
+        .git-log .date { color: #64748b; font-size: 0.8rem; }
+    </style>
+</head>
+<body class="antialiased">
+    <canvas id="background-canvas"></canvas>
+
+    <div class="main-container">
+        <div class="hero-section">
+            <img src="../logo.png" alt="FLUID Logo" class="mx-auto mb-6 h-24">
+            <h1 class="section-title">Anatomy of a Data Product</h1>
+            <p class="section-subtitle">FLUID is a specification for defining modern data products. It provides a simple, declarative structure for turning chaotic pipelines into trustworthy, governable, and AI-ready assets.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+            <!-- Identity -->
+            <div class="spec-card" data-modal-id="spec-identity">
+                <div class="spec-icon">🛂</div>
+                <h3 class="spec-title">Identity & Metadata</h3>
+                <p class="spec-analogy">"The Passport"</p>
+                <p class="spec-description">The `id`, `name`, `domain`, and `owner`. Uniquely identifies the product, its purpose, and assigns clear ownership.</p>
+            </div>
+            <!-- Consumes -->
+            <div class="spec-card" data-modal-id="spec-consumes">
+                <div class="spec-icon">🛒</div>
+                <h3 class="spec-title">consumes</h3>
+                <p class="spec-analogy">"The Ingredients List"</p>
+                <p class="spec-description">Explicitly declares all dependencies, whether raw sources or other data products, creating perfect, automated lineage.</p>
+            </div>
+            <!-- Build -->
+            <div class="spec-card" data-modal-id="spec-build">
+                <div class="spec-icon">⚙️</div>
+                <h3 class="spec-title">build</h3>
+                <p class="spec-analogy">"The Recipe"</p>
+                <p class="spec-description">The transformation logic. Defines the tools (dbt, Spark), runtime, and trigger conditions needed to create the output.</p>
+            </div>
+            <!-- Exposes -->
+            <div class="spec-card" data-modal-id="spec-exposes">
+                <div class="spec-icon">🏪</div>
+                <h3 class="spec-title">exposes</h3>
+                <p class="spec-analogy">"The Serving Window"</p>
+                <p class="spec-description">The official, public interface. Defines the schema, quality rules, and privacy policies for each output port.</p>
+            </div>
+            <!-- SLO -->
+            <div class="spec-card" data-modal-id="spec-slo">
+                <div class="spec-icon">⏱️</div>
+                <h3 class="spec-title">slo</h3>
+                <p class="spec-analogy">"The Promise"</p>
+                <p class="spec-description">Product-level Service Level Objectives, guaranteeing freshness, availability, and latency for all consumers.</p>
+            </div>
+            <!-- Access Policy -->
+            <div class="spec-card" data-modal-id="spec-access">
+                <div class="spec-icon">🛡️</div>
+                <h3 class="spec-title">accessPolicy</h3>
+                <p class="spec-analogy">"The Bouncer"</p>
+                <p class="spec-description">Defines static, role-based access grants, specifying who can read or manage the data product.</p>
+            </div>
+        </div>
+
+        <!-- NEW: Dive Deeper Section -->
+        <div class="text-center mt-16 w-full max-w-4xl">
+            <h2 class="text-2xl font-bold text-slate-300 mb-4">Dive Deeper</h2>
+            <p class="text-slate-400 mb-8">Explore the official documentation and resources to learn more about the FLUID specification.</p>
+            <div class="flex justify-center gap-4">
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Read the Full Specification
+                </a>
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.1.1.json" target="_blank" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 px-6 rounded-lg transition-colors">
+                    Download Schema for v0.1.1
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modal-close-btn" class="modal-close-btn">&times;</span>
+            <h2 id="modal-title" class="modal-title"></h2>
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="explanation">Explanation</button>
+                <button class="modal-tab" data-tab="code">fluid.yml</button>
+            </div>
+            <div id="modal-body">
+                <div id="explanation-content"></div>
+                <div id="code-content" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Background Animation
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        const numStars = 200;
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                z: Math.random() * canvas.width,
+                size: Math.random() * 2 + 1
+            });
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(200, 220, 255, 0.7)";
+            stars.forEach(star => {
+                star.z -= 1;
+                if (star.z <= 0) {
+                    star.z = canvas.width;
+                    star.x = Math.random() * canvas.width;
+                    star.y = Math.random() * canvas.height;
+                }
+                const k = 128 / star.z;
+                const px = star.x * k + canvas.width / 2;
+                const py = star.y * k + canvas.height / 2;
+                if (px > 0 && px < canvas.width && py > 0 && py < canvas.height) {
+                    const size = star.size * k;
+                    ctx.fillRect(px, py, size, size);
+                }
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // Modal Logic
+        const modalContainer = document.getElementById('modal-container');
+        const modalTitleEl = document.getElementById('modal-title');
+        const explanationContentEl = document.getElementById('explanation-content');
+        const codeContentEl = document.getElementById('code-content');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const tabs = document.querySelectorAll('.modal-tab');
+
+        const fullYml = `
+<pre class="code-block"><span class="spec-identity"><span class="key">fluidVersion:</span> <span class="string">"0.1.1"</span>
+<span class="key">kind:</span> <span class="string">DataProduct</span>
+<span class="key">id:</span> <span class="string">"customer_360_gold_v1"</span>
+<span class="key">name:</span> <span class="string">"Customer 360 Gold Model"</span>
+<span class="key">description:</span> <span class="string">"A comprehensive, unified view of the customer..."</span>
+<span class="key">domain:</span> <span class="string">"Analytics & BI"</span>
+<span class="key">metadata:</span>
+  <span class="key">layer:</span> <span class="string">Gold</span>
+  <span class="key">owner:</span>
+    <span class="key">team:</span> <span class="string">"Customer Insights & Analytics"</span>
+    <span class="key">email:</span> <span class="string">"customer-insights@example.com"</span>
+  <span class="key">status:</span> <span class="string">Published</span></span>
+
+<span class="spec-consumes"><span class="key">consumes:</span>
+  <span class="key">- id:</span> <span class="string">"sales_vault"</span>
+    <span class="key">ref:</span> <span class="string">"urn:dataproduct:silver_sales_datavault_v1"</span>
+  <span class="key">- id:</span> <span class="string">"web_analytics_silver"</span>
+    <span class="key">ref:</span> <span class="string">"urn:dataproduct:silver_web_analytics_v1"</span></span>
+
+<span class="spec-build"><span class="key">build:</span>
+  <span class="key">engine:</span> <span class="string">"dbt"</span>
+  <span class="key">model:</span> <span class="string">"models/marts/customer/customer_360.sql"</span>
+  <span class="key">trigger:</span>
+    <span class="key">type:</span> <span class="string">schedule</span>
+    <span class="key">cron:</span> <span class="string">"0 4 * * *"</span>
+  <span class="key">runtime:</span>
+    <span class="key">platform:</span> <span class="string">"dbt-cloud"</span></span>
+
+<span class="spec-exposes"><span class="key">exposes:</span>
+  <span class="key">- id:</span> <span class="string">"customer_360_master"</span>
+    <span class="key">type:</span> <span class="string">"bigquery_table"</span>
+    <span class="key">location:</span>
+      <span class="key">project:</span> <span class="string">"analytics-prod"</span>
+      <span class="key">dataset:</span> <span class="string">"gold_models"</span>
+    <span class="key">schema:</span>
+      <span class="key">- name:</span> <span class="string">customer_id</span>
+        <span class="key">type:</span> <span class="string">"STRING"</span>
+        <span class="key">tags:</span> <span class="string">[primary_key]</span>
+      <span class="key">- name:</span> <span class="string">email</span>
+        <span class="key">type:</span> <span class="string">"STRING"</span>
+        <span class="key">tags:</span> <span class="string">[pii]</span>
+    <span class="key">quality:</span>
+      <span class="key">- name:</span> <span class="string">"customer_id_is_not_null"</span>
+        <span class="key">rule:</span> <span class="string">"not_null"</span>
+        <span class="key">onFailure:</span> <span class="string">{ action: "fail_pipeline" }</span></span>
+
+<span class="spec-slo"><span class="key">slo:</span>
+  <span class="key">freshnessMinutes:</span> <span class="string">240</span>
+  <span class="key">availabilityPct:</span> <span class="string">99.95</span></span>
+
+<span class="spec-access"><span class="key">accessPolicy:</span>
+  <span class="key">grants:</span>
+    <span class="key">- principal:</span> <span class="string">"group:business-analysts@example.com"</span>
+      <span class="key">permissions:</span> <span class="string">["readData"]</span></span>
+</pre>
+        `;
+        
+        const modalData = {
+            'spec-identity': {
+                title: '🛂 Identity & Metadata',
+                text: `<h3>What it is:</h3><p>A unique, versioned ID, clear owner, and descriptive metadata for every data asset. This is the non-negotiable foundation for a data product.</p><div class="shock-value"><strong>Wake-Up Call:</strong> If you can't answer "Who owns this data?" and "What is it for?" in seconds, you don't have data products. You have data problems.</div>`,
+                highlightClass: 'spec-identity'
+            },
+            'spec-consumes': {
+                title: '🛒 consumes: The Ingredients List',
+                text: `<h3>What it is:</h3><p>An explicit, machine-readable list of all upstream data products this product depends on.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your current data lineage is a guess based on parsing SQL. It's brittle and often wrong. Explicit dependencies create perfect, automated lineage every time, making impact analysis instant and accurate.</div>`,
+                highlightClass: 'spec-consumes'
+            },
+            'spec-build': {
+                title: '⚙️ build: The Recipe',
+                text: `<h3>What it is:</h3><p>The version-controlled transformation logic, specifying the tools, runtime, and trigger conditions needed to create the output from the inputs.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your transformation logic is probably tangled up with orchestration and infrastructure code. Decoupling them makes your logic portable, testable, and reusable.</div>`,
+                highlightClass: 'spec-build'
+            },
+            'spec-exposes': {
+                title: '🏪 exposes: The Serving Window',
+                text: `<h3>What it is:</h3><p>The official, public interface of the data product. Each 'port' defines a single, trusted point of access and contains its own schema, quality rules, and privacy policies.</p><div class="shock-value"><strong>Wake-Up Call:</strong> If your users access data through multiple tables and views, you've created chaos. A data product exposes a single, governed interface, eliminating ambiguity and ensuring consistency.</div>`,
+                highlightClass: 'spec-exposes'
+            },
+            'spec-slo': {
+                title: '⏱️ slo: The Promise',
+                text: `<h3>What it is:</h3><p>A top-level Service Level Objective for the entire data product, making explicit guarantees about freshness, availability, and latency to all consumers.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your data consumers operate on hope. They hope the data is fresh. They hope the dashboard works. An SLO turns hope into a measurable, enforceable promise.</div>`,
+                highlightClass: 'spec-slo'
+            },
+            'spec-access': {
+                title: '🛡️ accessPolicy: The Bouncer',
+                text: `<h3>What it is:</h3><p>Defines the static, role-based access grants for the data product, specifying *who* can read or manage the data.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Managing data access table-by-table is a security nightmare that doesn't scale. Defining access at the product level simplifies governance and ensures policies are applied consistently.</div>`,
+                highlightClass: 'spec-access'
+            }
+        };
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const tabName = tab.dataset.tab;
+                explanationContentEl.classList.toggle('hidden', tabName !== 'explanation');
+                codeContentEl.classList.toggle('hidden', tabName !== 'code');
+            });
+        });
+
+        document.querySelectorAll('.spec-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const modalId = card.dataset.modalId;
+                const data = modalData[modalId];
+                if (data) {
+                    modalTitleEl.innerHTML = data.title;
+                    explanationContentEl.innerHTML = data.text;
+                    
+                    let highlightedYml = fullYml.replace(`class="${data.highlightClass}"`, `class="${data.highlightClass} highlight"`);
+                    codeContentEl.innerHTML = highlightedYml;
+                    
+                    // Reset to explanation tab by default
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('.modal-tab[data-tab="explanation"]').classList.add('active');
+                    explanationContentEl.classList.remove('hidden');
+                    codeContentEl.classList.add('hidden');
+
+                    modalContainer.classList.add('active');
+                }
+            });
+        });
+
+        const closeModal = () => {
+            modalContainer.classList.remove('active');
+        };
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+</html>
