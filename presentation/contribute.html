@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contribute to FLUID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            height: 100%;
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #38bdf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto px-4 py-16">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white mb-4">Building the Future, <span class="text-gradient">Together</span></h1>
+            <p class="max-w-4xl mx-auto text-lg md:text-xl text-gray-400">The agentic era requires a shared, open standard for data. FLUID is a community-driven protocol, and its success depends on all of us.</p>
+        </header>
+
+        <main>
+            <div class="card rounded-lg p-8 lg:p-12 w-full max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-center">
+                    <!-- QR Code and Link -->
+                    <div class="md:col-span-1 flex flex-col items-center justify-center">
+                        <h2 class="text-2xl font-bold text-white mb-4">Join the Movement</h2>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://open-data-protocol.github.io/fluid/" alt="QR Code for FLUID Protocol" class="rounded-lg border-4 border-gray-700">
+                        <p class="font-mono text-blue-400 mt-6 text-center break-all">open-data-protocol.github.io/fluid</p>
+                    </div>
+
+                    <!-- Call to Action -->
+                    <div class="md:col-span-2 text-left">
+                        <p class="text-gray-300 text-xl leading-relaxed">
+                            Whether you're an <strong class="text-white">enterprise</strong> solving real-world problems, a <strong class="text-white">vendor</strong> building the next generation of tools, or a <strong class="text-white">developer</strong> passionate about the future of data, your contribution matters.
+                        </p>
+                        <p class="text-lg text-blue-400 mt-6 font-semibold">
+                            Help us build the missing protocol for the agentic era.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
