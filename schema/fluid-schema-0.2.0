@@ -1,0 +1,561 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-data-protocol.org/fluid/fluid.schema.v2.3.json",
+  "title": "FLUID (Federated Layered Unified Interchange Definition) Specification",
+  "description": "A comprehensive, production-ready schema for FLUID data product contracts. This version adds stricter validation patterns for identifiers and other key fields to ensure contract integrity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fluidVersion",
+    "kind",
+    "id",
+    "name",
+    "description",
+    "domain",
+    "metadata",
+    "exposes"
+  ],
+  "properties": {
+    "fluidVersion": {
+      "type": "string",
+      "description": "Version of the FLUID spec this contract adheres to.",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "examples": ["2.3.0"]
+    },
+    "kind": {
+      "type": "string",
+      "description": "The type of data product definition.",
+      "examples": [
+        "DataProduct",
+        "VirtualDataProduct",
+        "EgressFlow",
+        "IngestFlow",
+        "MLModelProduct",
+        "FeatureStoreProduct"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "description": "Globally-unique, versioned data product identifier. Should be machine-friendly.",
+      "pattern": "^[a-zA-Z0-9_.-]+$",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable product name."
+    },
+    "description": {
+      "type": "string",
+      "description": "A brief, business-focused description of the product's purpose."
+    },
+    "domain": {
+      "type": "string",
+      "description": "The owning business domain (e.g., 'Marketing', 'Finance').",
+       "pattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "consumes": {
+      "description": "An optional list of input data sources required to build the product.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/consume"
+      }
+    },
+    "build": {
+      "$ref": "#/$defs/build"
+    },
+    "exposes": {
+      "description": "The public output interfaces (ports) of the data product.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/expose"
+      }
+    },
+    "slo": {
+      "$ref": "#/$defs/sla"
+    },
+    "accessPolicy": {
+      "$ref": "#/$defs/accessPolicy"
+    },
+    "operations": {
+      "$ref": "#/$defs/operations"
+    },
+    "security": {
+      "$ref": "#/$defs/security"
+    },
+    "governance": {
+      "$ref": "#/$defs/governance"
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "layer": {
+          "type": "string",
+          "enum": ["Bronze", "Silver", "Gold", "Platinum"],
+          "description": "The architectural layer of the data product."
+        },
+        "owner": {
+          "description": "The team or individual responsible for the data product.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A contact email address for the owner.",
+              "format": "email"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "team": { "type": "string" },
+                "email": { "type": "string", "format": "email" },
+                "slack": { "type": "string" }
+              },
+              "required": ["team"]
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Development", "Published", "Deprecated"],
+          "default": "Development"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of arbitrary tags for categorization."
+        }
+      },
+      "required": ["layer", "owner"]
+    },
+    "consume": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A local alias for the consumed data source.",
+          "pattern": "^[a-zA-Z0-9_.-]+$"
+        },
+        "ref": {
+          "type": "string",
+          "description": "A reference to another data product (e.g., URN)."
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "ref"]
+    },
+    "build": {
+      "type": "object",
+      "description": "Describes the logical transformation process and its operational details.",
+      "properties": {
+        "engine": {
+          "type": "string",
+          "description": "The transformation engine used. Provided examples cover common cloud services, but any string is valid.",
+          "examples": [
+            "bigquery",
+            "redshift-sql",
+            "athena-sql",
+            "snowflake-sql",
+            "dbt",
+            "spark-sql",
+            "spark-python",
+            "databricks-sql",
+            "databricks-python",
+            "emr-spark",
+            "glue-spark",
+            "dataflow-python",
+            "custom-python"
+          ]
+        },
+        "model": {
+          "type": "string",
+          "description": "A reference to the specific model or script (e.g., dbt model path, git URI to a SQL file)."
+        },
+        "config": {
+          "type": "object",
+          "description": "Engine-specific configuration key-value pairs.",
+          "additionalProperties": true
+        },
+        "trigger": {
+          "$ref": "#/$defs/trigger"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "retries": {
+          "$ref": "#/$defs/retryPolicy"
+        },
+        "notifications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/notification"
+          }
+        }
+      },
+      "required": ["engine", "model"]
+    },
+    "expose": {
+      "type": "object",
+      "description": "A single output port of the data product.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier for this output port.",
+          "pattern": "^[a-zA-Z0-9_.-]+$"
+        },
+        "type": {
+          "type": "string",
+          "description": "The physical type of the output. Provided examples cover common cloud services, but any string is valid.",
+          "examples": [
+            "bigquery_table",
+            "bigquery_view",
+            "bigquery_materialized_view",
+            "gcs_delta_table",
+            "gcs_iceberg_table",
+            "gcs_parquet_files",
+            "pubsub_topic",
+            "redshift_table",
+            "redshift_view",
+            "redshift_materialized_view",
+            "s3_delta_table",
+            "s3_iceberg_table",
+            "s3_parquet_files",
+            "kinesis_stream",
+            "kafka_topic",
+            "snowflake_table",
+            "api_endpoint"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        },
+        "tags": {
+          "type": "object",
+          "properties": {
+            "archetype": {
+              "type": "string",
+              "enum": ["hub", "satellite", "link", "view", "table"],
+              "description": "The modeling archetype of the port."
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/relationship"
+              }
+            }
+          }
+        },
+        "schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/column"
+          }
+        },
+        "mappings": {
+          "description": "Declarative transformation logic that separates lineage from rules.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mapping"
+          }
+        },
+        "quality": {
+          "description": "A list of quality rules specific to this port.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/qualityRule"
+          }
+        },
+        "privacy": {
+          "description": "A list of privacy treatments applied to columns in this port.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/privacyRule"
+          }
+        },
+        "semantics": {
+          "$ref": "#/$defs/semantics"
+        }
+      },
+      "required": ["id", "type", "schema", "location"]
+    },
+    "mapping": {
+      "type": "object",
+      "description": "Defines the transformation for a single target column, explicitly separating source columns for lineage from the transformation rule.",
+      "properties": {
+        "target": {
+          "type": "string",
+          "description": "The name of the target column in the output schema.",
+          "pattern": "^[a-zA-Z0-9_]+$"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of input columns used, for automated lineage generation."
+        },
+        "rule": {
+          "type": "string",
+          "description": "The transformation logic or function to compute the target column."
+        }
+      },
+      "required": ["target", "sources", "rule"]
+    },
+    "column": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+$"
+        },
+        "type": {
+          "type": "string",
+          "description": "The physical data type."
+        },
+        "description": {
+          "type": "string"
+        },
+        "nullable": {
+          "type": "boolean",
+          "default": true
+        },
+        "semantic": {
+          "type": "string",
+          "description": "Reference to an ontology term or glossary ID."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Semantic tags like 'primary_key', 'foreign_key', 'pii'."
+        }
+      },
+      "required": ["name", "type"]
+    },
+    "relationship": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "type": "string",
+          "description": "The 'id' of the target port for the relationship."
+        },
+        "cardinality": {
+          "type": "string",
+          "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"]
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": ["to", "cardinality"]
+    },
+    "qualityRule": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "rule": { "type": "string", "description": "The rule to be enforced (e.g., 'not_null', 'unique', or a SQL predicate)." },
+        "onFailure": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string", "enum": ["reject_row", "quarantine_row", "fail_pipeline", "alert"] }
+          },
+          "required": ["action"]
+        }
+      },
+      "required": ["name", "rule", "onFailure"]
+    },
+    "privacyRule": {
+      "type": "object",
+      "properties": {
+        "classification": { "type": "string", "enum": ["PII", "SPI", "Confidential"] },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "treatment": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["hashing", "masking", "encryption", "tokenization"] }
+          },
+          "required": ["type"]
+        }
+      },
+      "required": ["columns", "treatment"]
+    },
+    "semantics": {
+      "type": "object",
+      "properties": {
+        "ontology": { "type": "string", "format": "uri" },
+        "classifications": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "examples": ["parquet", "delta", "iceberg", "json", "csv", "avro"]
+        },
+        "properties": {
+          "type": "object",
+          "description": "Technology-specific properties. E.g., for BigQuery: { 'project': '...', 'dataset': '...', 'table': '...' }. For S3: { 'bucket': '...', 'path': '...' }."
+        }
+      },
+      "required": ["properties"]
+    },
+    "trigger": {
+      "type": "object",
+      "description": "Defines how the build is initiated.",
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "schedule" },
+            "cron": {
+              "type": "string",
+              "description": "A standard cron expression.",
+              "pattern": "^((?:\\*|\\d+(?:-\\d+)?(?:,\\d+(?:-\\d+)?)*)(?:/\\d+)?\\s+){4,5}(?:\\*|\\d+(?:-\\d+)?(?:,\\d+(?:-\\d+)?)*)(?:/\\d+)?$"
+            }
+          },
+          "required": ["type", "cron"]
+        },
+        {
+          "properties": {
+            "type": { "const": "event" },
+            "eventType": { "type": "string" }
+          },
+          "required": ["type", "eventType"]
+        },
+        {
+          "properties": { "type": { "const": "manual" } },
+          "required": ["type"]
+        }
+      ]
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "description": "The runtime platform. Provided examples cover common cloud orchestrators, but any string is valid.",
+          "examples": [
+            "composer",
+            "mwaa",
+            "airflow",
+            "dbt-cloud",
+            "databricks",
+            "emr-serverless",
+            "glue-jobs",
+            "kubernetes-engine",
+            "cloud-run",
+            "aws-lambda"
+          ]
+        },
+        "resources": { "type": "object", "properties": { "cpu": { "type": "string" }, "memory": { "type": "string" } } }
+      },
+      "required": []
+    },
+    "retryPolicy": {
+      "type": "object",
+      "properties": {
+        "count": { "type": "integer", "minimum": 0, "default": 0 },
+        "delaySeconds": { "type": "integer", "minimum": 0, "default": 0 },
+        "backoff": { "type": "string", "enum": ["none", "exponential"], "default": "none" }
+      }
+    },
+    "notification": {
+      "type": "object",
+      "properties": {
+        "channel": { "type": "string", "enum": ["email", "slack", "pagerduty", "webhook"] },
+        "target": { "type": "string" }
+      },
+      "required": []
+    },
+    "accessPolicy": {
+      "type": "object",
+      "properties": {
+        "grants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/accessGrant"
+          }
+        }
+      }
+    },
+    "accessGrant": {
+      "type": "object",
+      "properties": {
+        "principal": {
+          "type": "string",
+          "description": "e.g., group:analysts, user:name@company.com, gcp_service_account:..., aws_iam_role:...",
+          "pattern": "^(group|user|gcp_service_account|aws_iam_role):.+$"
+        },
+        "permissions": { "type": "array", "items": { "type": "string", "enum": ["readData", "readMetadata", "manage"] } }
+      },
+      "required": []
+    },
+    "operations": {
+      "type": "object",
+      "properties": {
+        "sla": { "$ref": "#/$defs/sla" },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" }
+      }
+    },
+    "sla": {
+      "type": "object",
+      "description": "Defines the Service Level Objectives for the entire data product.",
+      "properties": {
+        "latencyMs": { "type": "integer", "description": "Maximum query latency in milliseconds.", "minimum": 0 },
+        "freshnessMinutes": { "type": "integer", "description": "Maximum data latency in minutes.", "minimum": 0 },
+        "availabilityPct": { "type": "number", "description": "Expected uptime percentage.", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "properties": {
+        "retentionPeriodDays": { "type": "integer", "minimum": 0 },
+        "deletionPolicy": { "type": "string", "enum": ["hard-delete", "soft-delete", "anonymize"] }
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "encryptionAtRest": {
+          "type": "string",
+          "description": "Method of at-rest encryption. Examples provided for cloud KMS services.",
+          "default": "AES256",
+          "examples": ["AES256", "GCP_CMEK", "AWS_KMS"]
+        },
+        "encryptionInTransit": {
+          "type": "string",
+          "description": "Method of in-transit encryption.",
+          "default": "TLS1.2+",
+          "examples": ["TLS1.2+", "mTLS"]
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "requirement": { "type": "string" }
+            },
+            "required": ["name", "requirement"]
+          }
+        }
+      }
+    }
+  }
+}
