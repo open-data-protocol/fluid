@@ -646,148 +646,245 @@ governance:
       requirement: "Direct query access to this Bronze product is restricted to service principals."
 `,
                 silver: `
-fluidVersion: "0.1.1"
+fluidVersion: "0.2.0"
 kind: DataProduct
-id: "silver_sales_datavault_v1"
-name: "Sales Data Vault (Silver)"
-description: "Builds an integrated, cleansed, and historically accurate Data Vault 2.0 model for sales analytics. It conforms raw data from the Oracle ERP source system into a standardized structure of Hubs, Links, and Satellites, serving as the auditable foundation for all downstream analytics."
-domain: "Sales & Marketing"
+id: "silver-customer-360-v1"
+name: "Silver Customer 360 Data Vault"
+description: "An integrated and conformed Data Vault 2.0 model for the customer domain. It joins raw data from the CRM and ERP systems and structures it into Hubs, Links, and Satellites to serve as the auditable foundation for all downstream analytics."
+domain: "Customer-Analytics"
 
 metadata:
   layer: Silver
   owner:
-    team: "Data Vault Engineering"
-    email: "dv-team@example.com"
-    slack: "#data-vault-eng"
+    team: "Customer Data Engineering"
+    email: "cust-data-eng@example.com"
+    slack: "#customer-data-eng"
   status: Published
   tags:
-    - datavault
+    - customer_360
     - silver_layer
     - dbt
-    - sales
+    - bigquery
+    - datavault
 
 consumes:
-  - id: "oracle_sales_source"
-    ref: "urn:dataproduct:bronze_oracle_sales_v1"
-    description: "Raw, source-aligned sales data captured via CDC from the Oracle ERP system."
+  - id: "raw_crm_contacts"
+    ref: "urn:dataproduct:bronze_crm_contacts_v1.2"
+    description: "Raw, source-aligned customer contact information from the CRM system."
+  - id: "raw_erp_orders"
+    ref: "urn:dataproduct:bronze_erp_orders_v2.1"
+    description: "Raw, source-aligned order and transaction data from the ERP system."
 
 build:
   engine: "dbt"
-  model: "models/data_vault/silver_sales_vault" # This would point to the dbt model directory
+  model: "tag:silver_dv_customer" # This tag selects all dbt models for this data product
   config:
     materialized: "incremental"
     unique_key: "load_dts"
   trigger:
     type: schedule
-    cron: "0 1 * * *" # Run daily at 1 AM
+    cron: "0 2 * * *" # Run daily at 2 AM
   runtime:
-    platform: "dbt-cloud"
+    platform: "composer"
     resources:
       cpu: "4"
       memory: "16Gi"
   retries:
-    count: 2
-    delaySeconds: 300
+    count: 3
+    delaySeconds: 600
     backoff: exponential
-  notifications:
-    - channel: slack
-      target: "#dv-alerts"
 
 exposes:
   - id: "hub_customer"
     type: "bigquery_table"
-    description: "Hub table for unique customer business keys, integrating customers from all sources."
+    description: "Hub for unique customer business keys."
     location:
       format: "iceberg"
       properties:
-        project: "silver-layer-project"
-        dataset: "sales_vault"
+        project: "silver-data-project"
+        dataset: "customer_vault"
         table: "hub_customer"
     tags:
       archetype: hub
     schema:
-      - { name: "customer_hk", type: "STRING", tags: [primary_key, hash_key] }
-      - { name: "customer_bk", type: "STRING", tags: [business_key] }
+      - { name: "customer_hk", type: "STRING", nullable: false, tags: [primary_key, hash_key] }
+      - { name: "customer_bk", type: "STRING", nullable: false, tags: [business_key] }
       - { name: "load_dts", type: "TIMESTAMP" }
       - { name: "record_source", type: "STRING" }
     quality:
-      - name: "hub_customer_hk_not_null"
+      - name: "hub_customer_keys_not_null"
         rule: "not_null"
         onFailure: { action: "fail_pipeline" }
-      - name: "hub_customer_hk_is_unique"
-        rule: "unique"
-        onFailure: { action: "fail_pipeline" }
+    mappings:
+      - target: "customer_hk"
+        sources: ["raw_crm_contacts.CUST_ID"]
+        rule: "hash('sha1', raw_crm_contacts.CUST_ID)"
+      - target: "customer_bk"
+        sources: ["raw_crm_contacts.CUST_ID"]
+        rule: "direct(raw_crm_contacts.CUST_ID)"
+      - target: "load_dts"
+        sources: []
+        rule: "current_timestamp()"
+      - target: "record_source"
+        sources: []
+        rule: "constant('CRM')"
 
   - id: "hub_order"
     type: "bigquery_table"
-    description: "Hub table for unique order business keys."
+    description: "Hub for unique order business keys."
     location:
       format: "iceberg"
       properties:
-        project: "silver-layer-project"
-        dataset: "sales_vault"
+        project: "silver-data-project"
+        dataset: "customer_vault"
         table: "hub_order"
     tags:
       archetype: hub
     schema:
-      - { name: "order_hk", type: "STRING", tags: [primary_key, hash_key] }
-      - { name: "order_bk", type: "STRING", tags: [business_key] }
+      - { name: "order_hk", type: "STRING", nullable: false, tags: [primary_key, hash_key] }
+      - { name: "order_bk", type: "STRING", nullable: false, tags: [business_key] }
       - { name: "load_dts", type: "TIMESTAMP" }
       - { name: "record_source", type: "STRING" }
+    mappings:
+      - target: "order_hk"
+        sources: ["raw_erp_orders.ORDER_ID"]
+        rule: "hash('sha1', raw_erp_orders.ORDER_ID)"
+      - target: "order_bk"
+        sources: ["raw_erp_orders.ORDER_ID"]
+        rule: "direct(raw_erp_orders.ORDER_ID)"
+      - target: "load_dts"
+        sources: []
+        rule: "current_timestamp()"
+      - target: "record_source"
+        sources: []
+        rule: "constant('ERP')"
 
   - id: "hub_product"
     type: "bigquery_table"
-    description: "Hub table for unique product business keys."
+    description: "Hub for unique product business keys."
     location:
       format: "iceberg"
       properties:
-        project: "silver-layer-project"
-        dataset: "sales_vault"
+        project: "silver-data-project"
+        dataset: "customer_vault"
         table: "hub_product"
     tags:
       archetype: hub
     schema:
-      - { name: "product_hk", type: "STRING", tags: [primary_key, hash_key] }
-      - { name: "product_bk", type: "STRING", tags: [business_key] }
+      - { name: "product_hk", type: "STRING", nullable: false, tags: [primary_key, hash_key] }
+      - { name: "product_bk", type: "STRING", nullable: false, tags: [business_key] }
       - { name: "load_dts", type: "TIMESTAMP" }
       - { name: "record_source", type: "STRING" }
+    mappings:
+      - target: "product_hk"
+        sources: ["raw_erp_orders.PRODUCT_ID"]
+        rule: "hash('sha1', raw_erp_orders.PRODUCT_ID)"
+      - target: "product_bk"
+        sources: ["raw_erp_orders.PRODUCT_ID"]
+        rule: "direct(raw_erp_orders.PRODUCT_ID)"
+      - target: "load_dts"
+        sources: []
+        rule: "current_timestamp()"
+      - target: "record_source"
+        sources: []
+        rule: "constant('ERP')"
 
   - id: "sat_customer_details"
     type: "bigquery_table"
-    description: "Satellite storing descriptive attributes for customers (SCD Type 2)."
+    description: "Satellite storing descriptive, historical attributes for customers (SCD Type 2)."
     location:
       format: "iceberg"
       properties:
-        project: "silver-layer-project"
-        dataset: "sales_vault"
+        project: "silver-data-project"
+        dataset: "customer_vault"
         table: "sat_customer_details"
     tags:
       archetype: satellite
       relationships:
         - to: "hub_customer"
           cardinality: "many-to-one"
-          description: "Each customer can have multiple historical versions of their details."
+          description: "Connects satellite records to a single customer hub entry."
     schema:
-      - { name: "customer_hk", type: "STRING", tags: [primary_key, foreign_key] }
-      - { name: "load_dts", type: "TIMESTAMP", tags: [primary_key] }
-      - { name: "hash_diff", type: "STRING", tags: [technical] }
-      - { name: "first_name", type: "STRING", tags: [pii] }
-      - { name: "last_name", type: "STRING", tags: [pii] }
-      - { name: "email", type: "STRING", tags: [pii] }
+      - { name: "customer_hk", type: "STRING", nullable: false, tags: [primary_key, foreign_key] }
+      - { name: "load_dts", type: "TIMESTAMP", nullable: false, tags: [primary_key] }
+      - { name: "hash_diff", type: "STRING", nullable: false, tags: [technical] }
+      - { name: "full_name", type: "STRING", tags: [pii] }
+      - { name: "email_domain", type: "STRING" }
       - { name: "country", type: "STRING" }
     privacy:
       - classification: PII
-        columns: ["first_name", "last_name", "email"]
+        columns: ["full_name"]
         treatment: { type: "masking" }
+    mappings:
+      - target: "customer_hk"
+        sources: ["raw_crm_contacts.CUST_ID"]
+        rule: "hash('sha1', raw_crm_contacts.CUST_ID)"
+      - target: "load_dts"
+        sources: []
+        rule: "current_timestamp()"
+      - target: "hash_diff"
+        sources: ["raw_crm_contacts.FNAME", "raw_crm_contacts.LNAME", "raw_crm_contacts.EMAIL", "raw_crm_contacts.COUNTRY_CODE"]
+        rule: "hash('sha1', FNAME, LNAME, EMAIL, COUNTRY_CODE)"
+      - target: "full_name"
+        sources: ["raw_crm_contacts.FNAME", "raw_crm_contacts.LNAME"]
+        rule: "concat(trim(raw_crm_contacts.FNAME), ' ', trim(raw_crm_contacts.LNAME))"
+      - target: "email_domain"
+        sources: ["raw_crm_contacts.EMAIL"]
+        rule: "split(raw_crm_contacts.EMAIL, '@', 1)"
+      - target: "country"
+        sources: ["raw_crm_contacts.COUNTRY_CODE"]
+        rule: "direct(raw_crm_contacts.COUNTRY_CODE)"
 
-  - id: "link_customer_order"
+  - id: "sat_order_details"
     type: "bigquery_table"
-    description: "Link table connecting customers to their orders."
+    description: "Satellite storing descriptive, historical attributes for orders."
     location:
       format: "iceberg"
       properties:
-        project: "silver-layer-project"
-        dataset: "sales_vault"
+        project: "silver-data-project"
+        dataset: "customer_vault"
+        table: "sat_order_details"
+    tags:
+      archetype: satellite
+      relationships:
+        - to: "hub_order"
+          cardinality: "many-to-one"
+          description: "Connects satellite records to a single order hub entry."
+    schema:
+      - { name: "order_hk", type: "STRING", nullable: false, tags: [primary_key, foreign_key] }
+      - { name: "load_dts", type: "TIMESTAMP", nullable: false, tags: [primary_key] }
+      - { name: "hash_diff", type: "STRING", nullable: false, tags: [technical] }
+      - { name: "order_date", type: "DATE" }
+      - { name: "order_total", type: "NUMERIC" }
+      - { name: "status", type: "STRING" }
+    mappings:
+      - target: "order_hk"
+        sources: ["raw_erp_orders.ORDER_ID"]
+        rule: "hash('sha1', raw_erp_orders.ORDER_ID)"
+      - target: "load_dts"
+        sources: []
+        rule: "current_timestamp()"
+      - target: "hash_diff"
+        sources: ["raw_erp_orders.ORDER_DATE", "raw_erp_orders.ORDER_TOTAL", "raw_erp_orders.STATUS"]
+        rule: "hash('sha1', ORDER_DATE, ORDER_TOTAL, STATUS)"
+      - target: "order_date"
+        sources: ["raw_erp_orders.ORDER_DATE"]
+        rule: "direct(raw_erp_orders.ORDER_DATE)"
+      - target: "order_total"
+        sources: ["raw_erp_orders.ORDER_TOTAL"]
+        rule: "direct(raw_erp_orders.ORDER_TOTAL)"
+      - target: "status"
+        sources: ["raw_erp_orders.STATUS"]
+        rule: "direct(raw_erp_orders.STATUS)"
+
+  - id: "link_customer_order"
+    type: "bigquery_table"
+    description: "Link table establishing the relationship between customers and their orders."
+    location:
+      format: "iceberg"
+      properties:
+        project: "silver-data-project"
+        dataset: "customer_vault"
         table: "link_customer_order"
     tags:
       archetype: link
@@ -797,15 +894,27 @@ exposes:
         - to: "hub_order"
           cardinality: "many-to-one"
     schema:
-      - { name: "link_hk", type: "STRING", tags: [primary_key, hash_key] }
-      - { name: "customer_hk", type: "STRING", tags: [foreign_key] }
-      - { name: "order_hk", type: "STRING", tags: [foreign_key] }
+      - { name: "link_customer_order_hk", type: "STRING", nullable: false, tags: [primary_key, hash_key] }
+      - { name: "customer_hk", type: "STRING", nullable: false, tags: [foreign_key] }
+      - { name: "order_hk", type: "STRING", nullable: false, tags: [foreign_key] }
       - { name: "load_dts", type: "TIMESTAMP" }
-      - { name: "record_source", type: "STRING" }
     quality:
       - name: "link_fk_integrity"
         rule: "SQL:customer_hk IS NOT NULL AND order_hk IS NOT NULL"
         onFailure: { action: "quarantine_row" }
+    mappings:
+      - target: "link_customer_order_hk"
+        sources: ["raw_crm_contacts.CUST_ID", "raw_erp_orders.ORDER_ID"]
+        rule: "hash('sha1', raw_crm_contacts.CUST_ID, raw_erp_orders.ORDER_ID)"
+      - target: "customer_hk"
+        sources: ["raw_crm_contacts.CUST_ID"]
+        rule: "hash('sha1', raw_crm_contacts.CUST_ID)"
+      - target: "order_hk"
+        sources: ["raw_erp_orders.ORDER_ID"]
+        rule: "hash('sha1', raw_erp_orders.ORDER_ID)"
+      - target: "load_dts"
+        sources: []
+        rule: "current_timestamp()"
 
 slo:
   freshnessMinutes: 360 # 6 hours
@@ -824,7 +933,7 @@ operations:
     deletionPolicy: "soft-delete"
 
 security:
-  encryptionAtRest: "KMS"
+  encryptionAtRest: "GCP_CMEK"
   encryptionInTransit: "TLS1.2+"
 
 governance:
@@ -833,6 +942,7 @@ governance:
       requirement: "All Silver products must conform raw data into an integrated model."
     - name: "PII-Masking"
       requirement: "Direct access to PII columns must be restricted; views should use masked versions."
+
 `,
                 gold: `
 fluidVersion: "0.1.1"
