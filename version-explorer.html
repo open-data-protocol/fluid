@@ -40,10 +40,12 @@
   <aside class="glass-card flex flex-col h-full w-64 fixed inset-y-0 left-0 transform transition-transform duration-300 z-40 md:translate-x-0"
          :class="{'-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen}">
     <header class="flex items-center justify-between p-4 border-b border-slate-700">
+     <a href="https://open-data-protocol.github.io/fluid/"  target="_blank" class="flex items-center space-x-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded">  
       <div class="flex items-center gap-3">
-        <img src="./logo.png" alt="FLUID Logo" class="h-8 w-8">
-        <h2 class="font-sora text-xl font-bold text-slate-100">FLUID</h2>
+        <img src="./logo.png" alt="FLUID Logo" class="h-8 w-8" >
+        <h2 class="font-sora text-xl font-bold text-slate-100" >FLUID</h2>
       </div>
+    </a> 
       <button @click="sidebarOpen = false" class="md:hidden text-slate-400 hover:text-white rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400" aria-label="Close sidebar">✕</button>
     </header>
     <div class="p-4 overflow-y-auto flex-1">
