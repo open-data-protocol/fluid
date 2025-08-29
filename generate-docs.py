@@ -51,7 +51,7 @@ def generate_docs(schema_file: Path, version: str):
     output_dir = SPECS_DIR / version
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "index.html"
+    output_file = output_dir / "fluid-spec.html"
 
     cmd = [
         "generate-schema-doc",
