@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What is a Data Product?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: 'Inter', sans-serif;
+            background-color: #02042B;
+            color: #E2E8F0;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .font-sora { font-family: 'Sora', sans-serif; }
+        .container-fluid {
+            width: 100%;
+            max-width: 1600px;
+            padding: 2rem 3rem;
+            position: relative;
+            z-index: 10;
+        }
+        .box {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 73, 106, 0.5);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .icon-circle {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 1px solid;
+        }
+        .glow-effect {
+            position: absolute;
+            pointer-events: none;
+            z-index: -2;
+            opacity: 0.15;
+            filter: blur(120px);
+        }
+        .text-gradient-blue {
+            background: linear-gradient(90deg, #38BDF8, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .detail-card {
+            background-color: #1E293B;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .detail-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background-color: #334155;
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 700px;
+            background: #111827;
+            border-radius: 1rem;
+            z-index: 1001; opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid #374151; }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: #F9FAFB; }
+        .modal-body { padding: 1.5rem; }
+        .modal-body p { font-size: 1rem; color: #D1D5DB; line-height: 1.6; }
+        .modal-body .example {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #1F2937;
+            border-radius: 0.5rem;
+            border: 1px solid #374151;
+        }
+        .modal-body .example strong { color: #A5B4FC; }
+        .modal-close-btn {
+            position: absolute; top: 1rem; right: 1rem; cursor: pointer;
+            color: #9CA3AF; font-size: 1.75rem; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 9999px; transition: background-color 0.2s;
+        }
+        .modal-close-btn:hover { background-color: #374151; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="dataProductModal()">
+    <div class="glow-effect -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-600 rounded-full"></div>
+    <div class="glow-effect -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-slate-800 rounded-full"></div>
+
+    <div class="container-fluid">
+        <div class="text-center mb-10">
+            <h1 class="font-sora text-5xl font-extrabold text-white">What is a Data Product?</h1>
+            <h2 class="text-2xl text-slate-400 mt-2">It's More Than Just a Table in a Database.</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            <!-- What a Data Product is NOT -->
+            <div class="box border-t-8 border-slate-600">
+                <div class="icon-circle bg-slate-800 border-slate-700">
+                    <svg class="w-8 h-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+                </div>
+                <h3 class="font-sora text-3xl font-bold mb-4 text-slate-300">What it is NOT: <br>Data Exhaust</h3>
+                <p class="text-slate-400 text-lg mb-6">This is our current reality. Data is a passive byproduct of our operational systems. It's the "exhaust" from our running applications.</p>
+                <div class="space-y-4">
+                    <div class="detail-card border-red-500" @click="openModal('not-siloed')">
+                        <p class="font-bold text-lg">Siloed & Hidden</p>
+                    </div>
+                    <div class="detail-card border-red-500" @click="openModal('not-trusted')">
+                        <p class="font-bold text-lg">Inconsistent & Untrusted</p>
+                    </div>
+                    <div class="detail-card border-red-500" @click="openModal('not-owned')">
+                        <p class="font-bold text-lg">No Clear Owner</p>
+                    </div>
+                </div>
+                <div class="mt-auto pt-6 text-center">
+                    <p class="font-bold text-2xl text-red-400">Result: High Costs, Slow Decisions, Compliance Risks.</p>
+                </div>
+            </div>
+
+            <!-- What a Data Product IS -->
+            <div class="box border-t-8 border-blue-500">
+                <div class="icon-circle bg-blue-900/50 border-blue-700">
+                     <svg class="w-8 h-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.5l2.25 1.313M12 5.25v2.25m0 0l-2.25 1.313M12 7.5l2.25 1.313M3.75 9.75l2.25-1.313M21 9.75l-2.25-1.313" /></svg>
+                </div>
+                <h3 class="font-sora text-3xl font-bold mb-4"><span class="text-gradient-blue">What it IS: <br>A Trusted, Reusable Asset</span></h3>
+                <p class="text-slate-400 text-lg mb-6">A Data Product is an asset that has been intentionally designed, built, and managed for consumption. It's our "finished good."</p>
+                <div class="space-y-4">
+                    <div class="detail-card border-green-500" @click="openModal('is-discoverable')">
+                        <p class="font-bold text-lg">Discoverable</p>
+                    </div>
+                     <div class="detail-card border-green-500" @click="openModal('is-trustworthy')">
+                        <p class="font-bold text-lg">Trustworthy</p>
+                    </div>
+                     <div class="detail-card border-green-500" @click="openModal('is-governed')">
+                        <p class="font-bold text-lg">Secure & Governed</p>
+                    </div>
+                     <div class="detail-card border-green-500" @click="openModal('is-owned')">
+                        <p class="font-bold text-lg">Owned</p>
+                    </div>
+                </div>
+                 <div class="mt-auto pt-6 text-center">
+                    <p class="font-bold text-2xl text-green-400">Result: Faster Innovation, Higher Quality Insights, Automated Governance.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Modal Container -->
+    <div x-show="modalOpen" class="modal-overlay" :class="{'active': modalOpen}" @click="closeModal()" x-cloak>
+        <div class="modal-content" @click.stop>
+             <button @click="closeModal()" class="modal-close-btn">&times;</button>
+             <div class="modal-header">
+                <h3 class="modal-title" x-text="modalTitle"></h3>
+             </div>
+             <div class="modal-body">
+                <p x-html="modalContent"></p>
+                <div class="example">
+                    <strong class="text-indigo-400">Example Scenario:</strong>
+                    <p class="mt-1 text-slate-300" x-html="modalExample"></p>
+                </div>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        function dataProductModal() {
+            return {
+                modalOpen: false,
+                modalTitle: '',
+                modalContent: '',
+                modalExample: '',
+                modalData: {
+                    'not-siloed': {
+                        title: 'Siloed & Hidden',
+                        content: 'Data is trapped in the system where it was created. Finding it requires tribal knowledge, and accessing it requires a new, custom-built pipeline every single time.',
+                        example: 'An analyst spends three days tracking down the owner of a critical `customer_status` field, only to find it\'s in a deprecated table.'
+                    },
+                    'not-trusted': {
+                        title: 'Inconsistent & Untrusted',
+                        content: 'With no formal contract, there are no guarantees of quality, freshness, or even what the data means. Different teams get different answers from different tables for the same core business metric.',
+                        example: 'The Finance and Marketing teams report different numbers for "Monthly Active Users" because they use different, undocumented definitions, leading to confusion in executive meetings.'
+                    },
+                    'not-owned': {
+                        title: 'No Clear Owner',
+                        content: 'When a pipeline breaks, it\'s a multi-day investigation to find who is responsible, if anyone. This "hot potato" of accountability means data issues fester, eroding trust across the business.',
+                        example: 'A critical nightly pipeline fails. The platform team says it\'s a logic issue; the analytics team says it\'s an upstream data issue. The outage lasts 48 hours while teams try to assign blame.'
+                    },
+                    'is-discoverable': {
+                        title: 'Discoverable',
+                        content: 'A Data Product is published in a central Data Marketplace or Catalog. Its metadata—owner, description, schema, lineage—is machine-readable, making it easy for any employee or AI agent to find.',
+                        example: 'An AI agent programmatically queries the marketplace for all Gold-layer data products with the tag `customer_pii` and gets a list of 5 certified assets in milliseconds.'
+                    },
+                    'is-trustworthy': {
+                        title: 'Trustworthy',
+                        content: 'A Data Product comes with a formal, machine-readable FLUID contract that guarantees its reliability. This includes its schema, data quality rules, and Service Level Objectives (SLOs) for freshness.',
+                        example: 'A dashboard built on the "Customer Churn" data product displays a "Data Freshness: 3 hours ago" badge, pulled directly from the product\'s SLO contract, giving business users confidence in the data.'
+                    },
+                    'is-governed': {
+                        title: 'Secure & Governed',
+                        content: 'The FLUID contract includes an explicit `accessPolicy` and `privacy` block. This allows governance to be automated, ensuring that only authorized users get access and that sensitive data is treated correctly by default.',
+                        example: 'An analyst from the marketing team requests access to the "Customer Profile 360" product. The system automatically grants them access to a view where all PII columns are masked, as defined in the `privacy.treatment` rules.'
+                    },
+                    'is-owned': {
+                        title: 'Owned',
+                        content: 'Every Data Product has a dedicated business domain owner responsible for its quality, maintenance, and support throughout its entire lifecycle. If there\'s an issue, you know exactly who to call.',
+                        example: 'A data quality issue is detected in the "Billing Status" product. An alert is automatically routed to the `#billing-ops` Slack channel specified in the owner block, and the responsible team begins a fix immediately.'
+                    }
+                },
+                openModal(key) {
+                    const data = this.modalData[key];
+                    if (data) {
+                        this.modalTitle = data.title;
+                        this.modalContent = data.content;
+                        this.modalExample = data.example;
+                        this.modalOpen = true;
+                    }
+                },
+                closeModal() {
+                    this.modalOpen = false;
+                }
+            }
+        }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dataProductModal', dataProductModal);
+        });
+    </script>
+
+</body>
+</html>
+
