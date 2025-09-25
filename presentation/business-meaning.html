@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Products: What It Means For The Business</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+        }
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .section-subtitle {
+            font-size: 1.25rem;
+            text-align: center;
+            color: #a3a3a3;
+            max-width: 900px;
+            margin: 0 auto 4rem auto;
+        }
+        .card {
+            background-color: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+        }
+        .card-icon {
+            font-size: 3rem;
+            line-height: 1;
+        }
+        .card-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .card-description {
+            color: #a3a3a3;
+            font-size: 1.125rem;
+            flex-grow: 1;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 900px;
+            background-color: #161b22;
+            background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 40%);
+            border-radius: 1rem; border: 1px solid #30363d;
+            z-index: 1001; opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+        .modal-overlay.active .modal-content { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal-header { padding: 2.5rem 2.5rem 0 2.5rem; }
+        .modal-body { padding: 0 2.5rem 2.5rem 2.5rem; max-height: 70vh; overflow-y: auto; }
+        .modal-close-btn {
+            position: absolute; top: 1.5rem; right: 1.5rem; cursor: pointer;
+            color: #8b949e; font-size: 1.75rem;
+        }
+        .modal-title {
+            font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .modal-body h3 {
+            font-size: 1.5rem; font-weight: 700; color: #e5e5e5;
+            margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #30363d;
+        }
+        .modal-body p, .modal-body li { color: #a3a3a3; line-height: 1.7; }
+        .modal-body ul {
+            list-style-type: disc; padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .modal-body strong { color: #e5e5e5; font-weight: 600; }
+        .shock-value {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body x-data="businessUserHandler()">
+    <canvas id="background-canvas"></canvas>
+
+    <div class="main-container">
+        <h1 class="section-title">Data Products, Demystified</h1>
+        <p class="section-subtitle">You don't need to be a data engineer to get value from data. A "Data Product" is simply a trustworthy, reusable data asset designed to solve a business problem. Here's what that means for you.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+            <template x-for="concept in concepts" :key="concept.id">
+                <div class="card" @click="openModal(concept)">
+                    <div>
+                        <div class="card-icon" x-text="concept.icon"></div>
+                        <h2 class="card-title" x-text="concept.title"></h2>
+                        <p class="card-description" x-text="concept.description"></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div x-show="modalOpen" class="modal-overlay" :class="{'active': modalOpen}" @click="closeModal()" x-cloak>
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                 <span @click="closeModal()" class="modal-close-btn">&times;</span>
+                 <h2 class="modal-title"><span x-text="activeConcept?.icon"></span> <span x-text="activeConcept?.title"></span></h2>
+            </div>
+            <div class="modal-body" x-html="activeConcept?.bodyHtml"></div>
+        </div>
+    </div>
+
+    <script>
+        // Background Animation
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        const nodeCount = 50;
+        const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        for (let i = 0; i < nodeCount; i++) { nodes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, radius: Math.random() * 1.5 + 1 }); }
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(59, 130, 246, 0.5)";
+            nodes.forEach(node => { node.x += node.vx; node.y += node.vy; if (node.x > canvas.width || node.x < 0) node.vx *= -1; if (node.y > canvas.height || node.y < 0) node.vy *= -1; ctx.beginPath(); ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2); ctx.fill(); });
+            ctx.strokeStyle = "rgba(59, 130, 246, 0.05)";
+            for (let i = 0; i < nodes.length; i++) { for (let j = i; j < nodes.length; j++) { const dist = Math.sqrt(Math.pow(nodes[i].x - nodes[j].x, 2) + Math.pow(nodes[i].y - nodes[j].y, 2)); if (dist < 150) { ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke(); } } }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function businessUserHandler() {
+            return {
+                modalOpen: false,
+                activeConcept: null,
+                concepts: [
+                    {
+                        id: 'marketplace',
+                        icon: '🏦',
+                        title: 'The Data Marketplace',
+                        description: 'A central, self-service portal to find all available data assets. Think of it as the "App Store for Data."',
+                        bodyHtml: `<h3>The Old World: Data Archaeology</h3>
+                                   <p>How do you get data today? You probably have to ask a specialist in IT or another department, wait for them to find it, and then hope it's what you actually need. There is no single place to see what's available.</p>
+                                   <div class="shock-value">This process is slow, frustrating, and relies on "who you know." It prevents you from quickly exploring data to find new opportunities.</div>
+                                   <h3>The New Reality: An "App Store" for Data</h3>
+                                   <p>The Data Marketplace is a user-friendly website where all certified Data Products are listed. You can browse, search, and explore everything that's available in one central location.</p>
+                                   <h3>What It Means For You:</h3>
+                                   <ul>
+                                        <li><strong>Self-Service Discovery:</strong> You can find the data you need without filing a ticket or waiting for someone else.</li>
+                                        <li><strong>Full Visibility:</strong> You get a complete picture of the data assets available across the entire company, not just your department.</li>
+                                        <li><strong>Faster Time to Insight:</strong> By removing the friction of finding data, you can spend more time analyzing it and generating value.</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'discovery',
+                        icon: '🔎',
+                        title: 'Discovering Data You Can Trust',
+                        description: 'Find exactly what you need with simple search terms and filters, and see clear information about its quality and ownership.',
+                        bodyHtml: `<h3>The Old World: Cryptic Tables & Tribal Knowledge</h3>
+                                   <p>You finally get access to a database, only to find hundreds of tables with names like \`CUST_FCT_V2_PROD\`. You have no idea what they mean, where the data came from, or if it's even up-to-date.</p>
+                                   <div class="shock-value">You spend 80% of your time trying to figure out if you can trust the data, and only 20% of your time actually using it. Decisions are delayed and confidence is low.</div>
+                                   <h3>The New Reality: Search, Understand, and Go</h3>
+                                   <p>In the Data Marketplace, every Data Product has a detailed page with a clear, business-friendly description. You can search using plain language (e.g., "customer churn") and see all the relevant, certified products.</p>
+                                   <h3>What It Means For You:</h3>
+                                   <ul>
+                                        <li><strong>Simple Search:</strong> No need to know technical table names. You can search for data based on the business concepts you already understand.</li>
+                                        <li><strong>Clear Ownership:</strong> Every product lists a clear business owner and contact information, so you know exactly who to talk to if you have questions.</li>
+                                        <li><strong>Trust by Default:</strong> Only certified, high-quality products are listed, so you can be confident that what you find is ready for use.</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'governance',
+                        icon: '🏷️',
+                        title: 'Quality & Governance',
+                        description: 'Understand the reliability of data at a glance with clear metrics, just like a nutrition label on food.',
+                        bodyHtml: `<h3>The Old World: The Black Box</h3>
+                                    <p>Is the data fresh? Is it complete? Does it contain sensitive customer information? Answering these questions today is often impossible. Governance is a set of rules in a document, completely disconnected from the data itself.</p>
+                                    <div class="shock-value">You build a critical report, present it to leadership, and then find out the data was three weeks stale. This erodes trust in you, your team, and the data itself.</div>
+                                    <h3>The New Reality: A "Nutrition Label" for Data</h3>
+                                    <p>Every Data Product in the marketplace comes with a clear, easy-to-understand "nutrition label." This label provides vital information about the data's health and reliability, so you can assess its fitness for your purpose before you use it.</p>
+                                    <h3>What You'll See on the Label:</h3>
+                                    <ul>
+                                        <li><strong>Freshness (SLA):</strong> A guaranteed commitment for how up-to-date the data is (e.g., "Updated every 4 hours").</li>
+                                        <li><strong>Data Quality Score:</strong> An automated score that tells you how complete and accurate the data is.</li>
+                                        <li><strong>Privacy & Classification:</strong> Clear tags indicating if the data contains sensitive information (like PII) and how it must be handled.</li>
+                                        <li><strong>Lineage:</strong> A simple chart showing where the data came from, giving you full transparency.</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'access',
+                        icon: '🛒',
+                        title: 'How to Access a Data Product',
+                        description: 'Getting access to data is as simple as adding an item to a shopping cart and checking out, with a clear and fast approval process.',
+                        bodyHtml: `<h3>The Old World: The Access Maze</h3>
+                                    <p>You've found the data you need, but now you have to navigate a complex and opaque process of approvals from IT, security, and various data owners, which can take weeks.</p>
+                                    <div class="shock-value">Your project is on hold, waiting for a series of rubber stamps from people who lack the business context of your request. Innovation grinds to a halt.</div>
+                                    <h3>The New Reality: "Add to Cart" and Go</h3>
+                                    <p>The Data Marketplace streamlines access into a simple, transparent workflow. When you find a Data Product you need, you simply click "Request Access," much like an online store.</p>
+                                    <h3>What The Process Looks Like:</h3>
+                                    <ul>
+                                        <li><strong>Define Your Purpose:</strong> You'll be asked to provide a brief, plain-language description of why you need the data. This provides context for the owner.</li>
+                                        <li><strong>Automated Routing:</strong> Your request is automatically sent to the official business owner of the Data Product for approval. No more guessing who to ask.</li>
+                                        <li><strong>Fast, Transparent Approval:</strong> The owner is notified and can approve your request with a single click. The system can even be configured for automatic approval for low-sensitivity data, giving you access in seconds.</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'purpose',
+                        icon: '🎯',
+                        title: 'Your Role in This New World',
+                        description: 'You are more than a consumer. You are a critical partner who helps define, prioritize, and improve the data products the company relies on.',
+                        bodyHtml: `<h3>The Old World: A Passive Consumer</h3>
+                                    <p>Business users were often seen as the last step in the data chain. You received a report or a data export and had little say in how it was created or if it truly met your needs.</p>
+                                    <div class="shock-value">Data was something that was "done to you." This led to a disconnect where the technical teams built what they thought you needed, not what you actually needed.</div>
+                                    <h3>The New Reality: An Active Stakeholder</h3>
+                                    <p>Data Product thinking puts the business user at the center. Your needs, questions, and expertise are the driving force behind what gets built. You are a critical partner in the data creation process.</p>
+                                    <h3>Your Responsibilities and Superpowers:</h3>
+                                    <ul>
+                                        <li><strong>Define "Value":</strong> Your primary role is to articulate the business problems that need solving. This directly informs which Data Products get prioritized and built.</li>
+                                        <li><strong>Provide Feedback:</strong> The Marketplace allows you to rate Data Products and provide direct feedback to the owners. This creates a continuous improvement loop.</li>
+                                        <li><strong>Become a Data Product Owner:</strong> As a subject matter expert in your domain, you are the ideal candidate to become the official owner of a Data Product, guiding its strategy and ensuring it meets the needs of your peers.</li>
+                                   </ul>`
+                    }
+                ],
+                openModal(concept) {
+                    this.activeConcept = concept;
+                    this.modalOpen = true;
+                },
+                closeModal() {
+                    this.modalOpen = false;
+                }
+            }
+        }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('businessUserHandler', businessUserHandler);
+        });
+    </script>
+</body>
+</html>
+
