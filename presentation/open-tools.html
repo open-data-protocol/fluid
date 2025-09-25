@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building the FLUID Ecosystem</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+        }
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em;
+        }
+        .section-subtitle {
+            font-size: 1.25rem;
+            text-align: center;
+            color: #a3a3a3;
+            max-width: 800px;
+            margin: 0 auto 4rem auto;
+        }
+        .card {
+            background-color: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            height: 100%;
+        }
+        .interactive-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .interactive-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+        }
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .card-description {
+            color: #a3a3a3;
+        }
+        .shock-value {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            font-weight: 500;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%;
+            max-width: 800px;
+            background-color: #161b22;
+            background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 40%);
+            border-radius: 1rem;
+            border: 1px solid #30363d;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-overlay.active .modal-content {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .modal-header {
+            padding: 2.5rem 2.5rem 0 2.5rem;
+        }
+         .modal-body {
+            padding: 0 2.5rem 2.5rem 2.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            cursor: pointer;
+            color: #8b949e;
+            font-size: 1.75rem;
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .modal-body h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e5e5e5;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #30363d;
+        }
+        .modal-body p, .modal-body li {
+            color: #a3a3a3;
+            line-height: 1.7;
+        }
+        .modal-body ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <canvas id="background-canvas"></canvas>
+
+    <div class="main-container">
+        <h1 class="section-title">Powering the Data Product Economy</h1>
+        <p class="section-subtitle">A protocol is only as strong as its ecosystem. To make FLUID scale, we need a suite of open-source tools that make building, discovering, and consuming data products effortless.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+            <div class="card interactive-card" data-modal-id="tool-vscode">
+                <div class="card-icon">💻</div>
+                <h3 class="card-title">VS Code Data Product Studio</h3>
+                <p class="card-description">An extension for authoring, validating, and visualizing data products directly within the developer's IDE.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="tool-cli">
+                <div class="card-icon">⚡️</div>
+                <h3 class="card-title">The FLUID CLI</h3>
+                <p class="card-description">A powerful command-line interface for creating, testing, packaging, and publishing data products to a marketplace.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="tool-marketplace">
+                <div class="card-icon">🏦</div>
+                <h3 class="card-title">Open Data Marketplace</h3>
+                <p class="card-description">A turnkey, self-hosted data catalog for discovering, exploring, and managing access to all data products in an organization.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="tool-lineage">
+                <div class="card-icon">🌐</div>
+                <h3 class="card-title">FLUID Lineage Engine</h3>
+                <p class="card-description">An automated engine that parses `fluid.yml` files to build a complete, end-to-end lineage graph of the entire data estate.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="tool-agent">
+                <div class="card-icon">🤖</div>
+                <h3 class="card-title">Agentic Data Gateway</h3>
+                <p class="card-description">A reference implementation of a smart gateway that enforces context-aware access policies for AI agents consuming data products.</p>
+            </div>
+            <div class="card interactive-card" data-modal-id="tool-providers">
+                <div class="card-icon">🔌</div>
+                <h3 class="card-title">Execution Engine Providers</h3>
+                <p class="card-description">A library of providers that translate declarative FLUID specs into executable plans for tools like dbt, Spark, and Airflow.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                 <span id="modal-close-btn" class="modal-close-btn">&times;</span>
+                 <h2 id="modal-title" class="modal-title"></h2>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // Background Animation
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        const nodeCount = 50;
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        for (let i = 0; i < nodeCount; i++) {
+            nodes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 1.5 + 1
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(59, 130, 246, 0.5)";
+            
+            nodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+
+                if (node.x > canvas.width || node.x < 0) node.vx *= -1;
+                if (node.y > canvas.height || node.y < 0) node.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.strokeStyle = "rgba(59, 130, 246, 0.05)";
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i; j < nodes.length; j++) {
+                    const dist = Math.sqrt(Math.pow(nodes[i].x - nodes[j].x, 2) + Math.pow(nodes[i].y - nodes[j].y, 2));
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Modal Logic
+        const modalContainer = document.getElementById('modal-container');
+        const modalTitleEl = document.getElementById('modal-title');
+        const modalBodyEl = document.getElementById('modal-body');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        const modalData = {
+            'tool-vscode': {
+                title: '💻 VS Code Studio',
+                content: `
+                    <h3>The Why: From Guesswork to Guided Creation</h3>
+                    <p>In the old world, developers write YAML by hand, fighting syntax errors and constantly referencing documentation. It's a slow, error-prone process that lacks context about the wider data ecosystem.</p>
+                    <div class="shock-value">Your developers are flying blind, writing code against a specification they can't see. This isn't just inefficient; it's how data bugs, inconsistencies, and quality issues are born.</div>
+                    
+                    <h3>The How: An Intelligent IDE for Data Products</h3>
+                    <p>The FLUID Studio for VS Code transforms the developer experience. It provides an intelligent, context-aware environment that makes creating high-quality data products fast and intuitive.</p>
+                    
+                    <h3>Key Features & Guidelines</h3>
+                    <ul>
+                        <li><strong>Schema-Aware Autocompletion:</strong> Automatically pulls the schema from input data products ('inputs.dataProduct') so developers can reference upstream columns without leaving their editor.</li>
+                        <li><strong>Live Validation:</strong> Provides real-time feedback, highlighting errors or violations against the FLUID protocol specification as the developer types.</li>
+                        <li><strong>Embedded Lineage Visualizer:</strong> A built-in panel that renders a live, interactive graph of the data product's local dependencies, showing how it connects to its inputs and outputs.</li>
+                        <li><strong>One-Click Commands:</strong> Integrate directly with the FLUID CLI to run commands like 'fluid test' and 'fluid publish' from the VS Code command palette.</li>
+                    </ul>
+                `
+            },
+            'tool-cli': {
+                title: '⚡️ The FLUID CLI',
+                content: `
+                    <h3>The Why: Standardize and Automate the Lifecycle</h3>
+                    <p>Without a standard workflow, every new data product is an artisanal project. Teams waste time creating boilerplate, configuring CI/CD, and writing custom scripts, leading to inconsistency and massive maintenance overhead.</p>
+                    <div class="shock-value">Your "standard" is a wiki page nobody reads. Your data platform is a collection of unique, hand-crafted pipelines, each with its own failure modes and deployment process.</div>
+
+                    <h3>The How: The "Create-React-App" for Data</h3>
+                    <p>The FLUID CLI provides a powerful, convention-over-configuration workflow that standardizes the entire lifecycle of a data product, from creation to publication.</p>
+                    
+                    <h3>Key Features & Guidelines</h3>
+                    <ul>
+                        <li><strong>'fluid new product'</strong>: Scaffolds a complete data product directory with a 'fluid.yml', sample transformation code, and a testing suite.</li>
+                        <li><strong>'fluid validate'</strong>: Runs a comprehensive check against the 'fluid.yml' to ensure it conforms to the protocol specification.</li>
+                        <li><strong>'fluid test'</strong>: Executes contract tests against mock data to verify that the product's output schema and quality rules are met before deployment.</li>
+                        <li><strong>'fluid publish'</strong>: Packages the data product, tags it with a version, and pushes the specification to the Open Data Marketplace for discovery.</li>
+                    </ul>
+                `
+            },
+            'tool-marketplace': {
+                title: '🏦 Open Data Marketplace',
+                content: `
+                     <h3>The Why: Make Data Discoverable and Trustworthy</h3>
+                    <p>In most organizations, finding data is an exercise in archaeology. Analysts ask in Slack channels, dig through old wikis, and rely on tribal knowledge. Data remains hidden in silos, undocumented and untrusted.</p>
+                    <div class="shock-value">Your data is invisible. If a brilliant new analyst joins, they have no way to know what assets exist. This is an insane waste of human potential and a massive drag on innovation.</div>
+
+                    <h3>The How: The "App Store" for Your Data</h3>
+                    <p>The Open Data Marketplace is a turnkey web application that serves as the central hub for all data products. It's designed to make data discovery, understanding, and access a seamless, self-service experience.</p>
+
+                    <h3>Key Features & Guidelines</h3>
+                    <ul>
+                        <li><strong>Git-Native Integration:</strong> Automatically discovers and ingests 'fluid.yml' files from your organization's Git repositories, ensuring the catalog is always up-to-date.</li>
+                        <li><strong>Rich, Searchable UI:</strong> Provides faceted search, detailed product pages showing metadata, ownership, quality metrics, and a live-rendered lineage graph.</li>
+                        <li><strong>Access Control Workflow:</strong> Allows users to request access to data products, which triggers a standardized approval workflow routed to the product's owner.</li>
+                        <li><strong>Programmatic API:</strong> Exposes a full API and SDK, enabling AI agents and other tools to programmatically discover and understand available data products.</li>
+                    </ul>
+                `
+            },
+            'tool-lineage': {
+                title: '🌐 FLUID Lineage Engine',
+                content: `
+                    <h3>The Why: From Reactive Firefighting to Proactive Insight</h3>
+                    <p>When a critical dashboard breaks, it's a frantic, all-hands-on-deck effort to manually trace dependencies. Impact analysis for changes is a dangerous guessing game based on hope.</p>
+                    <div class="shock-value">You have no idea where your data comes from or where it goes. You are making changes to your data architecture and praying you don't break a critical report for the CFO.</div>
+
+                    <h3>The How: A Living Map of Your Data Estate</h3>
+                    <p>Because every FLUID product declaratively lists its inputs, the Lineage Engine can construct a complete, end-to-end graph of your data ecosystem automatically. It is the foundation for trust and operational excellence.</p>
+
+                    <h3>Key Features & Guidelines</h3>
+                    <ul>
+                        <li><strong>Automated Parsing:</strong> Continuously scans Git repositories for 'fluid.yml' files and parses the 'inputs' and 'outputs' sections to build the lineage graph.</li>
+                        <li><strong>Column-Level Granularity:</strong> Goes beyond table-level lineage by understanding how specific columns flow from one data product to another.</li>
+                        <li><strong>Open Standards Export:</strong> Natively supports exporting the lineage graph to open standards like OpenLineage, allowing integration with a wide variety of cataloging and observability tools.</li>
+                        <li><strong>Impact Analysis API:</strong> Provides an API to query the graph, enabling developers to programmatically check the downstream impact of a proposed change before they commit it.</li>
+                    </ul>
+                `
+            },
+            'tool-agent': {
+                title: '🤖 Agentic Data Gateway',
+                content: `
+                    <h3>The Why: Secure Data in the Age of AI</h3>
+                    <p>Static, role-based access control (RBAC) is fundamentally broken for a world of autonomous AI agents. It's blind to context and intent, treating a risky, broad query the same as a safe, narrow one.</p>
+                    <div class="shock-value">Your static access policies are a ticking time bomb. They cannot distinguish a legitimate request from a compromised agent trying to exfiltrate all your customer data.</li>
+
+                    <h3>The How: Zero-Trust, Context-Aware Security</h3>
+                    <p>The Agentic Data Gateway is a smart proxy that provides a dynamic, intelligent security layer for your data. It moves security from a static checklist to a real-time, context-aware decision engine.</p>
+
+                    <h3>Key Features & Guidelines</h3>
+                    <ul>
+                        <li><strong>Real-Time Policy Enforcement:</strong> Intercepts every query to a data product and validates it against the 'scopes', 'privacy', and 'accessPolicy' rules defined in the 'fluid.yml' contract.</li>
+                        <li><strong>Dynamic Data Masking:</strong> Automatically masks or redacts data from the query results based on the consuming agent's context and the 'privacy.treatment' rules in the contract.</li>
+                        <li><strong>Anomaly Detection:</strong> Monitors query patterns to detect and block anomalous behavior, such as an agent suddenly trying to access 100x more data than usual.</li>
+                        <li><strong>Centralized Audit Logging:</strong> Provides a single, immutable audit log of every data access request made by both humans and agents, ensuring full observability and compliance.</li>
+                    </ul>
+                `
+            },
+            'tool-providers': {
+                title: '🔌 Execution Engine Providers',
+                content: `
+                    <h3>The Why: Avoid Vendor Lock-in and Brittle Glue Code</h3>
+                    <p>Today's data architectures are cemented together with custom, imperative scripts. Swapping out one tool (e.g., Spark for dbt) requires a massive rewrite because the implementation logic is hardcoded everywhere.</p>
+                    <div class="shock-value">Your architecture is not composable. It's a monolith of brittle glue code that prevents you from adopting new, better technologies and locks you into the decisions of the past.</div>
+                    
+                    <h3>The How: Separate Intent from Implementation</h3>
+                    <p>Providers are the crucial bridge between the declarative FLUID world (the "what") and the imperative execution world (the "how"). They translate a single, standard 'fluid.yml' file into the specific code needed by a given tool.</p>
+                    
+                    <h3>Key Features & Guidelines</h3>
+                    <ul>
+                        <li><strong>Declarative to Imperative:</strong> A 'fluid-provider-dbt' would read a 'fluid.yml' and generate the corresponding dbt models, sources, and 'project.yml' configurations.</li>
+                        <li><strong>A 'fluid-provider-spark'</strong> would read the same 'fluid.yml' and generate the Spark SQL or PySpark job required to build the data product.</li>
+                        <li><strong>Ecosystem Driven:</strong> The goal is a rich, open-source ecosystem where the community builds and maintains providers for all major data tools (Snowflake, BigQuery, Flink, etc.).</li>
+                        <li><strong>Future-Proof Your Stack:</strong> By standardizing on the FLUID specification, you can swap out execution engines with minimal effort, ensuring your data architecture can evolve with your needs.</li>
+                    </ul>
+                `
+            },
+        };
+
+        document.querySelectorAll('.interactive-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const modalId = card.dataset.modalId;
+                const data = modalData[modalId];
+                if (data) {
+                    modalTitleEl.innerHTML = data.title;
+                    modalBodyEl.innerHTML = data.content;
+                    modalContainer.classList.add('active');
+                }
+            });
+        });
+
+        const closeModal = () => {
+            modalContainer.classList.remove('active');
+        };
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+</html>
+
