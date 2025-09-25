@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Data Product Checklist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            width: 100%;
+        }
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: --0.05em;
+        }
+        .section-subtitle {
+            font-size: 1.25rem;
+            text-align: center;
+            color: #a3a3a3;
+            max-width: 900px;
+            margin: 0 auto: 4rem auto;
+        }
+        .checklist-item {
+            background-color: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem 2rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .checklist-item.checked {
+            border-color: #22c55e;
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        .item-content {
+            flex-grow: 1;
+            text-align: left;
+            cursor: pointer;
+        }
+        .item-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e5e5e5;
+        }
+        .item-description {
+            color: #a3a3a3;
+        }
+        .custom-checkbox {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background-color: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .custom-checkbox:hover {
+            border-color: #3b82f6;
+        }
+        .custom-checkbox svg {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s;
+        }
+        .checklist-item.checked .custom-checkbox {
+            background-color: #22c55e;
+            border-color: #22c55e;
+        }
+        .checklist-item.checked .custom-checkbox svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem 0;
+        }
+        .progress-bar-bg {
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 9999px;
+            height: 16px;
+        }
+        .progress-bar-fg {
+            background: linear-gradient(90deg, #3b82f6, #22c55e);
+            border-radius: 9999px;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        .progress-label {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 900px;
+            background-color: #161b22;
+            background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 40%);
+            border-radius: 1rem; border: 1px solid #30363d;
+            z-index: 1001; opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+        .modal-overlay.active .modal-content { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal-header { padding: 2.5rem 2.5rem 0 2.5rem; }
+        .modal-body { padding: 0 2.5rem 2.5rem 2.5rem; max-height: 70vh; overflow-y: auto; }
+        .modal-close-btn {
+            position: absolute; top: 1.5rem; right: 1.5rem; cursor: pointer;
+            color: #8b949e; font-size: 1.75rem;
+        }
+        .modal-title {
+            font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .modal-body h3 {
+            font-size: 1.5rem; font-weight: 700; color: #e5e5e5;
+            margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #30363d;
+        }
+        .modal-body p, .modal-body li { color: #a3a3a3; line-height: 1.7; }
+        .modal-body ul {
+            list-style-type: '✓ '; padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .modal-body strong { color: #e5e5e5; font-weight: 600; }
+    </style>
+</head>
+<body x-data="dataProductChecklist()">
+    <canvas id="background-canvas"></canvas>
+
+    <div class="main-container">
+        <h1 class="section-title">The Data Product Litmus Test</h1>
+        <p class="section-subtitle">A "Data Product" is more than a buzzword; it's a commitment to quality, usability, and value. Use this checklist to see if your data asset is just a table or a true, enterprise-ready product.</p>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fg" :style="`width: ${progress}%`"></div>
+            </div>
+            <p class="progress-label">
+                <span x-text="progressText"></span> (<span x-text="checkedCount"></span>/<span x-text="checklistItems.length"></span>)
+            </p>
+        </div>
+        
+        <div class="w-full max-w-4xl space-y-4">
+            <template x-for="item in checklistItems" :key="item.id">
+                 <div class="checklist-item" :class="{ 'checked': item.checked }">
+                    <div @click="item.checked = !item.checked" class="custom-checkbox">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div class="item-content" @click="openModal(item)">
+                        <h3 class="item-title" x-text="item.title"></h3>
+                        <p class="item-description" x-text="item.description"></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Modal Container -->
+    <div x-show="modalOpen" class="modal-overlay" :class="{'active': modalOpen}" @click="closeModal()" x-cloak>
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                 <span @click="closeModal()" class="modal-close-btn">&times;</span>
+                 <h2 class="modal-title" x-text="activeItem?.title"></h2>
+            </div>
+            <div class="modal-body" x-html="activeItem?.bodyHtml"></div>
+        </div>
+    </div>
+
+    <script>
+        // Background Animation
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        const nodeCount = 50;
+        const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        for (let i = 0; i < nodeCount; i++) { nodes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, radius: Math.random() * 1.5 + 1 }); }
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(59, 130, 246, 0.5)";
+            nodes.forEach(node => { node.x += node.vx; node.y += node.vy; if (node.x > canvas.width || node.x < 0) node.vx *= -1; if (node.y > canvas.height || node.y < 0) node.vy *= -1; ctx.beginPath(); ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2); ctx.fill(); });
+            ctx.strokeStyle = "rgba(59, 130, 246, 0.05)";
+            for (let i = 0; i < nodes.length; i++) { for (let j = i; j < nodes.length; j++) { const dist = Math.sqrt(Math.pow(nodes[i].x - nodes[j].x, 2) + Math.pow(nodes[i].y - nodes[j].y, 2)); if (dist < 150) { ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke(); } } }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function dataProductChecklist() {
+            return {
+                modalOpen: false,
+                activeItem: null,
+                checklistItems: [
+                    {
+                        id: 'discoverable',
+                        title: '✅ Discoverable',
+                        description: 'Can a new employee find this data asset and understand its purpose within 15 minutes?',
+                        checked: false,
+                        bodyHtml: `<h3>Why It Matters</h3><p>If data can't be found, it has no value. In the old world, data is hidden in obscure databases, requiring tribal knowledge to locate. A Data Product must be published in a central marketplace where anyone can easily find it.</p>
+                                   <h3>How FLUID Helps</h3><p>The FLUID protocol standardizes metadata fields like \`domain\`, \`owner\`, and \`description\` directly within the version-controlled \`fluid.yml\` file. This creates a machine-readable manifest that can be automatically harvested by tools like an Open Data Marketplace to build a rich, searchable, and always up-to-date catalog.</p>
+                                   <h3>Acceptance Criteria</h3>
+                                   <ul>
+                                       <li>The product is listed in a central, searchable data catalog or marketplace.</li>
+                                       <li>The listing includes a clear, business-friendly description of its purpose and intended use cases.</li>
+                                       <li>It is tagged with relevant business domains (e.g., "Marketing," "Finance").</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'addressable',
+                        title: '✅ Addressable',
+                        description: 'Does the data have a permanent, unique, and machine-readable identifier?',
+                        checked: false,
+                        bodyHtml: `<h3>Why It Matters</h3><p>Data assets are often referenced by fragile, physical names (e.g., \`PROD_DB.SCHEMA.MY_TABLE_V2\`). If the underlying table moves, all downstream jobs break. A Data Product has a persistent, logical address that decouples it from its physical location, enabling automation and evolution.</p>
+                                   <h3>How FLUID Helps</h3><p>FLUID establishes a formal, logical addressing scheme (\`dp:domain.name\`) within its specification. The \`fluid.yml\` acts as the manifest at this address. This decouples the product's identity from its physical storage, allowing execution engines to manage the physical location while consumers only ever reference the permanent, logical address.</p>
+                                   <h3>Acceptance Criteria</h3>
+                                   <ul>
+                                       <li>The product has a globally unique, human-readable name (e.g., a URN like \`dp:finance.quarterly-revenue\`).</li>
+                                       <li>All consumption happens via this logical address, not a physical database path.</li>
+                                       <li>The product is versioned, allowing for backward-compatible changes.</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'trustworthy',
+                        title: '✅ Trustworthy',
+                        description: 'Is the data’s quality, freshness, and lineage explicitly defined and guaranteed via an SLA?',
+                        checked: false,
+                        bodyHtml: `<h3>Why It Matters</h3><p>Without a formal contract, trust is a matter of hope. Business users waste countless hours second-guessing data and building defensive checks. A Data Product makes trust explicit by publishing a machine-readable contract with guaranteed Service Level Objectives (SLOs).</p>
+                                   <h3>How FLUID Helps</h3><p>The \`quality\` block in the FLUID specification is a first-class citizen. It provides a standard, machine-readable format for defining data quality rules and freshness SLAs directly in the contract. This allows automated monitoring tools to continuously validate the data against its promised guarantees, making trust an enforceable, observable property of the product.</p>
+                                   <h3>Acceptance Criteria</h3>
+                                   <ul>
+                                       <li>A Service Level Agreement (SLA) for data freshness is published (e.g., "updated within 4 hours").</li>
+                                       <li>Data quality metrics (e.g., completeness, accuracy) are continuously measured and visible.</li>
+                                       <li>A complete, end-to-end lineage graph showing the data's origin is available.</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'self-describing',
+                        title: '✅ Self-Describing',
+                        description: 'Is all the metadata needed to understand and use the data available at its address?',
+                        checked: false,
+                        bodyHtml: `<h3>Why It Matters</h3><p>Documentation in external wikis is almost always out of date. To be useful, the metadata (schema, column definitions, quality metrics, owner) must be bundled with the data itself. A Data Product is a self-contained unit of value.</p>
+                                   <h3>How FLUID Helps</h3><p>The \`fluid.yml\` file *is* the self-describing manifest. The protocol requires the schema (column names, types, descriptions) for each output port to be explicitly defined within the file. This ensures that all the critical metadata required to use the data is version-controlled and lives right alongside the product's definition.</p>
+                                   <h3>Acceptance Criteria</h3>
+                                   <ul>
+                                       <li>A complete schema with data types and descriptions for every column is published.</li>
+                                       <li>The business owner and support contact information are clearly listed.</li>
+                                       <li>Sample data or a data preview is available to help users understand its structure and content.</li>
+                                   </ul>`
+                    },
+                     {
+                        id: 'interoperable',
+                        title: '✅ Interoperable',
+                        description: 'Does the product expose its data via standardized, enterprise-wide consumption ports?',
+                        checked: false,
+                        bodyHtml: `<h3>Why It Matters</h3><p>Custom, one-off access methods create brittle, hard-to-maintain pipelines. Data Products must be consumable via a limited set of standard, well-defined interfaces (or "ports"), like a SQL view, an API, or a stream. This makes them easy to combine and compose.</p>
+                                   <h3>How FLUID Helps</h3><p>FLUID defines the concept of an \`output port\`, a logical interface for the data. While the protocol doesn't mandate specific technologies, the provider ecosystem is designed to materialize these ports using standard formats (e.g., a JDBC view, a Parquet file set, a REST API). This encourages consistency and ensures that any FLUID product can be consumed by any tool that speaks these standard protocols.</p>
+                                   <h3>Acceptance Criteria</h3>
+                                   <ul>
+                                       <li>The product can be accessed via at least one standard, company-approved interface (e.g., JDBC/ODBC, REST API).</li>
+                                       <li>The consumption port is documented and its performance characteristics are understood.</li>
+                                       <li>The data format is non-proprietary and usable by a wide range of tools (e.g., Parquet, JSON).</li>
+                                   </ul>`
+                    },
+                    {
+                        id: 'secure',
+                        title: '✅ Secure',
+                        description: 'Is access to the data managed by a formal, automated, and auditable governance process?',
+                        checked: false,
+                        bodyHtml: `<h3>Why It Matters</h3><p>Ad-hoc access management via tickets and manual permissions is slow and a massive security risk. A Data Product defines its access policies as code, allowing for an automated, transparent, and secure process for granting and revoking access.</p>
+                                   <h3>How FLUID Helps</h3><p>Security is codified directly into the \`fluid.yml\` through the \`privacy\` and \`accessPolicy\` blocks. These machine-readable rules define data classification and access requirements. This enables automated enforcement by tools like an Agentic Data Gateway, which can inspect the contract at query time to make dynamic, context-aware security decisions.</p>
+                                   <h3>Acceptance Criteria</h3>
+                                   <ul>
+                                       <li>The product has a clear data classification (e.g., "Public," "Confidential," "PII").</li>
+                                       <li>Access policies are defined in a machine-readable format.</li>
+                                       <li>There is a clear, self-service workflow for requesting access, which is routed to the owner for approval.</li>
+                                       <li>All access requests and grants are logged in an immutable audit trail.</li>
+                                   </ul>`
+                    }
+                ],
+
+                get checkedCount() {
+                    return this.checklistItems.filter(item => item.checked).length;
+                },
+                get progress() {
+                    return (this.checkedCount / this.checklistItems.length) * 100;
+                },
+                get progressText() {
+                    if (this.progress === 0) return "Just a Table...";
+                    if (this.progress < 50) return "Getting Started";
+                    if (this.progress < 100) return "Almost There!";
+                    return "Certified Data Product!";
+                },
+
+                openModal(item) {
+                    this.activeItem = item;
+                    this.modalOpen = true;
+                },
+                closeModal() {
+                    this.modalOpen = false;
+                }
+            }
+        }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dataProductChecklist', dataProductChecklist);
+        });
+    </script>
+</body>
+</html>
