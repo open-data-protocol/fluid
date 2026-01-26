@@ -9,10 +9,11 @@
 > FLUID provides the foundational protocol for building trustworthy, governable, and scalable data ecosystems—ready for the agentic era.
 
 **Quick Start:**
-- 📖 [FLUID v0.5.7 Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
-- 🔗 [JSON Schema v0.5.7](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.5.7.json)
+- 📖 [FLUID v0.7.1 Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
+- 🔗 [JSON Schema v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)
 - 🚀 [Examples in Action](https://github.com/open-data-protocol/fluid/blob/main/examples.md)
 - 🤝 [Contributing Guide](https://github.com/open-data-protocol/fluid/blob/main/contribute.md)
+- 🆕 [What's New in v0.7.1](#-whats-new-in-fluid-071)
 
 ---
 
@@ -229,6 +230,162 @@ FLUID represents the **evolution of data engineering** from reactive, tool-speci
 In an era where **data governance is becoming a competitive advantage**, FLUID provides the foundation for building trustworthy, scalable, and compliant data ecosystems ready for both human and AI consumption.
 
 ---
+
+## 🚀 What's New in FLUID 0.7.1
+
+**FLUID 0.7.1** represents a significant evolution focused on **Agentic Governance** and **Provider-First Orchestration**. Built with **100% backward compatibility** with v0.5.7, it adds powerful new capabilities for the AI-driven enterprise:
+
+### 🤖 Agentic Governance (NEW)
+
+Control **which AI models** can access your data and **how they can use it**:
+
+```yaml
+# NEW in v0.7.1: AI/LLM usage policies
+agentPolicy:
+  allowedModels:
+    - "gpt-4"
+    - "claude-3-opus"
+    - "gemini-1.5-pro"
+  maxTokensPerRequest: 8192
+  maxTokensPerDay: 100000
+  allowedUseCases:
+    - "customer-insights"
+    - "market-analysis"
+  deniedUseCases:
+    - "political-profiling"
+    - "credit-scoring"
+  requiresHumanReview: true
+  auditLog:
+    enabled: true
+    includePrompts: true
+```
+
+**Why this matters:** As AI agents become primary data consumers, organizations need granular control over:
+- ✅ **Model-specific access** - Whitelist/blacklist AI models
+- ✅ **Usage boundaries** - Define permitted and prohibited use cases
+- ✅ **Rate limiting** - Token quotas per request and per day
+- ✅ **Audit compliance** - Full logging of AI interactions with data
+- ✅ **Human oversight** - Require review for sensitive operations
+
+### 🌍 Sovereignty Constraints (NEW)
+
+Enforce **data residency** and **jurisdictional compliance** at the contract level:
+
+```yaml
+# NEW in v0.7.1: Top-level sovereignty requirements
+sovereignty:
+  jurisdiction: "EU"
+  dataResidency:
+    allowedRegions:
+      - "europe-west1"
+      - "europe-west3"
+    deniedRegions:
+      - "us-central1"
+  complianceFrameworks:
+    - "GDPR"
+    - "HIPAA"
+  crossBorderTransfer:
+    allowed: false
+```
+
+**Why this matters:** Global compliance requires infrastructure-level enforcement:
+- ✅ **Jurisdictional boundaries** - Enforce EU, US, APAC data laws
+- ✅ **Regional constraints** - Specify allowed/denied cloud regions
+- ✅ **Compliance frameworks** - Declare GDPR, HIPAA, SOC2 requirements
+- ✅ **Transfer controls** - Block cross-border data movement
+
+### ⚙️ Provider-First Orchestration (NEW)
+
+Direct invocation of **provider actions** as first-class orchestration tasks:
+
+```yaml
+# NEW in v0.7.1: Provider actions without wrapper operators
+orchestration:
+  engine: "airflow"
+  tasks:
+    - taskId: "ensure_s3_bucket"
+      type: "provider_action"
+      provider: "aws.s3"
+      action: "ensure_bucket"
+      parameters:
+        bucket_name: "customer-data-lake"
+        region: "us-west-2"
+      
+    - taskId: "load_to_snowflake"
+      type: "provider_action" 
+      provider: "snowflake.table"
+      action: "ensure"
+      parameters:
+        database: "ANALYTICS"
+        schema: "GOLD"
+        table: "CUSTOMER_360"
+      dependsOn: ["ensure_s3_bucket"]
+```
+
+**Why this matters:** Simplifies multi-cloud orchestration:
+- ✅ **Native provider actions** - AWS, GCP, Azure, Snowflake primitives
+- ✅ **No wrapper complexity** - Direct action invocation
+- ✅ **Cross-provider workflows** - Multi-cloud pipelines without vendor lock-in
+- ✅ **Strong typing** - Provider-specific validation
+
+### 📊 Enhanced Access Control (NEW)
+
+Root-level **accessPolicy** for automated IAM binding generation:
+
+```yaml
+# NEW in v0.7.1: Declarative access grants
+accessPolicy:
+  grants:
+    - principal: "group:data-analytics@company.com"
+      permissions: ["read", "select", "query"]
+      resources:
+        - "$.exposes[?(@.kind=='table')]"
+    
+    - principal: "serviceAccount:pipeline@project.iam.gserviceaccount.com"
+      permissions: ["write", "insert", "update"]
+      conditions:
+        ipRanges: ["10.0.0.0/8"]
+```
+
+**Why this matters:** Infrastructure-as-code for data access:
+- ✅ **Automated IAM** - Generate cloud IAM bindings from FLUID spec
+- ✅ **Resource targeting** - JSONPath expressions for fine-grained access
+- ✅ **Conditional access** - IP restrictions, time windows
+- ✅ **Audit-ready** - Version-controlled access policies
+
+### 📈 Key Improvements Over v0.5.7
+
+| Feature | v0.5.7 | v0.7.1 | Impact |
+|---------|--------|--------|--------|
+| **AI Model Control** | ❌ None | ✅ agentPolicy | Govern AI/LLM data access |
+| **Data Sovereignty** | ❌ Manual | ✅ sovereignty | Automated compliance enforcement |
+| **Orchestration** | ⚠️ Abstract | ✅ Provider-first | Direct cloud provider actions |
+| **Access Control** | ⚠️ Expose-level | ✅ Root-level accessPolicy | Centralized IAM automation |
+| **Cross-Provider** | ⚠️ Complex | ✅ Native | Simplified multi-cloud workflows |
+| **Task Dependencies** | ⚠️ Build-only | ✅ Data product deps | Richer dependency graphs |
+| **Error Handling** | ⚠️ Basic | ✅ Categorized | Intelligent retry strategies |
+| **Cost Tracking** | ⚠️ Estimated | ✅ Actual vs estimated | Budget enforcement |
+
+### 🔄 100% Backward Compatible
+
+**All v0.5.7 contracts work unchanged in v0.7.1:**
+- ✅ No breaking changes
+- ✅ New features are opt-in
+- ✅ Existing patterns fully preserved
+- ✅ Gradual adoption path
+
+**Migration is simple:**
+```yaml
+# Change version number - that's it!
+fluidVersion: "0.7.1"  # was "0.5.7"
+
+# Optionally add new features
+agentPolicy: { ... }
+sovereignty: { ... }
+accessPolicy: { ... }
+```
+
+---
 ## The Looming Crisis of Context
 
 The "modern data stack"—a disaggregated ecosystem of best-in-class tools—has enabled rapid progress, but is held together by fragile scripts, proprietary configs, and tribal knowledge. This complexity, manageable by humans, becomes a liability in the Agentic Revolution.
@@ -248,7 +405,7 @@ The current landscape, built on disconnected pipelines, offers no scalable answe
 
 ## What FLUID Is (and Is Not)
 
-### What FLUID 0.5.7 Is: A Declarative Protocol for Data Products
+### What FLUID 0.7.1 Is: A Declarative Protocol for Data Products
 
 FLUID is a **declarative specification** (YAML/JSON, version-controlled) that defines a data product's complete lifecycle. It's not an execution engine, but a universal contract language for the data ecosystem.
 
@@ -259,12 +416,16 @@ FLUID is a **declarative specification** (YAML/JSON, version-controlled) that de
 - **Instructional:** Clear, executable specifications that tell tools exactly how to build, deploy, and manage data products. The contract becomes the implementation blueprint.
 - **Declaration:** Declarative-first approach where you specify *what* you want, not *how* to achieve it. Tools interpret the specification to determine optimal execution strategies.
 
-**Key Components in v0.5.7:**
+**Key Components in v0.7.1:**
 - **`exposes`**: What data this product provides (schema, location, quality guarantees)
 - **`consumes`**: What data this product depends on (other FLUID products or external sources)  
 - **`build`**: How the data gets created (dbt, SQL, Python, multi-stage pipelines)
 - **`metadata`**: Ownership, business context, and governance information
-- **Enhanced Features**: Multi-modal builds, improved lineage, ML pipeline support
+- **`agentPolicy`** ⭐NEW: AI/LLM usage governance and control
+- **`sovereignty`** ⭐NEW: Data residency and jurisdictional compliance
+- **`accessPolicy`** ⭐NEW: Root-level access control with automated IAM
+- **`orchestration`** ⭐NEW: Provider-first task orchestration
+- **Enhanced Features**: Multi-modal builds, improved lineage, ML pipeline support, agentic governance
 
 This structure separates **interface** (what you get) from **implementation** (how it's built), enabling reliable data ecosystems ready for both humans and AI agents.
 
@@ -276,7 +437,7 @@ Instead, FLUID fosters a **decentralized, compliant ecosystem**. Tools become "F
 
 ---
 
-## 🔄 FLUID vs. OpenAPI Data Specification (OPDS) v4
+## 🔄 FLUID 0.7.1 vs. OpenAPI Data Specification (OPDS) v4
 
 Understanding when to use FLUID versus OPDS v4 is crucial for making the right architectural decisions for your data ecosystem.
 
@@ -292,7 +453,7 @@ Understanding when to use FLUID versus OPDS v4 is crucial for making the right a
 
 ### **Detailed Comparison:**
 
-| **Aspect** | **FLUID 0.5.7** | **OPDS v4** |
+| **Aspect** | **FLUID 0.7.1** | **OPDS v4** |
 |------------|------------------|--------------|
 | **Primary Purpose** | End-to-end data product lifecycle management | API specification and documentation |
 | **Scope** | Data ingestion → transformation → consumption | HTTP API endpoints and schemas |
@@ -312,9 +473,14 @@ Understanding when to use FLUID versus OPDS v4 is crucial for making the right a
 **Data Mesh / Domain-Driven Architecture:**
 ```yaml
 # FLUID: Complete data product specification
-fluidVersion: "0.5.7"
+fluidVersion: "0.7.1"
 kind: "DataProduct"
 id: "finance.gold.risk_metrics"
+
+# NEW in v0.7.1: Agentic governance
+agentPolicy:
+  allowedModels: ["gpt-4", "claude-3"]
+  maxTokensPerDay: 50000
 
 # Includes: sources, transformations, quality, access, observability
 consumes: [...]
@@ -372,9 +538,14 @@ Many organizations benefit from using **both** specifications together:
 
 ```yaml
 # FLUID: Data product that exposes an API
-fluidVersion: "0.5.7"
+fluidVersion: "0.7.1"
 kind: "DataProduct"
 id: "customer.api.profiles_v1"
+
+# NEW: AI model restrictions
+agentPolicy:
+  allowedModels: ["gpt-4-turbo"]
+  maxTokensPerRequest: 4096
 
 exposes:
   - exposeId: "customer_api"
@@ -407,11 +578,11 @@ build:
 3. **Simplify to request/response** patterns
 4. **Optimize for developer experience**
 
-### **Revised Concept Mapping: FLUID 0.5.7 ↔ OPDS v4.0**
+### **Revised Concept Mapping: FLUID 0.7.1 ↔ OPDS v4.0**
 
 Let me provide a more accurate comparison based on careful analysis of both specifications:
 
-| **Concept Domain** | **FLUID 0.5.7** | **OPDS v4.0** | **Analysis** |
+| **Concept Domain** | **FLUID 0.7.1** | **OPDS v4.0** | **Analysis** |
 |-------------------|------------------|----------------|---------------|
 | **Product Definition** | `id`, `name`, `description`, `domain` | `productID`, `name`, `description`, `valueProposition`, `productSeries` | **OPDS stronger**: Richer business context with value propositions and product series grouping |
 | **Lifecycle Management** | `lifecycle.state` (4 states: preview→active→deprecated→retired) | `status` (8 states: announcement→draft→development→testing→acceptance→production→sunset→retired) | **OPDS stronger**: More granular lifecycle tracking for business processes |
@@ -425,6 +596,9 @@ Let me provide a more accurate comparison based on careful analysis of both spec
 | **Dependency Management** | Formal `consumes[]` with version constraints | Informal `recommendedDataProducts[]` | **FLUID stronger**: Explicit dependency management |
 | **Metadata Richness** | Technical metadata (`tags`, `labels`, `businessContext`) | Business metadata (`categories`, `standards`, `useCases[]`, `brandSlogan`) | **Different purposes**: FLUID=technical discovery, OPDS=business discovery |
 | **Versioning Strategy** | Semantic versioning with `schemaEvolution` | Product versioning with `versionNotes` and `issues` tracking | **FLUID stronger**: Technical schema evolution, OPDS stronger for business version communication |
+| **AI/LLM Governance** | ✅ NEW: `agentPolicy` with model whitelisting, usage quotas, audit logging | ❌ No AI-specific governance | **FLUID exclusive**: Granular control over AI model access and usage boundaries |
+| **Data Sovereignty** | ✅ NEW: `sovereignty` with jurisdiction, residency, cross-border controls | ⚠️ Basic geographic metadata | **FLUID stronger**: Automated compliance enforcement at infrastructure level |
+| **Orchestration** | ✅ NEW: Provider-first tasks with direct cloud action invocation | ❌ No orchestration capabilities | **FLUID exclusive**: Native multi-cloud workflow management |
 
 ### **Corrected Strength Analysis:**
 
@@ -436,10 +610,14 @@ Let me provide a more accurate comparison based on careful analysis of both spec
 - **Quality Tooling**: Integration with enterprise DQ tools (SodaCL, Montecarlo, DQOps)
 - **Lifecycle Granularity**: Detailed business process states
 
-#### **� FLUID 0.5.7 Actually Excels At:**
+#### **🎯 FLUID 0.7.1 Actually Excels At:**
 - **Data Engineering**: Complete pipeline orchestration and transformation logic
 - **Technical Governance**: Embedded contracts, lineage tracking, schema evolution
 - **AI/ML Workflows**: Native support for ML pipelines and agentic consumption
+- **Agentic Governance** ⭐NEW: AI model whitelisting, usage quotas, audit logging
+- **Data Sovereignty** ⭐NEW: Jurisdiction enforcement, regional constraints, cross-border controls
+- **Provider-First Orchestration** ⭐NEW: Direct cloud provider action invocation
+- **Access Automation** ⭐NEW: Root-level IAM policy generation
 - **Dependency Management**: Formal inter-product relationships with version constraints
 - **Multi-Environment**: Environment-specific configurations (dev/staging/prod)
 - **Developer Experience**: Unified specification for technical teams
@@ -452,12 +630,15 @@ Let me provide a more accurate comparison based on careful analysis of both spec
 
 ### **Decision Framework:**
 
-**Choose FLUID 0.5.7 if you need:**
+**Choose FLUID 0.7.1 if you need:**
 - ✅ **End-to-end data pipeline governance**
 - ✅ **AI/ML pipeline orchestration** 
 - ✅ **Automated quality & lineage tracking**
 - ✅ **Multi-environment data mesh architecture**
 - ✅ **Agentic AI consumption with contracts**
+- ✅ **AI model governance** (NEW: agentPolicy)
+- ✅ **Data sovereignty enforcement** (NEW: jurisdiction control)
+- ✅ **Provider-first orchestration** (NEW: direct cloud actions)
 
 **Choose OPDS v4.0 if you need:**
 - ✅ **Commercial data marketplace**
@@ -520,7 +701,7 @@ No matter how advanced, an AI agent cannot operate on data it does not understan
 
 ---
 
-## ✨ FLUID 0.5.7 in Action: Simple Examples
+## ✨ FLUID 0.7.1 in Action: Simple Examples
 
 ### 🥉 Example 1: Bronze Layer - Raw Data Ingestion
 
@@ -528,10 +709,16 @@ A FLUID data product that ingests payment events with built-in quality controls:
 
 ```yaml
 # payments.fluid.yml
-fluidVersion: "0.5.7"
+fluidVersion: "0.7.1"
 kind: "DataProduct"
 id: "finance.bronze.raw_payments"
 name: "Raw Payment Events"
+
+# NEW in v0.7.1: Data sovereignty
+sovereignty:
+  jurisdiction: "US"
+  dataResidency:
+    allowedRegions: ["us-central1", "us-east1"]
 
 metadata:
   layer: "Bronze"
@@ -592,10 +779,16 @@ A FLUID data product that transforms raw data into business-ready insights:
 
 ```yaml
 # customer_metrics.fluid.yml
-fluidVersion: "0.5.7"
+fluidVersion: "0.7.1"
 kind: "DataProduct" 
 id: "analytics.silver.customer_metrics"
 name: "Customer Metrics"
+
+# NEW in v0.7.1: Access control automation
+accessPolicy:
+  grants:
+    - principal: "group:analytics-team@company.com"
+      permissions: ["read", "select"]
 
 metadata:
   layer: "Silver"
@@ -649,10 +842,17 @@ A FLUID data product optimized for machine learning consumption:
 
 ```yaml
 # ml_features.fluid.yml
-fluidVersion: "0.5.7"
+fluidVersion: "0.7.1"
 kind: "DataProduct"
 id: "ml.gold.churn_features"
 name: "Churn Prediction Features"
+
+# NEW in v0.7.1: AI model governance
+agentPolicy:
+  allowedModels: ["gpt-4", "claude-3-opus"]
+  maxTokensPerRequest: 8192
+  allowedUseCases: ["churn-prediction", "customer-analytics"]
+  requiresHumanReview: false
 
 metadata:
   layer: "Gold"
@@ -720,7 +920,7 @@ A specification is only as strong as its ability to withstand scrutiny. Here, we
 ### 2❓Does FLUID replace my existing tools?
 **A:** No. FLUID makes your tools work better together. dbt, Airflow, Snowflake, and other tools become "FLUID-aware" by reading the `.fluid.yml` specification to auto-configure themselves. It's the shared language, not a replacement platform.
 
-### 3❓How do I start using FLUID 0.5.7 today?
+### 3❓How do I start using FLUID 0.7.1 today?
 **A:** Start small:
 1. Pick one critical data pipeline
 2. Write a `.fluid.yml` file describing it (see examples above)
@@ -728,7 +928,7 @@ A specification is only as strong as its ability to withstand scrutiny. Here, we
 4. Gradually expand to more data products
 
 ### 4❓What about complex transformations and custom logic?
-**A:** FLUID 0.5.7 supports multiple build patterns:
+**A:** FLUID 0.7.1 supports multiple build patterns:
 - **`hybrid-reference`**: For dbt-style transformations
 - **`embedded-logic`**: For custom SQL/Python code
 - **`multi-stage`**: For complex multi-step orchestration
@@ -736,19 +936,23 @@ A specification is only as strong as its ability to withstand scrutiny. Here, we
 The `lineage` block maintains full traceability even with custom code.
 
 ### 5❓How does this help with AI agents and the "agentic era"?
-**A:** AI agents need **contracts**, not chaos. FLUID provides:
+**A:** AI agents need **contracts**, not chaos. FLUID 0.7.1 provides:
 - **Discoverable data**: Agents can find the right data products
 - **Trustworthy contracts**: Schema, quality, and freshness guarantees
 - **Secure access**: Policy-driven permissions for autonomous systems
 - **Rich context**: Business semantics and lineage for better decision-making
+- **⭐ AI governance** (NEW): Model whitelisting, usage quotas, and audit trails
+- **⭐ Sovereignty controls** (NEW): Automated jurisdictional compliance
+- **⭐ Fine-grained permissions** (NEW): Root-level access policies with automated IAM
 
 ---
 
 ## 📚 Learn More
 
-📖 [FLUID v0.5.7 Full Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)  
-🔗 [JSON Schema v0.5.7](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.5.7.json)  
-📚 [Generated Schema Documentation](https://github.com/open-data-protocol/fluid/blob/main/specs/0.5.7/fluid-spec.html)  
+📖 [FLUID v0.7.1 Full Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)  
+🔗 [JSON Schema v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)  
+📚 [Generated Schema Documentation](https://github.com/open-data-protocol/fluid/blob/main/specs/0.7.1/fluid-spec.html)  
+🆕 [Version Diff: 0.5.7 → 0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema-diffs/diff-0.5.7-to-0.7.1.md)  
 🧑‍💻 [FLUID Contribution Guide](https://github.com/open-data-protocol/fluid/blob/main/contribute.md)  
 📜 [License (MIT)](LICENSE.md)
 
