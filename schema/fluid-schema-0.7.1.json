@@ -15,7 +15,7 @@
   ],
   "examples": [
     {
-      "fluidVersion": "0.5.7",
+      "fluidVersion": "0.7.1",
       "kind": "DataProduct",
       "id": "gold.customer.analytics_360_v1",
       "name": "Customer 360 Analytics",
