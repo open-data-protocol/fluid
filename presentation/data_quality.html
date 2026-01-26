@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declarative Data Quality with FLUID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #02042B;
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .glow-effect {
+            position: absolute;
+            pointer-events: none;
+            z-index: -2;
+            opacity: 0.15;
+            filter: blur(120px);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .code-header {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        
+        .highlight-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .highlight-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .provider-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 16px;
+        }
+        
+        .aws-logo { background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%); }
+        .gcp-logo { background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); }
+        
+        pre code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .yaml-key { color: #9cdcfe; }
+        .yaml-string { color: #ce9178; }
+        .yaml-number { color: #b5cea8; }
+        .yaml-comment { color: #6a9955; font-style: italic; }
+        .yaml-bool { color: #569cd6; }
+        .yaml-operator { color: #d4d4d4; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-8">
+    <div id="canvas-container"></div>
+    <div class="glow-effect -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500 rounded-full"></div>
+    <div class="glow-effect -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-500 rounded-full"></div>
+    
+    <div class="max-w-7xl w-full relative z-10">
+        
+        <!-- Hero Section -->
+        <div class="text-center mb-16">
+            <div class="inline-block mb-4">
+                <span class="text-6xl">📊</span>
+            </div>
+            <h1 class="text-6xl font-black text-white mb-6">
+                Declarative Data Quality
+            </h1>
+            <p class="text-2xl text-white/90 mb-8 max-w-3xl mx-auto">
+                Define quality rules once in FLUID. Deploy everywhere.<br/>
+                Let cloud providers do the heavy lifting.
+            </p>
+        </div>
+
+        <!-- Value Proposition -->
+        <div class="grid md:grid-cols-3 gap-6 mb-16">
+            <div class="highlight-card text-center">
+                <div class="text-5xl mb-4">⚡</div>
+                <h3 class="text-xl font-bold mb-2 gradient-text">Write Once</h3>
+                <p class="text-gray-600">Declare rules in your FLUID contract, not scattered across notebooks and pipelines</p>
+            </div>
+            <div class="highlight-card text-center">
+                <div class="text-5xl mb-4">🚀</div>
+                <h3 class="text-xl font-bold mb-2 gradient-text">Deploy Everywhere</h3>
+                <p class="text-gray-600">Same contract works with BigQuery, Glue, Great Expectations, and custom validators</p>
+            </div>
+            <div class="highlight-card text-center">
+                <div class="text-5xl mb-4">🎯</div>
+                <h3 class="text-xl font-bold mb-2 gradient-text">Fail Fast</h3>
+                <p class="text-gray-600">Catch issues before they reach consumers with automated validation gates</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-16">
+            
+            <!-- FLUID Example -->
+            <div>
+                <div class="highlight-card">
+                    <span class="feature-badge">FLUID Contract</span>
+                    <h2 class="text-2xl font-bold mb-4">Declarative Data Quality Rules</h2>
+                    <p class="text-gray-600 mb-6">
+                        Define comprehensive quality rules directly in your data product contract.
+                        FLUID supports freshness, completeness, uniqueness, anomaly detection, and custom validations.
+                    </p>
+                    
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                            <span class="text-gray-400 text-sm ml-2">customer-360.fluid.yaml</span>
+                        </div>
+                        <pre class="p-6 overflow-x-auto"><code><span class="yaml-key">exposes</span><span class="yaml-operator">:</span>
+  <span class="yaml-operator">-</span> <span class="yaml-key">exposeId</span><span class="yaml-operator">:</span> <span class="yaml-string">customer_profiles</span>
+    <span class="yaml-key">kind</span><span class="yaml-operator">:</span> <span class="yaml-string">Table</span>
+    <span class="yaml-key">contract</span><span class="yaml-operator">:</span>
+      <span class="yaml-comment"># Schema definition with all required columns</span>
+      <span class="yaml-key">schema</span><span class="yaml-operator">:</span>
+        <span class="yaml-operator">-</span> <span class="yaml-key">name</span><span class="yaml-operator">:</span> <span class="yaml-string">customer_id</span>
+          <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">STRING</span>
+          <span class="yaml-key">required</span><span class="yaml-operator">:</span> <span class="yaml-bool">true</span>
+        <span class="yaml-operator">-</span> <span class="yaml-key">name</span><span class="yaml-operator">:</span> <span class="yaml-string">email</span>
+          <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">STRING</span>
+          <span class="yaml-key">required</span><span class="yaml-operator">:</span> <span class="yaml-bool">true</span>
+        <span class="yaml-operator">-</span> <span class="yaml-key">name</span><span class="yaml-operator">:</span> <span class="yaml-string">age</span>
+          <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">INTEGER</span>
+        <span class="yaml-operator">-</span> <span class="yaml-key">name</span><span class="yaml-operator">:</span> <span class="yaml-string">updated_at</span>
+          <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">TIMESTAMP</span>
+          <span class="yaml-key">required</span><span class="yaml-operator">:</span> <span class="yaml-bool">true</span>
+      
+      <span class="yaml-comment"># Declarative data quality rules</span>
+      <span class="yaml-key">dq</span><span class="yaml-operator">:</span>
+        <span class="yaml-key">rules</span><span class="yaml-operator">:</span>
+          <span class="yaml-comment"># Freshness: Data must be updated within 24 hours</span>
+          <span class="yaml-operator">-</span> <span class="yaml-key">id</span><span class="yaml-operator">:</span> <span class="yaml-string">freshness_check</span>
+            <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">freshness</span>
+            <span class="yaml-key">selector</span><span class="yaml-operator">:</span> <span class="yaml-string">updated_at</span>
+            <span class="yaml-key">threshold</span><span class="yaml-operator">:</span> <span class="yaml-string">"PT24H"</span>
+            <span class="yaml-key">severity</span><span class="yaml-operator">:</span> <span class="yaml-string">critical</span>
+          
+          <span class="yaml-comment"># Completeness: 100% of records must have customer_id</span>
+          <span class="yaml-operator">-</span> <span class="yaml-key">id</span><span class="yaml-operator">:</span> <span class="yaml-string">customer_id_completeness</span>
+            <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">completeness</span>
+            <span class="yaml-key">selector</span><span class="yaml-operator">:</span> <span class="yaml-string">customer_id</span>
+            <span class="yaml-key">threshold</span><span class="yaml-operator">:</span> <span class="yaml-number">1.0</span>
+            <span class="yaml-key">operator</span><span class="yaml-operator">:</span> <span class="yaml-string">gte</span>
+            <span class="yaml-key">severity</span><span class="yaml-operator">:</span> <span class="yaml-string">critical</span>
+          
+          <span class="yaml-comment"># Uniqueness: No duplicate customer_ids allowed</span>
+          <span class="yaml-operator">-</span> <span class="yaml-key">id</span><span class="yaml-operator">:</span> <span class="yaml-string">unique_customers</span>
+            <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">uniqueness</span>
+            <span class="yaml-key">selector</span><span class="yaml-operator">:</span> <span class="yaml-string">customer_id</span>
+            <span class="yaml-key">threshold</span><span class="yaml-operator">:</span> <span class="yaml-number">1.0</span>
+            <span class="yaml-key">operator</span><span class="yaml-operator">:</span> <span class="yaml-string">eq</span>
+            <span class="yaml-key">severity</span><span class="yaml-operator">:</span> <span class="yaml-string">critical</span>
+          
+          <span class="yaml-comment"># Range: 95% of ages must be between 18 and 120</span>
+          <span class="yaml-operator">-</span> <span class="yaml-key">id</span><span class="yaml-operator">:</span> <span class="yaml-string">valid_age_range</span>
+            <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">range</span>
+            <span class="yaml-key">selector</span><span class="yaml-operator">:</span> <span class="yaml-string">age</span>
+            <span class="yaml-key">min</span><span class="yaml-operator">:</span> <span class="yaml-number">18</span>
+            <span class="yaml-key">max</span><span class="yaml-operator">:</span> <span class="yaml-number">120</span>
+            <span class="yaml-key">threshold</span><span class="yaml-operator">:</span> <span class="yaml-number">0.95</span>
+            <span class="yaml-key">severity</span><span class="yaml-operator">:</span> <span class="yaml-string">warning</span>
+          
+          <span class="yaml-comment"># Pattern: Email must match valid format</span>
+          <span class="yaml-operator">-</span> <span class="yaml-key">id</span><span class="yaml-operator">:</span> <span class="yaml-string">valid_email_format</span>
+            <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">pattern</span>
+            <span class="yaml-key">selector</span><span class="yaml-operator">:</span> <span class="yaml-string">email</span>
+            <span class="yaml-key">pattern</span><span class="yaml-operator">:</span> <span class="yaml-string">"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"</span>
+            <span class="yaml-key">threshold</span><span class="yaml-operator">:</span> <span class="yaml-number">0.99</span>
+            <span class="yaml-key">severity</span><span class="yaml-operator">:</span> <span class="yaml-string">warning</span>
+          
+          <span class="yaml-comment"># Custom SQL: No duplicate emails</span>
+          <span class="yaml-operator">-</span> <span class="yaml-key">id</span><span class="yaml-operator">:</span> <span class="yaml-string">unique_emails</span>
+            <span class="yaml-key">type</span><span class="yaml-operator">:</span> <span class="yaml-string">custom</span>
+            <span class="yaml-key">expression</span><span class="yaml-operator">:</span> <span class="yaml-string">"COUNT(DISTINCT email) = COUNT(*)"</span>
+            <span class="yaml-key">severity</span><span class="yaml-operator">:</span> <span class="yaml-string">error</span>
+        
+        <span class="yaml-key">monitoring</span><span class="yaml-operator">:</span>
+          <span class="yaml-key">enabled</span><span class="yaml-operator">:</span> <span class="yaml-bool">true</span>
+          <span class="yaml-key">alertChannels</span><span class="yaml-operator">:</span> <span class="yaml-operator">[</span><span class="yaml-string">"slack://data-quality"</span><span class="yaml-operator">]</span>
+          <span class="yaml-key">frequency</span><span class="yaml-operator">:</span> <span class="yaml-string">"@daily"</span></code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="space-y-6">
+                <div class="highlight-card">
+                    <span class="feature-badge">Why Declarative?</span>
+                    <h2 class="text-2xl font-bold mb-4">The Power of Declaration</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">✅</div>
+                            <div>
+                                <h4 class="font-bold mb-1">Version Controlled Quality</h4>
+                                <p class="text-gray-600 text-sm">DQ rules live in Git alongside your data product definition. Every change is tracked, reviewed, and auditable.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">🔄</div>
+                            <div>
+                                <h4 class="font-bold mb-1">Self-Documenting</h4>
+                                <p class="text-gray-600 text-sm">Quality expectations are explicit and discoverable. Consumers know exactly what guarantees they get.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">🧪</div>
+                            <div>
+                                <h4 class="font-bold mb-1">Test in Lower Environments</h4>
+                                <p class="text-gray-600 text-sm">Same rules validate dev, staging, and prod. Catch issues before they impact production consumers.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">🎛️</div>
+                            <div>
+                                <h4 class="font-bold mb-1">Severity Levels</h4>
+                                <p class="text-gray-600 text-sm">Critical rules block pipeline execution. Warnings alert without breaking. You control the trade-offs.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <h3 class="text-xl font-bold mb-4">📋 Supported Rule Types</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="p-3 bg-purple-50 rounded-lg">
+                            <div class="font-bold text-purple-900">freshness</div>
+                            <div class="text-purple-700">Data age validation</div>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg">
+                            <div class="font-bold text-blue-900">completeness</div>
+                            <div class="text-blue-700">Null checks</div>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg">
+                            <div class="font-bold text-green-900">uniqueness</div>
+                            <div class="text-green-700">Duplicate detection</div>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg">
+                            <div class="font-bold text-orange-900">range</div>
+                            <div class="text-orange-700">Min/max validation</div>
+                        </div>
+                        <div class="p-3 bg-pink-50 rounded-lg">
+                            <div class="font-bold text-pink-900">anomaly</div>
+                            <div class="text-pink-700">Pattern detection</div>
+                        </div>
+                        <div class="p-3 bg-indigo-50 rounded-lg">
+                            <div class="font-bold text-indigo-900">custom</div>
+                            <div class="text-indigo-700">SQL expressions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cloud Provider Integration -->
+        <div class="mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-black text-white mb-4">Native Cloud Provider Support</h2>
+                <p class="text-xl text-white/80">Your FLUID contract compiles to platform-native data quality services</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                
+                <!-- GCP BigQuery -->
+                <div class="highlight-card">
+                    <div class="provider-logo gcp-logo">GCP</div>
+                    <h3 class="text-2xl font-bold mb-4">Google BigQuery Data Quality</h3>
+                    <p class="text-gray-600 mb-6">
+                        FLUID rules automatically compile to BigQuery <code class="bg-gray-100 px-2 py-1 rounded text-sm">DATA_QUALITY_RULES</code> and <code class="bg-gray-100 px-2 py-1 rounded text-sm">CREATE DATA QUALITY SCAN</code> statements.
+                    </p>
+                    
+                    <div class="code-block mb-4">
+                        <div class="code-header">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                            <span class="text-gray-400 text-sm ml-2">Generated BigQuery DQ Scan</span>
+                        </div>
+                        <pre class="p-6 overflow-x-auto text-sm"><code><span class="yaml-comment">-- Auto-generated from FLUID contract: customer-360.fluid.yaml</span>
+<span class="yaml-key">CREATE OR REPLACE DATA QUALITY SCAN</span> customer_360_dq_scan
+<span class="yaml-key">ON</span> `project.dataset.customer_profiles`
+<span class="yaml-key">OPTIONS</span>(
+  description=<span class="yaml-string">"FLUID v0.7.1 Data Quality Rules"</span>,
+  labels=[(<span class="yaml-string">"managed-by"</span>, <span class="yaml-string">"fluid"</span>), (<span class="yaml-string">"severity"</span>, <span class="yaml-string">"mixed"</span>)]
+)
+<span class="yaml-key">RULES</span> (
+  <span class="yaml-comment">-- Freshness: updated_at within 24 hours (CRITICAL)</span>
+  freshness_check: <span class="yaml-key">ROW</span> <span class="yaml-key">CONDITION</span> 
+    <span class="yaml-string">"MAX(updated_at) &gt;= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR)"</span>,
+  
+  <span class="yaml-comment">-- Completeness: 100% customer_id present (CRITICAL)</span>
+  customer_id_completeness: <span class="yaml-key">NOT_NULL</span>(<span class="yaml-string">"customer_id"</span>) &gt;= <span class="yaml-number">1.0</span>,
+  
+  <span class="yaml-comment">-- Uniqueness: No duplicate customer_ids (CRITICAL)</span>
+  unique_customers: <span class="yaml-key">UNIQUENESS</span>(<span class="yaml-string">"customer_id"</span>) = <span class="yaml-number">1.0</span>,
+  
+  <span class="yaml-comment">-- Range: 95% of ages between 18-120 (WARNING)</span>
+  valid_age_range: <span class="yaml-key">ROW</span> <span class="yaml-key">CONDITION</span> 
+    <span class="yaml-string">"age BETWEEN 18 AND 120"</span> &gt;= <span class="yaml-number">0.95</span>,
+  
+  <span class="yaml-comment">-- Pattern: Email format validation (WARNING)</span>
+  valid_email_format: <span class="yaml-key">REGEX</span>(<span class="yaml-string">"email"</span>, 
+    <span class="yaml-string">"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"</span>) &gt;= <span class="yaml-number">0.99</span>,
+  
+  <span class="yaml-comment">-- Custom: No duplicate emails (ERROR)</span>
+  unique_emails: <span class="yaml-key">UNIQUENESS</span>(<span class="yaml-string">"email"</span>) = <span class="yaml-number">1.0</span>
+);</code></pre>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-blue-900 mb-2">🎯 BigQuery Features</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>✓ Native Data Quality Scans (no external tools)</li>
+                            <li>✓ Scheduled validation runs via Cloud Scheduler</li>
+                            <li>✓ Results in BigQuery tables for dashboards</li>
+                            <li>✓ Integration with Cloud Monitoring/Alerting</li>
+                            <li>✓ Column-level lineage tracking</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- AWS Glue -->
+                <div class="highlight-card">
+                    <div class="provider-logo aws-logo">AWS</div>
+                    <h3 class="text-2xl font-bold mb-4">AWS Glue Data Quality</h3>
+                    <p class="text-gray-600 mb-6">
+                        FLUID contracts generate <code class="bg-gray-100 px-2 py-1 rounded text-sm">DataQualityRuleset</code> definitions compatible with AWS Glue Data Quality service.
+                    </p>
+                    
+                    <div class="code-block mb-4">
+                        <div class="code-header">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                            <span class="text-gray-400 text-sm ml-2">Generated AWS Glue DQ Ruleset</span>
+                        </div>
+                        <pre class="p-6 overflow-x-auto text-sm"><code><span class="yaml-comment"># Auto-generated from FLUID contract: customer-360.fluid.yaml</span>
+<span class="yaml-key">Rules</span> <span class="yaml-operator">=</span> [
+  <span class="yaml-comment"># Freshness: updated_at within 24 hours (CRITICAL)</span>
+  <span class="yaml-string">ColumnDataType "updated_at" = "TIMESTAMP"</span>,
+  <span class="yaml-string">ColumnValues "updated_at" &gt; now() - interval '24' hour</span>,
+  
+  <span class="yaml-comment"># Completeness: 100% customer_id present (CRITICAL)</span>
+  <span class="yaml-string">Completeness "customer_id" = 1.0</span>,
+  
+  <span class="yaml-comment"># Uniqueness: No duplicate customer_ids (CRITICAL)</span>
+  <span class="yaml-string">Uniqueness "customer_id" = 1.0</span>,
+  
+  <span class="yaml-comment"># Range: 95% of ages between 18-120 (WARNING)</span>
+  <span class="yaml-string">ColumnValues "age" between 18 and 120 &gt;= 0.95</span>,
+  
+  <span class="yaml-comment"># Pattern: Email regex validation (WARNING)</span>
+  <span class="yaml-string">ColumnValues "email" matches "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" &gt;= 0.99</span>,
+  
+  <span class="yaml-comment"># Custom: No duplicate emails (ERROR)</span>
+  <span class="yaml-string">Uniqueness "email" = 1.0</span>,
+  
+  <span class="yaml-comment"># Rule set severity mapping</span>
+  <span class="yaml-string">OnFailure "freshness_check,customer_id_completeness,unique_customers" = "STOP"</span>,
+  <span class="yaml-string">OnFailure "valid_age_range,valid_email_format" = "CONTINUE"</span>,
+  <span class="yaml-string">OnFailure "unique_emails" = "STOP"</span>
+]
+
+<span class="yaml-comment"># Glue Data Quality configuration</span>
+<span class="yaml-key">RulesetConfiguration</span> <span class="yaml-operator">=</span> {
+  <span class="yaml-string">"TargetDataSource"</span>: <span class="yaml-string">"s3://data-lake/customer-profiles/"</span>,
+  <span class="yaml-string">"ManagedBy"</span>: <span class="yaml-string">"FLUID"</span>,
+  <span class="yaml-string">"Severity"</span>: <span class="yaml-string">"CRITICAL"</span>,
+  <span class="yaml-string">"Tags"</span>: {
+    <span class="yaml-string">"fluid-contract"</span>: <span class="yaml-string">"customer-360"</span>,
+    <span class="yaml-string">"fluid-version"</span>: <span class="yaml-string">"0.7.1"</span>,
+    <span class="yaml-string">"data-product"</span>: <span class="yaml-string">"gold.customer.analytics_360_v1"</span>
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="bg-orange-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-orange-900 mb-2">🎯 AWS Glue Features</h4>
+                        <ul class="text-sm text-orange-800 space-y-1">
+                            <li>✓ Native Glue Data Quality engine</li>
+                            <li>✓ Integration with Glue ETL jobs</li>
+                            <li>✓ CloudWatch metrics and alarms</li>
+                            <li>✓ EventBridge for automated workflows</li>
+                            <li>✓ Support for S3, Redshift, and RDS sources</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Pattern -->
+        <div class="highlight-card mb-16">
+            <span class="feature-badge">Implementation Pattern</span>
+            <h2 class="text-3xl font-bold mb-6">How It Works in Practice</h2>
+            
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="text-center">
+                    <div class="text-5xl mb-3">📝</div>
+                    <h4 class="font-bold mb-2">1. Define</h4>
+                    <p class="text-sm text-gray-600">Write DQ rules in your FLUID contract once</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-5xl mb-3">🔄</div>
+                    <h4 class="font-bold mb-2">2. Compile</h4>
+                    <p class="text-sm text-gray-600">FLUID CLI generates platform-native DQ code</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-5xl mb-3">🚀</div>
+                    <h4 class="font-bold mb-2">3. Deploy</h4>
+                    <p class="text-sm text-gray-600">IaC tools provision DQ scans automatically</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-5xl mb-3">📊</div>
+                    <h4 class="font-bold mb-2">4. Monitor</h4>
+                    <p class="text-sm text-gray-600">Results flow to your observability stack</p>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                    <span class="text-gray-400 text-sm ml-2">Example: CI/CD Integration</span>
+                </div>
+                <pre class="p-6 overflow-x-auto"><code><span class="yaml-comment"># .github/workflows/data-product-deploy.yml</span>
+<span class="yaml-key">name</span><span class="yaml-operator">:</span> <span class="yaml-string">Deploy Data Product</span>
+
+<span class="yaml-key">on</span><span class="yaml-operator">:</span>
+  <span class="yaml-key">push</span><span class="yaml-operator">:</span>
+    <span class="yaml-key">branches</span><span class="yaml-operator">:</span> <span class="yaml-operator">[</span><span class="yaml-string">main</span><span class="yaml-operator">]</span>
+
+<span class="yaml-key">jobs</span><span class="yaml-operator">:</span>
+  <span class="yaml-key">deploy</span><span class="yaml-operator">:</span>
+    <span class="yaml-key">runs-on</span><span class="yaml-operator">:</span> <span class="yaml-string">ubuntu-latest</span>
+    <span class="yaml-key">steps</span><span class="yaml-operator">:</span>
+      <span class="yaml-comment"># Validate FLUID contract</span>
+      <span class="yaml-operator">-</span> <span class="yaml-key">run</span><span class="yaml-operator">:</span> <span class="yaml-string">fluid validate customer-360.fluid.yaml</span>
+      
+      <span class="yaml-comment"># Generate platform-specific DQ rules</span>
+      <span class="yaml-operator">-</span> <span class="yaml-key">run</span><span class="yaml-operator">:</span> <span class="yaml-string">fluid compile dq --target=bigquery customer-360.fluid.yaml</span>
+      
+      <span class="yaml-comment"># Deploy to GCP via Terraform</span>
+      <span class="yaml-operator">-</span> <span class="yaml-key">run</span><span class="yaml-operator">:</span> <span class="yaml-string">terraform apply -auto-approve</span>
+      
+      <span class="yaml-comment"># Run initial DQ scan</span>
+      <span class="yaml-operator">-</span> <span class="yaml-key">run</span><span class="yaml-operator">:</span> <span class="yaml-string">gcloud dataplex datascans run customer-360-dq-scan</span></code></pre>
+            </div>
+        </div>
+
+        <!-- Real-World Benefits -->
+        <div class="highlight-card mb-8">
+            <h2 class="text-3xl font-bold mb-6 text-center">Real-World Impact</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-6xl font-black gradient-text mb-2">75%</div>
+                    <p class="text-gray-600">Reduction in DQ incident resolution time</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-6xl font-black gradient-text mb-2">90%</div>
+                    <p class="text-gray-600">Of issues caught before reaching production</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-6xl font-black gradient-text mb-2">Zero</div>
+                    <p class="text-gray-600">Manual DQ check configuration needed</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="text-center text-white">
+            <p class="text-xl mb-4">
+                Stop writing data quality checks in 5 different places.
+            </p>
+            <p class="text-3xl font-bold mb-6">
+                Declare them once in FLUID. Deploy everywhere.
+            </p>
+            <a href="../specification.md" class="inline-block bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-colors shadow-lg">
+                Read the Full Specification →
+            </a>
+        </div>
+
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let scene, camera, renderer, particles;
+            
+            function init() {
+                const container = document.getElementById('canvas-container');
+                if (!container) return;
+                
+                const isMobile = window.innerWidth < 768;
+                const particleCount = isMobile ? 800 : 2500;
+
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 15;
+                renderer = new THREE.WebGLRenderer({ alpha: true });
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+                
+                const particlesGeometry = new THREE.BufferGeometry();
+                const posArray = new Float32Array(particleCount * 3);
+                for (let i = 0; i < particleCount * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 50;
+                }
+                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const particleMaterial = new THREE.PointsMaterial({
+                    size: 0.05,
+                    color: 0x38BDF8,
+                    transparent: true,
+                    opacity: 0.6,
+                    blending: THREE.AdditiveBlending
+                });
+                particles = new THREE.Points(particlesGeometry, particleMaterial);
+                scene.add(particles);
+                window.addEventListener('resize', onWindowResize, false);
+            }
+
+            function onWindowResize() {
+                if (!camera || !renderer) return;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function animate() {
+                if (!particles || !renderer || !scene || !camera) return;
+                requestAnimationFrame(animate);
+                const time = Date.now() * 0.00005;
+                particles.rotation.y = time * 0.2;
+                particles.rotation.x = time * 0.1;
+                renderer.render(scene, camera);
+            }
+            
+            init();
+            animate();
+        });
+    </script>
+</body>
+</html>

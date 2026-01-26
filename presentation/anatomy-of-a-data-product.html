@@ -236,9 +236,9 @@
             <!-- Build -->
             <div class="spec-card" data-modal-id="spec-build">
                 <div class="spec-icon">⚙️</div>
-                <h3 class="spec-title">build</h3>
-                <p class="spec-analogy">"The Recipe"</p>
-                <p class="spec-description">The transformation logic. Defines the tools (dbt, Spark), runtime, and trigger conditions needed to create the output.</p>
+                <h3 class="spec-title">builds</h3>
+                <p class="spec-analogy">"The Recipe (Plural)"</p>
+                <p class="spec-description">Multi-modal transformation logic. Array of builds supporting batch + streaming, SQL + ML, or multi-stage patterns in one data product.</p>
             </div>
             <!-- Exposes -->
             <div class="spec-card" data-modal-id="spec-exposes">
@@ -271,8 +271,8 @@
                 <a href="https://github.com/open-data-protocol/fluid/blob/main/specification.md" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
                     Read the Full Specification
                 </a>
-                <a href="https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.1.1.json" target="_blank" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 px-6 rounded-lg transition-colors">
-                    Download Schema for v0.1.1
+                <a href="https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json" target="_blank" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 px-6 rounded-lg transition-colors">
+                    Download Schema for v0.7.1
                 </a>
             </div>
         </div>
@@ -349,92 +349,146 @@
         const tabs = document.querySelectorAll('.modal-tab');
 
         const fullYml = `
-<pre class="code-block"><span class="spec-identity"><span class="key">fluidVersion:</span> <span class="string">"0.1.1"</span>
+<pre class="code-block"><span class="spec-identity"><span class="key">fluidVersion:</span> <span class="string">"0.7.1"</span>
 <span class="key">kind:</span> <span class="string">DataProduct</span>
-<span class="key">id:</span> <span class="string">"customer_360_gold_v1"</span>
-<span class="key">name:</span> <span class="string">"Customer 360 Gold Model"</span>
-<span class="key">description:</span> <span class="string">"A comprehensive, unified view of the customer..."</span>
-<span class="key">domain:</span> <span class="string">"Analytics & BI"</span>
+<span class="key">id:</span> <span class="string">"gold.customer.analytics_360_v1"</span>
+<span class="key">name:</span> <span class="string">"Customer 360 Analytics"</span>
+<span class="key">description:</span> <span class="string">"Unified customer profiles with ML-driven insights"</span>
+<span class="key">domain:</span> <span class="string">"Customer Experience"</span>
+<span class="key">tags:</span> <span class="string">["customer-data", "analytics", "gold-layer"]</span>
 <span class="key">metadata:</span>
-  <span class="key">layer:</span> <span class="string">Gold</span>
+  <span class="key">layer:</span> <span class="string">"Gold"</span>
   <span class="key">owner:</span>
-    <span class="key">team:</span> <span class="string">"Customer Insights & Analytics"</span>
-    <span class="key">email:</span> <span class="string">"customer-insights@example.com"</span>
-  <span class="key">status:</span> <span class="string">Published</span></span>
+    <span class="key">team:</span> <span class="string">"customer-analytics"</span>
+    <span class="key">email:</span> <span class="string">"customer-analytics@company.com"</span></span>
 
 <span class="spec-consumes"><span class="key">consumes:</span>
-  <span class="key">- id:</span> <span class="string">"sales_vault"</span>
-    <span class="key">ref:</span> <span class="string">"urn:dataproduct:silver_sales_datavault_v1"</span>
-  <span class="key">- id:</span> <span class="string">"web_analytics_silver"</span>
-    <span class="key">ref:</span> <span class="string">"urn:dataproduct:silver_web_analytics_v1"</span></span>
+  <span class="key">- productId:</span> <span class="string">"silver.sales.transactions_v2"</span>
+    <span class="key">exposeId:</span> <span class="string">"sales_data"</span>
+    <span class="key">versionConstraint:</span> <span class="string">"^2.0"</span>
+  <span class="key">- productId:</span> <span class="string">"silver.web.analytics_v1"</span>
+    <span class="key">exposeId:</span> <span class="string">"user_events"</span>
+    <span class="key">versionConstraint:</span> <span class="string">"^1.0"</span></span>
 
-<span class="spec-build"><span class="key">build:</span>
-  <span class="key">engine:</span> <span class="string">"dbt"</span>
-  <span class="key">model:</span> <span class="string">"models/marts/customer/customer_360.sql"</span>
-  <span class="key">trigger:</span>
-    <span class="key">type:</span> <span class="string">schedule</span>
-    <span class="key">cron:</span> <span class="string">"0 4 * * *"</span>
-  <span class="key">runtime:</span>
-    <span class="key">platform:</span> <span class="string">"dbt-cloud"</span></span>
+<span class="spec-build"><span class="key">builds:</span>
+  <span class="comment"># Primary batch transformation</span>
+  <span class="key">- id:</span> <span class="string">"batch-aggregation"</span>
+    <span class="key">pattern:</span> <span class="string">"hybrid-reference"</span>
+    <span class="key">engine:</span> <span class="string">"dbt"</span>
+    <span class="key">properties:</span>
+      <span class="key">model:</span> <span class="string">"models/gold/customer_360.sql"</span>
+      <span class="key">materializedAs:</span> <span class="string">"table"</span>
+    <span class="key">execution:</span>
+      <span class="key">trigger:</span>
+        <span class="key">type:</span> <span class="string">"schedule"</span>
+        <span class="key">cron:</span> <span class="string">"0 4 * * *"</span>
+      <span class="key">runtime:</span>
+        <span class="key">platform:</span> <span class="string">"gcp"</span>
+        <span class="key">environment:</span> <span class="string">"production"</span>
+    <span class="key">outputs:</span>
+      <span class="key">- exposeId:</span> <span class="string">"customer_360_table"</span>
+  
+  <span class="comment"># Real-time feature enrichment</span>
+  <span class="key">- id:</span> <span class="string">"realtime-features"</span>
+    <span class="key">pattern:</span> <span class="string">"embedded-logic"</span>
+    <span class="key">engine:</span> <span class="string">"spark"</span>
+    <span class="key">properties:</span>
+      <span class="key">code:</span> <span class="string">"spark_jobs/realtime_enrich.py"</span>
+    <span class="key">execution:</span>
+      <span class="key">trigger:</span>
+        <span class="key">type:</span> <span class="string">"event"</span>
+        <span class="key">source:</span> <span class="string">"pubsub://customer-events"</span>
+      <span class="key">runtime:</span>
+        <span class="key">platform:</span> <span class="string">"gcp"</span>
+    <span class="key">outputs:</span>
+      <span class="key">- exposeId:</span> <span class="string">"customer_features_stream"</span></span>
 
 <span class="spec-exposes"><span class="key">exposes:</span>
-  <span class="key">- id:</span> <span class="string">"customer_360_master"</span>
-    <span class="key">type:</span> <span class="string">"bigquery_table"</span>
-    <span class="key">location:</span>
-      <span class="key">project:</span> <span class="string">"analytics-prod"</span>
-      <span class="key">dataset:</span> <span class="string">"gold_models"</span>
-    <span class="key">schema:</span>
-      <span class="key">- name:</span> <span class="string">customer_id</span>
-        <span class="key">type:</span> <span class="string">"STRING"</span>
-        <span class="key">tags:</span> <span class="string">[primary_key]</span>
-      <span class="key">- name:</span> <span class="string">email</span>
-        <span class="key">type:</span> <span class="string">"STRING"</span>
-        <span class="key">tags:</span> <span class="string">[pii]</span>
-    <span class="key">quality:</span>
-      <span class="key">- name:</span> <span class="string">"customer_id_is_not_null"</span>
-        <span class="key">rule:</span> <span class="string">"not_null"</span>
-        <span class="key">onFailure:</span> <span class="string">{ action: "fail_pipeline" }</span></span>
+  <span class="comment"># Batch-processed table from dbt build</span>
+  <span class="key">- exposeId:</span> <span class="string">"customer_360_table"</span>
+    <span class="key">kind:</span> <span class="string">"Table"</span>
+    <span class="key">binding:</span>
+      <span class="key">platform:</span> <span class="string">"gcp"</span>
+      <span class="key">format:</span> <span class="string">"bigquery_table"</span>
+      <span class="key">location:</span>
+        <span class="key">project:</span> <span class="string">"analytics-prod"</span>
+        <span class="key">dataset:</span> <span class="string">"gold_layer"</span>
+        <span class="key">table:</span> <span class="string">"customer_360"</span>
+    <span class="key">contract:</span>
+      <span class="key">schema:</span>
+        <span class="key">- name:</span> <span class="string">customer_id</span>
+          <span class="key">type:</span> <span class="string">STRING</span>
+          <span class="key">required:</span> <span class="string">true</span>
+        <span class="key">- name:</span> <span class="string">email</span>
+          <span class="key">type:</span> <span class="string">STRING</span>
+          <span class="key">sensitivity:</span> <span class="string">"pii"</span>
+        <span class="key">- name:</span> <span class="string">lifetime_value</span>
+          <span class="key">type:</span> <span class="string">FLOAT64</span>
+      <span class="key">dq:</span>
+        <span class="key">rules:</span>
+          <span class="key">- id:</span> <span class="string">"customer_id_not_null"</span>
+            <span class="key">type:</span> <span class="string">"completeness"</span>
+            <span class="key">selector:</span> <span class="string">"customer_id"</span>
+            <span class="key">threshold:</span> <span class="string">1.0</span>
+            <span class="key">severity:</span> <span class="string">"critical"</span>
+    <span class="key">qos:</span>
+      <span class="key">freshnessSLO:</span> <span class="string">"PT4H"</span>
+      <span class="key">availability:</span> <span class="string">"99.9%"</span>
+  
+  <span class="comment"># Real-time stream from Spark build</span>
+  <span class="key">- exposeId:</span> <span class="string">"customer_features_stream"</span>
+    <span class="key">kind:</span> <span class="string">"Stream"</span>
+    <span class="key">binding:</span>
+      <span class="key">platform:</span> <span class="string">"gcp"</span>
+      <span class="key">format:</span> <span class="string">"pubsub_topic"</span>
+      <span class="key">location:</span>
+        <span class="key">topic:</span> <span class="string">"customer-features-enriched"</span>
+    <span class="key">qos:</span>
+      <span class="key">latencyP95:</span> <span class="string">"PT1S"</span></span>
 
-<span class="spec-slo"><span class="key">slo:</span>
-  <span class="key">freshnessMinutes:</span> <span class="string">240</span>
-  <span class="key">availabilityPct:</span> <span class="string">99.95</span></span>
+<span class="spec-slo"><span class="comment"># Product-level QoS inherited by all exposes</span>
+<span class="key">qos:</span>
+  <span class="key">availability:</span> <span class="string">"99.95%"</span>
+  <span class="key">freshnessSLO:</span> <span class="string">"PT6H"</span></span>
 
 <span class="spec-access"><span class="key">accessPolicy:</span>
   <span class="key">grants:</span>
-    <span class="key">- principal:</span> <span class="string">"group:business-analysts@example.com"</span>
-      <span class="key">permissions:</span> <span class="string">["readData"]</span></span>
+    <span class="key">- principal:</span> <span class="string">"group:business-analysts@company.com"</span>
+      <span class="key">permissions:</span> <span class="string">["read", "select"]</span>
+    <span class="key">- principal:</span> <span class="string">"serviceAccount:ml-service@project.iam"</span>
+      <span class="key">permissions:</span> <span class="string">["read"]</span></span>
 </pre>
         `;
         
         const modalData = {
             'spec-identity': {
                 title: '🛂 Identity & Metadata',
-                text: `<h3>What it is:</h3><p>A unique, versioned ID, clear owner, and descriptive metadata for every data asset. This is the non-negotiable foundation for a data product.</p><div class="shock-value"><strong>Wake-Up Call:</strong> If you can't answer "Who owns this data?" and "What is it for?" in seconds, you don't have data products. You have data problems.</div>`,
+                text: `<h3>What it is:</h3><p>A unique, versioned ID (using dot notation like <code>gold.customer.analytics_360_v1</code>), clear owner, domain classification, and descriptive metadata. In v0.7.1, this includes tags and labels for discovery and automation.</p><div class="shock-value"><strong>Wake-Up Call:</strong> If you can't answer "Who owns this data?" and "What is it for?" in seconds, you don't have data products. You have data problems. FLUID makes ownership and purpose machine-readable and discoverable.</div>`,
                 highlightClass: 'spec-identity'
             },
             'spec-consumes': {
                 title: '🛒 consumes: The Ingredients List',
-                text: `<h3>What it is:</h3><p>An explicit, machine-readable list of all upstream data products this product depends on.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your current data lineage is a guess based on parsing SQL. It's brittle and often wrong. Explicit dependencies create perfect, automated lineage every time, making impact analysis instant and accurate.</div>`,
+                text: `<h3>What it is:</h3><p>An explicit list of upstream data products using <code>productId</code> and <code>exposeId</code> references. In v0.7.1, you can specify version constraints (e.g., <code>^2.0</code>) to ensure compatibility and track dependencies precisely.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your current data lineage is a guess based on parsing SQL. It's brittle and often wrong. Explicit dependencies create perfect, automated lineage every time, making impact analysis instant and accurate.</div>`,
                 highlightClass: 'spec-consumes'
             },
             'spec-build': {
-                title: '⚙️ build: The Recipe',
-                text: `<h3>What it is:</h3><p>The version-controlled transformation logic, specifying the tools, runtime, and trigger conditions needed to create the output from the inputs.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your transformation logic is probably tangled up with orchestration and infrastructure code. Decoupling them makes your logic portable, testable, and reusable.</div>`,
+                title: '⚙️ builds: The Recipe',
+                text: `<h3>What it is:</h3><p>Version-controlled transformation logic using <code>builds</code> array for multi-modal patterns. Each build has an <code>id</code>, <code>pattern</code> (hybrid-reference, embedded-logic, multi-stage), engine-specific <code>properties</code>, <code>execution</code> config, and <code>outputs</code> mapping to exposes. Perfect for batch + streaming, SQL + ML, or multi-stage pipelines.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your data product probably needs multiple build patterns—daily batch aggregation AND real-time enrichment. FLUID's <code>builds</code> array lets you declare both in one contract instead of maintaining separate pipelines.</div>`,
                 highlightClass: 'spec-build'
             },
             'spec-exposes': {
                 title: '🏪 exposes: The Serving Window',
-                text: `<h3>What it is:</h3><p>The official, public interface of the data product. Each 'port' defines a single, trusted point of access and contains its own schema, quality rules, and privacy policies.</p><div class="shock-value"><strong>Wake-Up Call:</strong> If your users access data through multiple tables and views, you've created chaos. A data product exposes a single, governed interface, eliminating ambiguity and ensuring consistency.</div>`,
+                text: `<h3>What it is:</h3><p>The official interface with <code>exposeId</code>, <code>kind</code> (Table, API, Stream), <code>binding</code> for platform location, <code>contract</code> with schema and data quality rules, and <code>qos</code> for SLOs. Each expose is a versioned, governed access point.</p><div class="shock-value"><strong>Wake-Up Call:</strong> If users access data through 5 different tables, you've created chaos. A data product exposes ONE governed interface with explicit quality guarantees and access controls.</div>`,
                 highlightClass: 'spec-exposes'
             },
             'spec-slo': {
-                title: '⏱️ slo: The Promise',
-                text: `<h3>What it is:</h3><p>A top-level Service Level Objective for the entire data product, making explicit guarantees about freshness, availability, and latency to all consumers.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your data consumers operate on hope. They hope the data is fresh. They hope the dashboard works. An SLO turns hope into a measurable, enforceable promise.</div>`,
+                title: '⏱️ qos: The Promise',
+                text: `<h3>What it is:</h3><p>Product-level Quality of Service with <code>availability</code> (e.g., 99.95%), <code>freshnessSLO</code> (ISO-8601 duration like PT6H), and latency guarantees. In v0.7.1, QoS can be set at product level or per-expose for fine-grained control.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Your data consumers operate on hope. They hope the data is fresh. They hope it's available. QoS turns hope into a measurable, enforceable SLA.</div>`,
                 highlightClass: 'spec-slo'
             },
             'spec-access': {
                 title: '🛡️ accessPolicy: The Bouncer',
-                text: `<h3>What it is:</h3><p>Defines the static, role-based access grants for the data product, specifying *who* can read or manage the data.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Managing data access table-by-table is a security nightmare that doesn't scale. Defining access at the product level simplifies governance and ensures policies are applied consistently.</div>`,
+                text: `<h3>What it is:</h3><p>Root-level access control with <code>grants</code> defining principals (users, groups, service accounts) and permissions (read, write, select). In v0.7.1, this generates platform-native IAM bindings automatically—no manual permission management.</p><div class="shock-value"><strong>Wake-Up Call:</strong> Managing data access table-by-table is a security nightmare. FLUID defines access once at the product level, then compiles to BigQuery IAM, S3 policies, or Snowflake grants automatically.</div>`,
                 highlightClass: 'spec-access'
             }
         };
