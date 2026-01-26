@@ -149,9 +149,14 @@ FLUID's design explicitly enables **complementary coexistence** with business-fo
 
 ```yaml
 # FLUID: Technical implementation and governance
-fluidVersion: "0.5.7"
+fluidVersion: "0.7.1"
 kind: "DataProduct"
 id: "analytics.gold.customer_segments"
+
+# NEW in v0.7.1: AI model governance
+agentPolicy:
+  allowedModels: ["gpt-4", "claude-3-opus"]
+  maxTokensPerRequest: 4096
 
 # Technical contract and automation
 exposes:

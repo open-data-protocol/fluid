@@ -309,73 +309,152 @@
                     
                     <div x-show="tab === 'source'" class="p-4 sm:p-6">
                         <h3 class="font-sora text-xl font-semibold text-sky-400">Bronze Layer: Contract-Driven Ingestion</h3>
-                        <p class="text-slate-400 mb-4">This product ingests raw events from a Kafka topic, but enforces quality and privacy rules *in-flight* before the data ever lands in cloud storage.</p>
+                        <p class="text-slate-400 mb-4">This product ingests raw events from a Kafka topic, enforces quality and privacy rules, and includes data sovereignty constraints (NEW in v0.7.1).</p>
                         <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
-fluidVersion: "0.1.1"
+fluidVersion: "0.7.1"
 kind: DataProduct
-id: raw_payments_v1
+id: "finance.bronze.raw_payments"
 name: "Raw Payment Events"
 domain: "Finance"
-metadata: { layer: "Bronze" }
-consumes:
-  - id: kafka_topic
-    type: kafka
-    # ... connection details
+
+# NEW in v0.7.1: Data sovereignty
+sovereignty:
+  jurisdiction: "US"
+  dataResidency:
+    allowedRegions: ["us-central1", "us-east1"]
+
+metadata:
+  layer: "Bronze"
+  owner:
+    team: "finance-platform"
+    email: "finance@company.com"
+
 exposes:
-  - id: landing_bucket
-    type: gcs_bucket
-    schema:
-      - { name: payment_id, type: STRING }
-      - { name: amount, type: NUMERIC }
-      - { name: user_email, type: STRING, tags: [pii] }
-    quality:
-      - name: "amount_is_positive"
-        check: "amount > 0"
+  - exposeId: "payment_events"
+    kind: "table"
+    contract:
+      schema:
+        - name: payment_id
+          type: STRING
+          required: true
+        - name: amount
+          type: NUMERIC
+          required: true
+        - name: user_email
+          type: STRING
+          tags: ["pii"]
+      dq:
+        rules:
+          - id: "positive_amount"
+            type: "valid_values"
+            selector: "amount > 0"
+            severity: "error"
+    binding:
+      platform: "gcp"
+      format: "bigquery_table"
+      location:
+        dataset: "bronze_finance"
+        table: "payments"
                         </code></pre>
                     </div>
 
                     <div x-show="tab === 'domain'" class="p-4 sm:p-6" style="display: none;">
                         <h3 class="font-sora text-xl font-semibold text-purple-400">Silver Layer: Transformation with dbt</h3>
-                        <p class="text-slate-400 mb-4">This product consumes the Bronze data, delegates transformation to a dbt model, and inherits its contract directly from the dbt `schema.yml`.</p>
+                        <p class="text-slate-400 mb-4">This product consumes Bronze data, uses dbt for transformation, and includes automated access control (NEW in v0.7.1).</p>
                         <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
-fluidVersion: "0.1.1"
+fluidVersion: "0.7.1"
 kind: DataProduct
-id: trusted_payments_v1
+id: "finance.silver.trusted_payments"
 name: "Trusted Payment Transactions"
 domain: "Finance"
-metadata: { layer: "Silver" }
+
+metadata:
+  layer: "Silver"
+  owner:
+    team: "finance-analytics"
+    email: "analytics@company.com"
+
 consumes:
-  - id: raw_events
-    ref: "urn:product:finance:raw_payments_v1"
+  - productId: "finance.bronze.raw_payments"
+    exposeId: "payment_events"
+
+# NEW in v0.7.1: Root-level access control
+accessPolicy:
+  grants:
+    - principal: "group:finance-analysts@company.com"
+      permissions: ["read", "select"]
+    - principal: "serviceAccount:etl@project.iam.gserviceaccount.com"
+      permissions: ["read", "write"]
+
 build:
-  engine: dbt
-  model: "models/finance/trusted_payments.sql"
+  engine: "dbt"
+  pattern: "hybrid-reference"
+  properties:
+    model: "models/finance/trusted_payments.sql"
+
 exposes:
-  - id: trusted_table
-    type: bigquery_table
-    # Schema is inherited from dbt model
+  - exposeId: "trusted_table"
+    kind: "table"
+    binding:
+      platform: "gcp"
+      format: "bigquery_table"
+      location:
+        dataset: "silver_finance"
+        table: "trusted_payments"
                         </code></pre>
                     </div>
 
                     <div x-show="tab === 'consumer'" class="p-4 sm:p-6" style="display: none;">
-                        <h3 class="font-sora text-xl font-semibold text-emerald-400">Gold Layer: Secure & Purpose-Built</h3>
-                        <p class="text-slate-400 mb-4">This product serves features to an ML agent. Access is tightly controlled by a policy that only grants read access to the specific agent.</p>
+                        <h3 class="font-sora text-xl font-semibold text-emerald-400">Gold Layer: AI-Ready with Agentic Governance</h3>
+                        <p class="text-slate-400 mb-4">This product serves ML features with AI model governance—controlling which AI models can access the data and how they can use it (NEW in v0.7.1).</p>
                         <pre class="overflow-x-auto text-xs sm:text-sm bg-slate-900/50 p-4 rounded-lg"><code class="language-yaml">
-fluidVersion: "0.1.1"
+fluidVersion: "0.7.1"
 kind: DataProduct
-id: churn_features_v1
+id: "ml.gold.churn_features"
 name: "Customer Churn Features"
 domain: "Machine Learning"
-metadata: { layer: "Gold" }
+
+metadata:
+  layer: "Gold"
+  owner:
+    team: "ml-engineering"
+    email: "ml@company.com"
+
 consumes:
-  - id: trusted_customers
-    ref: "urn:product:sales:trusted_customers_v2"
+  - productId: "finance.silver.trusted_payments"
+    exposeId: "trusted_table"
+
+# NEW in v0.7.1: AI/LLM governance
+agentPolicy:
+  allowedModels:
+    - "gpt-4"
+    - "claude-3-opus"
+  maxTokensPerRequest: 8192
+  allowedUseCases:
+    - "churn-prediction"
+    - "customer-analytics"
+  requiresHumanReview: false
+  auditLog:
+    enabled: true
+
 exposes:
-  - id: feature_store_view
-    type: redis_view
-    accessPolicy:
-      - principal: "agent:churn_prediction_model_v2"
-        permissions: ["read"]
+  - exposeId: "churn_features"
+    kind: "table"
+    contract:
+      schema:
+        - name: customer_id
+          type: STRING
+          required: true
+        - name: recency_score
+          type: FLOAT
+        - name: frequency_score
+          type: FLOAT
+    binding:
+      platform: "gcp"
+      format: "bigquery_table"
+      location:
+        dataset: "gold_ml"
+        table: "churn_features"
                         </code></pre>
                     </div>
                 </div>
