@@ -20,6 +20,15 @@ It re-frames the data lifecycle around the concept of a Data Product: a versione
 
 This document details the full specification for this protocol, providing the technical foundation required to build the governable, scalable, and agent-ready data ecosystems of the future.
 
+<div align="center" style="margin: 2rem 0;">
+  <a href="https://amzn.eu/d/ikMlWNV" target="_blank" title="FLUID Data Products - Available on Amazon">
+    <img src="./front-cover.png" alt="FLUID Data Products Book Cover" width="200" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s;"/>
+  </a>
+  <p style="margin-top: 0.75rem; font-size: 0.875rem; color: #6b7280;">
+    <em><a href="https://amzn.eu/d/ikMlWNV" target="_blank" style="color: #3b82f6; text-decoration: none;">📖 Get the book on Amazon</a></em>
+  </p>
+</div>
+
 
 🌊 FLUID: Federated Layered Unified Interchange Definition  
 Version 1.0 – Official Specification

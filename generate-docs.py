@@ -54,7 +54,10 @@ def generate_docs(schema_file: Path, version: str):
     output_file = output_dir / "fluid-spec.html"
 
     # Use the full path to the generate-schema-doc command in the virtual environment
-    venv_path = Path(__file__).resolve().parent.parent / ".venv" / "bin" / "generate-schema-doc"
+    # On Windows: .venv\Scripts\, on Unix: .venv/bin/
+    venv_bin_dir = "Scripts" if sys.platform == "win32" else "bin"
+    venv_cmd = "generate-schema-doc.exe" if sys.platform == "win32" else "generate-schema-doc"
+    venv_path = Path(__file__).resolve().parent.parent / ".venv" / venv_bin_dir / venv_cmd
     
     cmd = [
         str(venv_path),
