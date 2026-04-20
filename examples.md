@@ -450,3 +450,60 @@ Use these examples as templates, inspiration, and a launchpad for your own data 
 
 ---
 
+## 📎 Appendix A — The Smallest Valid 0.7.2 Contract ("Hello FLUID")
+
+> **Goal:** The minimum viable `fluid-schema-0.7.2.json` contract — every `required` field satisfied, nothing optional.
+> **Why it's here:** The ten foundational examples above use the human-friendly FLUID 1.0 spec grammar. This appendix shows the same idea expressed in the authoritative JSON-Schema grammar (`fluidVersion: "0.7.2"`) that `schema/fluid-schema-0.7.2.json` validates against. Useful as a smoke-test baseline: if this one validates, your toolchain is wired up correctly.
+
+The contract below describes a local DuckDB query that emits a single Parquet table — a "Hello, FLUID" for the 0.7.2 schema.
+
+```yaml
+# appendix-a-hello-fluid.yml  —  validates against schema/fluid-schema-0.7.2.json
+fluidVersion: "0.7.2"
+kind: DataProduct
+id: local.hello.fluid_v1
+name: Hello FLUID
+description: The smallest valid 0.7.2 contract — a local DuckDB query that emits a single Parquet table.
+
+metadata:
+  owner:
+    team: platform
+    email: platform@example.com
+
+exposes:
+  - exposeId: greeting
+    title: Hello FLUID greeting
+    kind: table
+    contract:
+      schema:
+        - { name: message, type: STRING, required: true }
+    binding:
+      platform: local
+      format: parquet
+      location:
+        path: ./out/greeting.parquet
+
+build:
+  pattern: embedded-logic
+  engine: sql
+  properties:
+    language: sql
+    sql: "SELECT 'Hello, FLUID' AS message"
+```
+
+**How to run it**
+
+The 0.7.2 schema is authored alongside `forge-cli` (the reference CLI for FLUID contracts). Once installed, a round-trip looks like:
+
+```bash
+# validate
+forge validate appendix-a-hello-fluid.yml
+
+# build — runs the embedded SQL through DuckDB and writes ./out/greeting.parquet
+forge build appendix-a-hello-fluid.yml
+```
+
+Every 0.7.2 release is expected to ship with this contract intact; if it stops validating against `schema/fluid-schema-0.7.2.json`, something has regressed.
+
+---
+
