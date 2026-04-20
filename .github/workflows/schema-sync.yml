@@ -72,3 +72,37 @@ jobs:
             fi
           done
           exit $fail
+
+  docs-up-to-date:
+    name: specs/ ↔ schema/ (latest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fluid
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install json-schema-for-humans into expected venv path
+        run: |
+          # generate-docs.py expects a venv at <repo-parent>/.venv
+          venv_dir="$(dirname "$GITHUB_WORKSPACE")/.venv"
+          python3 -m venv "$venv_dir"
+          "$venv_dir/bin/pip" install --quiet json-schema-for-humans
+
+      - name: Regenerate specs for latest schema and verify no drift
+        run: |
+          set -euo pipefail
+          python3 generate-docs.py
+          # json-schema-for-humans emits one non-deterministic line — the
+          # generated-on timestamp in the footer. Ignore hunks whose only
+          # diff is that line so real content changes still fail the job.
+          if git diff --quiet -I 'generated-by-footer' -- specs/; then
+            echo "✓ specs/ is in sync with schema/"
+          else
+            echo "::error ::specs/ is out of date. Run 'python3 generate-docs.py' and commit the result."
+            git --no-pager diff --stat -I 'generated-by-footer' -- specs/
+            exit 1
+          fi
