@@ -9,11 +9,11 @@
 > FLUID provides the foundational protocol for building trustworthy, governable, and scalable data ecosystems—ready for the agentic era.
 
 **Quick Start:**
-- 📖 [FLUID v0.7.1 Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
-- 🔗 [JSON Schema v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)
+- 📖 [FLUID Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
+- 🔗 [JSON Schema v0.7.2 (latest)](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.2.json) · [v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)
 - 🚀 [Examples in Action](https://github.com/open-data-protocol/fluid/blob/main/examples.md)
 - 🤝 [Contributing Guide](https://github.com/open-data-protocol/fluid/blob/main/contribute.md)
-- 🆕 [What's New in v0.7.1](#-whats-new-in-fluid-071)
+- 🆕 [What's New in v0.7.2](#-whats-new-in-fluid-072) · [v0.7.1](#-whats-new-in-fluid-071)
 
 ---
 
@@ -233,6 +233,73 @@ FLUID represents the **evolution of data engineering** from reactive, tool-speci
 - **Enhanced auditability** through version-controlled governance
 
 In an era where **data governance is becoming a competitive advantage**, FLUID provides the foundation for building trustworthy, scalable, and compliant data ecosystems ready for both human and AI consumption.
+
+---
+
+## 🚀 What's New in FLUID 0.7.2
+
+**FLUID 0.7.2** is the **Semantic Truth Engine** release. It is **additive** over v0.7.1 — every v0.7.1 contract remains valid unchanged — and completes the agentic contract: *agentPolicy* decides **whether** an AI agent may act on a data product, and *semantics* tells it **how to act correctly**.
+
+### 🧠 Semantic Model (NEW)
+
+Each `exposes[]` entry now accepts an optional `semantics` block that maps physical columns to business concepts — entities, measures, dimensions, and metrics — in a form agents and BI tools can reason about without re-deriving KPIs.
+
+```yaml
+# NEW in v0.7.2: machine-readable business logic on an exposed table
+exposes:
+  - exposeId: customer_profiles
+    kind: table
+    # ...binding, contract, etc...
+    semantics:
+      entities:
+        - name: customer
+          primaryKey: customer_id
+      measures:
+        - name: revenue
+          expr: "SUM(order_total)"
+          agg: sum
+      dimensions:
+        - name: signup_month
+          expr: "DATE_TRUNC('month', created_at)"
+      metrics:
+        - name: monthly_active_customers
+          type: simple
+          measure: customer_id
+          filters: ["last_active_at >= CURRENT_DATE - INTERVAL 30 DAY"]
+```
+
+**Why this matters:** eliminates the *semantic hallucination* failure mode where an LLM asked "what's our MRR?" invents an SQL expression because the contract never told it how MRR is defined. The shape is aligned with dbt MetricFlow, Snowflake Semantic Views, and OSI-format metric definitions — portable across engines.
+
+### 🧊 Apache Iceberg Binding Config (NEW)
+
+`binding.icebergConfig` lets contracts declare Iceberg table format specifics — write version, file format, partition spec, sort order — directly in the FLUID contract, so provisioners don't need an out-of-band config file.
+
+```yaml
+binding:
+  platform: aws
+  format: iceberg
+  location: { bucket: warehouse, path: "gold/customer_profiles" }
+  icebergConfig:
+    writeVersion: 2
+    fileFormat: parquet
+    partitionSpec:
+      - { sourceColumn: created_at, transform: month }
+```
+
+### 🔄 100% Backward Compatible with v0.7.1
+
+- ✅ No breaking changes
+- ✅ `semantics` and `icebergConfig` are both opt-in
+- ✅ All v0.7.1 features (agentPolicy, sovereignty, provider-first orchestration, root accessPolicy) fully preserved
+
+**Migration:**
+```yaml
+# Change version number — that's it.
+fluidVersion: "0.7.2"  # was "0.7.1"
+# Optionally add a semantics block on any expose.
+```
+
+See [schema-diffs/diff-0.7.1-to-0.7.2.md](schema-diffs/diff-0.7.1-to-0.7.2.md) for the full auto-generated change list.
 
 ---
 

@@ -1,0 +1,108 @@
+# Checks that schemas vendored into this repo still match their source of truth
+# in Agenticstiger/forge-cli. The forge CLI is where the FLUID JSON schemas
+# are authored; this repo is the public distribution point. If the two drift,
+# consumers pointing at https://open-data-protocol.github.io/fluid/schema/...
+# and consumers using forge-cli would see different contracts.
+#
+# Sync scope starts at 0.7.2. Older versions (0.0.1..0.7.1) already diverge
+# between the two repos at the byte level and are intentionally excluded;
+# extend SYNCED_VERSIONS when a new release is vendored.
+#
+# Comparison is done on canonical JSON (sorted keys, no whitespace) rather
+# than raw bytes so cosmetic formatting drift doesn't fail the build.
+
+name: schema-sync
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly drift check on Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  schema-sync:
+    name: schema ↔ forge-cli
+    runs-on: ubuntu-latest
+    env:
+      FORGE_RAW_BASE: https://raw.githubusercontent.com/Agenticstiger/forge-cli/main/fluid_build/schemas
+      SYNCED_VERSIONS: "0.7.2"
+    steps:
+      - name: Checkout fluid
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify each synced schema matches forge-cli
+        run: |
+          set -euo pipefail
+          fail=0
+          for version in $SYNCED_VERSIONS; do
+            local_file="schema/fluid-schema-${version}.json"
+            if [[ ! -f "$local_file" ]]; then
+              echo "::error ::$local_file missing from this repo"
+              fail=1
+              continue
+            fi
+
+            remote_url="${FORGE_RAW_BASE}/fluid-schema-${version}.json"
+            remote_file="$(mktemp)"
+            if ! curl -fsSL "$remote_url" -o "$remote_file"; then
+              echo "::error ::failed to fetch $remote_url"
+              fail=1
+              continue
+            fi
+
+            canon_local=$(python3 -c "import json,sys; print(json.dumps(json.load(open(sys.argv[1])), sort_keys=True, separators=(',',':')))" "$local_file")
+            canon_remote=$(python3 -c "import json,sys; print(json.dumps(json.load(open(sys.argv[1])), sort_keys=True, separators=(',',':')))" "$remote_file")
+
+            if [[ "$canon_local" != "$canon_remote" ]]; then
+              echo "::error ::schema/fluid-schema-${version}.json drifted from forge-cli"
+              echo "  expected source: $remote_url"
+              echo "  to re-vendor:    curl -fsSL $remote_url -o $local_file"
+              fail=1
+            else
+              echo "✓ fluid-schema-${version}.json in sync with forge-cli"
+            fi
+          done
+          exit $fail
+
+  docs-up-to-date:
+    name: specs/ ↔ schema/ (latest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fluid
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install json-schema-for-humans into expected venv path
+        run: |
+          # generate-docs.py expects a venv at <repo-parent>/.venv
+          venv_dir="$(dirname "$GITHUB_WORKSPACE")/.venv"
+          python3 -m venv "$venv_dir"
+          "$venv_dir/bin/pip" install --quiet json-schema-for-humans
+
+      - name: Regenerate specs for latest schema and verify no drift
+        run: |
+          set -euo pipefail
+          python3 generate-docs.py
+          # json-schema-for-humans emits one non-deterministic line — the
+          # generated-on timestamp in the footer. Ignore hunks whose only
+          # diff is that line so real content changes still fail the job.
+          if git diff --quiet -I 'generated-by-footer' -- specs/; then
+            echo "✓ specs/ is in sync with schema/"
+          else
+            echo "::error ::specs/ is out of date. Run 'python3 generate-docs.py' and commit the result."
+            git --no-pager diff --stat -I 'generated-by-footer' -- specs/
+            exit 1
+          fi
