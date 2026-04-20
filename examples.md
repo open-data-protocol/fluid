@@ -450,3 +450,69 @@ Use these examples as templates, inspiration, and a launchpad for your own data 
 
 ---
 
+## 📘 Appendix A — Starter Contract for FLUID 0.7.2 (Semantic Truth Engine)
+
+> **Goal:** Show the smallest valid contract under `fluid-schema-0.7.2.json`.
+> **Concepts:** The 0.7.2 schema tightens a few semantics relative to 0.7.1:
+> - `metadata.owner` is now the canonical owner location (top-level `owner` is rejected under `additionalProperties: false`).
+> - Build patterns use the `embedded-logic` name (replacing the earlier `single-stage`).
+> - `exposes` requires at least one entry (`minItems: 1`) — every contract must declare at least one output port.
+> - Data-quality rule types use the `valid_values` / `accuracy` vocabulary; severities use `warn` (not `warning`); the equality operator is `==`.
+> - Triggers use `type: schedule` (not `scheduled`).
+
+```yaml
+# hello-fluid-0.7.2.fluid.yml
+fluidVersion: 0.7.2
+kind: DataProduct
+id: tutorial.hello_world_v1
+name: Hello FLUID
+description: The smallest valid 0.7.2 contract — a single "hello" table produced locally.
+domain: Tutorial
+tags:
+  - tutorial
+  - beginner
+metadata:
+  owner:
+    team: your-team
+    email: your-team@company.com
+exposes:
+  - exposeId: hello_message
+    title: Hello Message
+    version: 1.0.0
+    kind: table
+    description: A simple greeting message.
+    binding:
+      platform: local
+      format: parquet
+      location:
+        path: output/hello_message.parquet
+    contract:
+      schema:
+        - name: message
+          type: VARCHAR
+          required: true
+          description: The greeting message.
+        - name: created_at
+          type: TIMESTAMP
+          required: true
+          description: When this message was created.
+builds:
+  - id: generate_hello
+    description: Generate a simple hello message.
+    pattern: embedded-logic
+    engine: sql
+    properties:
+      sql: |
+        SELECT
+          'Hello, FLUID!' AS message,
+          CURRENT_TIMESTAMP AS created_at
+    execution:
+      trigger:
+        type: manual
+      runtime:
+        platform: local
+```
+
+Validate with any JSON-Schema-compliant validator against [`schema/fluid-schema-0.7.2.json`](./schema/fluid-schema-0.7.2.json). The full change set from 0.7.1 → 0.7.2 is enumerated in [`schema-diffs/diff-0.7.1-to-0.7.2.md`](./schema-diffs/diff-0.7.1-to-0.7.2.md).
+
+
