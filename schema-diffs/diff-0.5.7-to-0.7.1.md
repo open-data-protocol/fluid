@@ -1,9 +1,9 @@
 # Schema Changes: 0.5.7 → 0.7.1
 
-**Total changes:** 27
+**Total changes:** 28
 - ✅ Added: 20
 - ❌ Removed: 0
-- 📝 Modified: 7
+- 📝 Modified: 8
 
 ---
 
@@ -496,6 +496,18 @@
 "FLUID Data Product contract (v0.7.1). Provider-First Orchestration + Agentic Governance Release:
 
 🔥 ..."
+```
+
+### `examples`
+
+**Before:**
+```json
+[{"fluidVersion": "0.5.7", "kind": "DataProduct", "id": "gold.customer.analytics_360_v1", "name": "Customer 360 Analytics", "description": "Unified customer profiles with ML-driven insights", "domain": "Customer Experience", "tags": ["customer-data", "analytics", "gold-layer"], "labels": {"team": "customer-analytics", "criticality": "high", "cost-center": "engineering"}, "metadata": {"layer": "Gold", "owner": {"team": "customer-analytics", "email": "customer-analytics@company.com"}, "businessContext": {"domain": "Customer Experience", "subdomain": "Customer Intelligence"}}, "exposes": [{"exposeId": "customer_profiles", "title": "Unified Customer Profiles", "version": "2.1.0", "kind": "table", "tags": ["pii", "customer-facing", "real-time"], "labels": {"sensitivity": "high", "retention": "7-years", "region": "us-central1"}, "contract": {"schema": [{"name": "customer_id", "type": "STRING", "required": true, "description": "Unique customer identifier", "sensitivity": "cleartext", "tags": ["identifier", "primary-key"], "labels": {"business-name": "Customer ID", "data-category": "identifier"}}]}, "binding": {"platform": "gcp", "format": "bigquery_table", "location": {"project": "company-data", "dataset": "gold_customer", "table": "profiles_v1"}}}]}]
+```
+
+**After:**
+```json
+[{"fluidVersion": "0.7.1", "kind": "DataProduct", "id": "gold.customer.analytics_360_v1", "name": "Customer 360 Analytics", "description": "Unified customer profiles with ML-driven insights", "domain": "Customer Experience", "tags": ["customer-data", "analytics", "gold-layer"], "labels": {"team": "customer-analytics", "criticality": "high", "cost-center": "engineering"}, "metadata": {"layer": "Gold", "owner": {"team": "customer-analytics", "email": "customer-analytics@company.com"}, "businessContext": {"domain": "Customer Experience", "subdomain": "Customer Intelligence"}}, "exposes": [{"exposeId": "customer_profiles", "title": "Unified Customer Profiles", "version": "2.1.0", "kind": "table", "tags": ["pii", "customer-facing", "real-time"], "labels": {"sensitivity": "high", "retention": "7-years", "region": "us-central1"}, "contract": {"schema": [{"name": "customer_id", "type": "STRING", "required": true, "description": "Unique customer identifier", "sensitivity": "cleartext", "tags": ["identifier", "primary-key"], "labels": {"business-name": "Customer ID", "data-category": "identifier"}}]}, "binding": {"platform": "gcp", "format": "bigquery_table", "location": {"project": "company-data", "dataset": "gold_customer", "table": "profiles_v1"}}}]}]
 ```
 
 ### `properties.fluidVersion.const`
