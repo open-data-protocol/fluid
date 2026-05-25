@@ -8,6 +8,12 @@
 # between the two repos at the byte level and are intentionally excluded;
 # extend SYNCED_VERSIONS when a new release is vendored.
 #
+# To re-vendor manually:
+#   curl -fsSL "$FORGE_RAW_BASE/fluid-schema-<version>.json" \
+#     -o schema/fluid-schema-<version>.json
+#   python3 generate-schema-diffs.py
+#   python3 generate-docs.py
+#
 # Comparison is done on canonical JSON (sorted keys, no whitespace) rather
 # than raw bytes so cosmetic formatting drift doesn't fail the build.
 
@@ -29,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORGE_RAW_BASE: https://raw.githubusercontent.com/Agenticstiger/forge-cli/main/fluid_build/schemas
-      SYNCED_VERSIONS: "0.7.2"
+      SYNCED_VERSIONS: "0.7.2 0.7.3"
     steps:
       - name: Checkout fluid
         uses: actions/checkout@v4
