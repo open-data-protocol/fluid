@@ -9,11 +9,93 @@
 > FLUID provides the foundational protocol for building trustworthy, governable, and scalable data ecosystems—ready for the agentic era.
 
 **Quick Start:**
+- 🧭 [**FLUID at a Glance**](#-fluid-at-a-glance) — one screen, every top-level block, version-stamped
+- 🟢 [**Minimal Valid Contract**](#-minimal-valid-contract) — smallest file that validates
 - 📖 [FLUID Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)
-- 🔗 [JSON Schema v0.7.2 (latest)](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.2.json) · [v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)
+- 🔗 [JSON Schema v0.7.3 (latest)](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.3.json) · [v0.7.2](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.2.json) · [v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)
+- 📚 [Schema Anatomy](docs/anatomy.md) · [Schema Cheatsheet](docs/schema-cheatsheet.md)
 - 🚀 [Examples in Action](https://github.com/open-data-protocol/fluid/blob/main/examples.md)
 - 🤝 [Contributing Guide](https://github.com/open-data-protocol/fluid/blob/main/contribute.md)
-- 🆕 [What's New in v0.7.2](#-whats-new-in-fluid-072) · [v0.7.1](#-whats-new-in-fluid-071)
+- 🆕 [What's New in v0.7.3](#-whats-new-in-fluid-073) · [v0.7.2](#-whats-new-in-fluid-072) · [v0.7.1](#-whats-new-in-fluid-071)
+
+---
+
+## 🧭 FLUID at a Glance
+
+A FLUID contract is one YAML file. The shape below shows **every top-level block** in v0.7.3, with one-line meaning and the version each was introduced. Required blocks are marked `[req]`; everything else is opt-in.
+
+```yaml
+fluidVersion: "0.7.3"            # [req] which contract version this file targets
+kind: DataProduct                # [req] DataProduct | MLPipeline
+id:   domain.layer.name          # [req] globally unique product id
+name: "Human-readable name"      # [req] display name
+description: "..."               #       business-facing summary
+domain: "Finance"                #       owning business domain
+tags:   [pii, gold-layer]        #       free-text categorization
+labels: { team: analytics }      #       key/value categorization
+
+metadata:                        # [req] only metadata.owner is required
+  owner: { team, email }         # [req] team is the one truly required field
+  layer: Gold                    #       free-form; convention: Bronze | Silver | Gold
+
+consumes: [ ... ]                #       upstream FLUID products you depend on
+exposes:  [ ... ]                # [req] ports you publish (each requires exposeId+kind+contract+binding)
+  └── contract                   # [req] schema columns (or openapiRef), dq rules
+  └── semantics                  #         ⭐ 0.7.2 — entities, measures, dimensions, metrics
+  └── policy                     #         authn, authz, privacy, classification, agentPolicy (⭐ 0.7.1)
+  └── binding                    # [req] where it lives (platform + format + location, + icebergConfig*)
+
+build:                           #       how the product is produced
+  pattern: hybrid-reference      #       | embedded-logic | multi-stage | acquisition (⭐ 0.7.3)
+  engine:  dbt | sql | python | spark | glue | custom | duckdb | airbyte | meltano | dlt | kafka-connect | debezium
+  properties: { ... }            #       pattern-specific block — acquisitionPattern when pattern=acquisition (⭐ 0.7.3)
+
+orchestration: { engine: airflow | dagster | prefect | kubeflow | custom | none, tasks: [...] }   # ⭐ 0.7.0+
+sovereignty:   { jurisdiction, allowedRegions, deniedRegions, enforcementMode, … }   # ⭐ 0.7.1
+accessPolicy:  { grants: [{ principal, permissions, resources, conditions }] }       # ⭐ 0.7.1
+retention:     { runState, runLogs, lineage, dlq }                                   # ⭐ 0.7.3
+lineage:       { upstream, downstream, fieldLevel }
+governance:    { ... }
+schemaEvolution: { strategy, compatibility }
+machineLearning: { ... }
+environments:  { dev: {...}, staging: {...}, prod: {...} }
+lifecycle:     { state: preview | active | deprecated | retired }
+docs:          { ... }
+```
+
+> 💡 **`agentPolicy` location.** AI/LLM consumption policy lives **per-expose** under `exposes[].policy.agentPolicy` — not at the root. (Earlier release notes show it at the top level; the schema has never accepted it there.) See [docs/anatomy.md §7](docs/anatomy.md) for the correct shape.
+
+> 📚 For a one-line-per-field reference with required/optional flags, see the [**Schema Cheatsheet**](docs/schema-cheatsheet.md).
+> For a tour of each block with deep-dive links, see the [**Schema Anatomy**](docs/anatomy.md).
+
+---
+
+## 🟢 Minimal Valid Contract
+
+The smallest file that passes JSON Schema validation against v0.7.3 — every other top-level block is opt-in:
+
+```yaml
+fluidVersion: "0.7.3"
+kind: DataProduct
+id:   demo.bronze.hello_world
+name: "Hello World"
+metadata:
+  owner: { team: data-platform }
+exposes:
+  - exposeId: hello
+    kind: table
+    contract:
+      schema:
+        - { name: id, type: STRING, required: true }
+    binding:
+      platform: local
+      format:   parquet
+      location: { path: "./hello.parquet" }
+```
+
+> **What you can drop:** `description`, `domain`, `tags`, `labels`, `consumes`, `build`, `orchestration`, all governance blocks (`agentPolicy`, `sovereignty`, `accessPolicy`, `retention`), `lineage`, `lifecycle`, `environments`, `docs`. Everything else is layered on as you need it.
+
+See [**examples.md**](examples.md) for the ten-step progression from this minimal file to a production source-aligned acquisition product.
 
 ---
 
@@ -233,6 +315,131 @@ FLUID represents the **evolution of data engineering** from reactive, tool-speci
 - **Enhanced auditability** through version-controlled governance
 
 In an era where **data governance is becoming a competitive advantage**, FLUID provides the foundation for building trustworthy, scalable, and compliant data ecosystems ready for both human and AI consumption.
+
+---
+
+## 🚀 What's New in FLUID 0.7.3
+
+**FLUID 0.7.3** is the **Source-Aligned Acquisition** release. It is **additive** over v0.7.2 — every existing contract remains valid — and finally makes *ingestion from external systems* a first-class FLUID concept rather than something you bolt on with Airbyte/Meltano configs outside the contract.
+
+### 🛬 `acquisition` build pattern (NEW)
+
+The `build` block gains a fourth pattern, `acquisition`, designed for source-aligned data products: contracts that *ingest* an external system (Salesforce, Postgres, Kafka, files, …) into your mesh, with no transformation logic.
+
+```yaml
+build:
+  pattern: acquisition            # tells the schema that build.properties below is an acquisitionPattern
+  engine: airbyte                 # see "Six engines" below
+  capabilities: [incremental_dedup, schema_evolution, dlp_scan]
+  properties:                     # ← pattern-specific block; acquisitionPattern shape
+    source:
+      kind: postgres              # filesystem | postgres | mysql | http | salesforce | stripe | …
+      mode: incremental_dedup     # full_refresh | incremental_append | incremental_dedup | incremental_merge | cdc | streaming
+      cursor_field: updated_at
+      connection:
+        secretRef: "vault://pg-prod-readonly"   # must be a URI: vault:// aws:// gcp:// azure:// env://
+      streams: [public.customers, public.orders]
+    sink:
+      format: iceberg             # iceberg | delta | parquet | snowflake_table | bigquery_table | …
+      partitionBy: ["day(ingested_at)"]    # function-form strings (acquisitionSink uses strings; binding.icebergConfig uses objects)
+    delivery:
+      guarantee: at_least_once    # at_most_once | at_least_once | exactly_once
+      idempotencyKey: "${stream}|${batch_id}"
+      dlq:
+        enabled: true
+        sink: { format: parquet, location: "s3://acme-dlq/customers/" }
+        maxRecordsBeforeAbort: 10000
+        alertOn: [pii_classification_failed, schema_violation, quality_gate_failed]
+    schemaEvolution:
+      policy: evolve_safe         # strict | discover_and_freeze | evolve_safe | evolve_all
+      onAddedColumn: include      # include | warn | fail
+      onRemovedColumn: warn       # drop | warn | fail
+      onTypeChange: fail          # cast | warn | fail
+    preLand: [dlp_scan, tokenize_pii, quality_gate, emit_lineage_input]
+    airbyte:
+      connector_image: airbyte/source-postgres
+      version: "3.4.10"
+      image_signature:            # ⭐ supply-chain security
+        verifier: cosign          # cosign is the only verifier today
+        publicKey: "k8s://acme/cosign-pub"
+        slsaProvenance: required  # required | optional | disabled
+      deployment: { mode: managed }    # embedded | bring-your-own | managed
+```
+
+**Why this matters:** ingestion is where most data-quality, compliance, and lineage debt is born. Previously a `.fluid.yml` could describe how data was *transformed* but stayed silent on how it *arrived*. v0.7.3 closes that gap with the same contract-as-code discipline applied to the source boundary.
+
+### 🔌 Six ingestion engines
+
+| Engine | Best for | Footprint |
+|---|---|---|
+| **duckdb** | files (Parquet/CSV/JSON), JDBC, zero infra | in-process |
+| **airbyte** | 350+ SaaS connectors | container |
+| **meltano** | 600+ Singer taps, Python ecosystem | container |
+| **dlt** | Python-native, code-defined pipelines | library |
+| **kafka-connect** | streaming, Confluent ecosystem | cluster |
+| **debezium** | change data capture (CDC) | cluster |
+
+### 🏗️ Three deployment modes
+
+- **`embedded`** — runs in-process with the FLUID runner (no extra infra)
+- **`bring-your-own`** — points at an existing Airbyte/Meltano/Kafka server you already operate
+- **`managed`** — Forge provisions runtime via Helm / Docker Compose / OpenTofu
+
+### 🤝 Capability-based negotiation
+
+Runners publish what they can do (`full_refresh`, `incremental_dedup`, `cdc`, `schema_discovery`, `dlp_scan`, `exactly_once`, …). The contract publishes what it *asks* for via `build.capabilities`. The orchestrator validates ask ⊆ declarations before scheduling — incompatible source/runner pairs fail fast at contract apply, not at 3 AM in production.
+
+### 📐 Schema evolution as a first-class policy
+
+`schemaEvolution.policy` has four well-defined values:
+
+| Policy | Behavior |
+|---|---|
+| `strict` | any schema change at source aborts the run |
+| `discover_and_freeze` | discover schema on first run, lock it thereafter |
+| `evolve_safe` | additive changes propagate; type changes / removals require approval |
+| `evolve_all` | propagate everything (with full lineage) |
+
+### 🚚 Delivery guarantees + DLQ
+
+`delivery.guarantee` makes the contract honest about what the runner can promise: `at_most_once`, `at_least_once`, or `exactly_once`. Pair it with `idempotencyKey` (a template like `"${stream}|${batch_id}"`) and a `dlq` destination, and re-runs become safe by construction.
+
+### 🔐 Source supply-chain security
+
+For production-grade ingestion, the connector image you run is part of the data supply chain:
+
+```yaml
+airbyte:
+  image_signature:
+    verifier: cosign                              # signature verifier (cosign only today)
+    publicKey: "k8s://acme/cosign-pub"            # public-key reference
+    slsaProvenance: required                      # required | optional | disabled
+```
+
+### 🧹 Top-level `retention` block
+
+```yaml
+retention:
+  runState: P30D     # ISO-8601 durations
+  runLogs:  P90D
+  lineage:  P365D
+  dlq:      P180D
+```
+
+A single sweeper job honors these — no more per-tool TTL knobs scattered across the stack.
+
+### 🔄 100% Backward Compatible with v0.7.2
+
+- ✅ No breaking changes
+- ✅ `acquisition`, `retention`, `build.capabilities`, and the six new engines are all opt-in
+- ✅ All v0.7.2 semantics + v0.7.1 agentPolicy/sovereignty/accessPolicy fully preserved
+
+**Migration:**
+```yaml
+fluidVersion: "0.7.3"  # was "0.7.2" — that's it
+```
+
+See [schema-diffs/diff-0.7.2-to-0.7.3.md](schema-diffs/diff-0.7.2-to-0.7.3.md) for the full auto-generated change list.
 
 ---
 
@@ -1021,10 +1228,11 @@ The `lineage` block maintains full traceability even with custom code.
 
 ## 📚 Learn More
 
-📖 [FLUID v0.7.1 Full Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)  
-🔗 [JSON Schema v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)  
-📚 [Generated Schema Documentation](https://github.com/open-data-protocol/fluid/blob/main/specs/0.7.1/fluid-spec.html)  
-🆕 [Version Diff: 0.5.7 → 0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema-diffs/diff-0.5.7-to-0.7.1.md)  
+📖 [FLUID Full Specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md)  
+🔗 JSON Schema: [v0.7.3 (latest)](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.3.json) · [v0.7.2](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.2.json) · [v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/schema/fluid-schema-0.7.1.json)  
+📚 Generated Schema Docs: [v0.7.3](https://github.com/open-data-protocol/fluid/blob/main/specs/0.7.3/fluid-spec.html) · [v0.7.2](https://github.com/open-data-protocol/fluid/blob/main/specs/0.7.2/fluid-spec.html) · [v0.7.1](https://github.com/open-data-protocol/fluid/blob/main/specs/0.7.1/fluid-spec.html)  
+🧭 [Schema Anatomy](docs/anatomy.md) · 📋 [Schema Cheatsheet](docs/schema-cheatsheet.md)  
+🆕 Version Diffs: [0.7.2 → 0.7.3](schema-diffs/diff-0.7.2-to-0.7.3.md) · [0.7.1 → 0.7.2](schema-diffs/diff-0.7.1-to-0.7.2.md) · [0.5.7 → 0.7.1](schema-diffs/diff-0.5.7-to-0.7.1.md)  
 🧑‍💻 [FLUID Contribution Guide](https://github.com/open-data-protocol/fluid/blob/main/contribute.md)  
 📜 [License (MIT)](LICENSE.md)
 

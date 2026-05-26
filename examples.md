@@ -1,509 +1,536 @@
-# 🚀 **FLUID by Example: The Ultimate Curated Guide for New Users**
+# 🚀 FLUID by Example — Ten Steps from "Hello World" to Production
 
-Welcome to the **FLUID** journey! This guide presents **10 foundational `.fluid.yml` examples**, each crafted to help you master the FLUID specification. Examples are ordered from the simplest to the most advanced, building your knowledge step by step.
-
----
-
-## 📚 **Table of Contents**
-
-1. [Hello, World! – A Basic File Copy](#1-hello-world--a-basic-file-copy)
-2. [Adding a Contract – Schema Enforcement](#2-adding-a-contract--schema-enforcement)
-3. [Simple Transformation (SQL)](#3-simple-transformation-sql)
-4. [Adding Quality Rules](#4-adding-quality-rules)
-5. [Layered Product (Consuming another FLUID Product)](#5-layered-product-consuming-another-fluid-product)
-6. [Orchestration with dbt](#6-orchestration-with-dbt)
-7. [Streaming Ingestion (Kafka)](#7-streaming-ingestion-kafka)
-8. [Adding Privacy Treatments](#8-adding-privacy-treatments)
-9. [Egress Flow to an External System](#9-egress-flow-to-an-external-system)
-10. [Product with Access Policies](#10-product-with-access-policies)
+> All examples target **`fluidVersion: "0.7.3"`** (the [latest schema](schema/fluid-schema-0.7.3.json)).
+> Each example **adds one block** to the previous one. Read in order to learn the schema by accretion.
+> For the schema's mental model first, see [**docs/anatomy.md**](docs/anatomy.md).
+> For a one-row-per-field lookup, see [**docs/schema-cheatsheet.md**](docs/schema-cheatsheet.md).
 
 ---
 
-## 1. Hello, World! – A Basic File Copy <a name="1-hello-world--a-basic-file-copy"></a>
+## 📚 Table of Contents
 
-> **Goal:** Copy files from one cloud storage location to another.  
-> **Concepts:** Data product basics, scheduling, state management.
+| # | Example | What it adds |
+|---|---|---|
+| 1 | [Minimal valid contract](#1-minimal-valid-contract) | the six required fields, nothing else |
+| 2 | [Add a schema](#2-add-a-schema) | `exposes[].contract.schema` |
+| 3 | [Add data quality](#3-add-data-quality) | `exposes[].contract.dq.rules` |
+| 4 | [Add a build](#4-add-a-build-embedded-sql) | `build` — embedded SQL |
+| 5 | [Consume another product](#5-consume-another-product) | `consumes` + `build.pattern: hybrid-reference` (dbt) |
+| 6 | [Restrict access](#6-restrict-access-with-accesspolicy) | `accessPolicy` (⭐ 0.7.1) |
+| 7 | [Govern AI consumers](#7-govern-ai-consumers-with-agentpolicy) | `agentPolicy` (⭐ 0.7.1) |
+| 8 | [Pin to a jurisdiction](#8-pin-to-a-jurisdiction-with-sovereignty) | `sovereignty` (⭐ 0.7.1) |
+| 9 | [Define business semantics](#9-define-business-semantics) | `exposes[].semantics` (⭐ 0.7.2) |
+| 10 | [Source-aligned acquisition](#10-source-aligned-acquisition) | `build.pattern: acquisition` (⭐ 0.7.3) |
+
+---
+
+## 1. Minimal valid contract
+
+> **Goal:** get a `.fluid.yml` that validates against v0.7.3 with the fewest possible lines.
+> **New in this step:** the six required top-level keys (`fluidVersion`, `kind`, `id`, `name`, `metadata`, `exposes`) and the four required fields inside each expose (`exposeId`, `kind`, `contract`, `binding`).
 
 ```yaml
-# 01-hello-world.fluid.yml
-fluidVersion: "1.0"
+# 01-minimal.fluid.yml
+fluidVersion: "0.7.3"
 kind: DataProduct
-
+id:   demo.bronze.hello_world
+name: "Hello World"
 metadata:
-    dataProduct: landing.bronze.raw_user_uploads
-    owner: { team: 'data-platform' }
-
-consumes:
-    - type: gcs
-        connection: secret:gcp-prod-sa-key
-        properties:
-            bucket: 'acme-user-uploads-raw'
-            path: 'daily/*.csv'
-
+  owner: { team: data-platform }
 exposes:
-    - location:
-            type: gcs
-            connection: secret:gcp-prod-sa-key
-            properties:
-                bucket: 'acme-bronze-layer'
-                path: 'raw_user_uploads/'
-        contract:
-            schema: { columns: [] } # Schema is unknown/undeclared initially
-
-build:
-    execution:
-        trigger: { type: 'schedule', properties: { cron: '0 1 * * *' } }
-        runtime: { type: 'gcp-storage-copy-job' }
-    stateManagement:
-        backend: gcs
-        properties: { bucket: 'fluid-state-prod', path: 'state/01-hello-world.json' }
-```
-
----
-
-## 2. Adding a Contract – Schema Enforcement <a name="2-adding-a-contract--schema-enforcement"></a>
-
-> **Goal:** Validate source CSV columns before copying.  
-> **Concepts:** Schema contracts, format conversion.
-
-```yaml
-# 02-with-contract.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: landing.bronze.validated_user_uploads
-    owner: { team: 'data-platform' }
-
-consumes:
-    - type: gcs
-        connection: secret:gcp-prod-sa-key
-        format: { type: 'csv', properties: { header: true } }
-        properties:
-            bucket: 'acme-user-uploads-raw'
-            path: 'daily/*.csv'
-
-exposes:
-    - location:
-            type: gcs
-            connection: secret:gcp-prod-sa-key
-            format: { type: 'parquet' }
-            properties:
-                bucket: 'acme-bronze-layer'
-                path: 'validated_user_uploads/'
-        contract:
-            schema:
-                columns:
-                    - { name: 'user_id', type: 'STRING', nullable: false }
-                    - { name: 'email', type: 'STRING' }
-                    - { name: 'created_at', type: 'TIMESTAMP' }
-
-build:
-    execution:
-        trigger: { type: 'schedule', properties: { cron: '0 1 * * *' } }
-        runtime: { type: 'gcp-dataflow', properties: { jobTemplate: 'gcs-to-gcs-with-validation' } }
-    stateManagement:
-        backend: gcs
-        properties: { bucket: 'fluid-state-prod', path: 'state/02-with-contract.json' }
-```
-
----
-
-## 3. Simple Transformation (SQL) <a name="3-simple-transformation-sql"></a>
-
-> **Goal:** Transform data with SQL before loading to BigQuery.  
-> **Concepts:** SQL transformations, type casting, renaming.
-
-```yaml
-# 03-simple-transform.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: landing.bronze.users_table
-    owner: { team: 'data-platform' }
-
-consumes:
-    - type: gcs
-        connection: secret:gcp-prod-sa-key
-        format: { type: 'csv', properties: { header: true } }
-        properties:
-            bucket: 'acme-user-uploads-raw'
-            path: 'daily/*.csv'
-
-exposes:
-    - location:
-            type: bigquery
-            connection: secret:gcp-prod-sa-key
-            properties:
-                project: 'acme-prod-dwh'
-                dataset: 'bronze'
-                table: 'users'
-        contract:
-            schema: { columns: [{name: id, type: INT64}, {name: user_email, type: STRING}] }
-
-build:
-    transformation:
-        engine: sql
-        properties:
-            query: |
-                SELECT
-                    CAST(user_id AS INT64) as id,
-                    email as user_email
-                FROM source
-    execution:
-        trigger: { type: 'schedule', properties: { cron: '0 2 * * *' } }
-        runtime: { type: 'gcp-dataflow' }
-    stateManagement:
-        backend: gcs
-        properties: { bucket: 'fluid-state-prod', path: 'state/03-simple-transform.json' }
-```
-
----
-
-## 4. Adding Quality Rules <a name="4-adding-quality-rules"></a>
-
-> **Goal:** Enforce data quality with validation rules.  
-> **Concepts:** Quality block, row rejection, quarantining.
-
-```yaml
-# 04-with-quality.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: landing.bronze.quality_checked_users
-    owner: { team: 'data-platform' }
-
-consumes: # ... same as example 3 ...
-
-exposes:
-    - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'bronze', table: 'quality_checked_users' }
-        contract:
-            schema: { columns: [{name: id, type: INT64}, {name: user_email, type: STRING}] }
-            quality:
-                - rule: not_null
-                    columns: [id]
-                    onFailure: { action: 'reject_row' }
-                - rule: regex_match
-                    columns: [user_email]
-                    pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-                    onFailure: { action: 'quarantine_row', location: 'gs://acme-quarantine/invalid_emails/' }
-
-build: # ... same as example 3 ...
-```
-
----
-
-## 5. Layered Product (Consuming another FLUID Product) <a name="5-layered-product-consuming-another-fluid-product"></a>
-
-> **Goal:** Build lineage by consuming another FLUID product.  
-> **Concepts:** Logical pointers, data product chaining.
-
-```yaml
-# 05-layered-product.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: users.silver.enriched_users
-    owner: { team: 'analytics-engineering' }
-
-consumes:
-    - type: fluid-product
-        name: landing.bronze.quality_checked_users
-
-exposes:
-    - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'silver', table: 'users' }
-        contract:
-            schema: { columns: [{name: user_id, type: INT64}, {name: email, type: STRING}, {name: domain, type: STRING}] }
-
-build:
-    transformation:
-        engine: sql
-        properties:
-            query: |
-                SELECT
-                    id as user_id,
-                    user_email as email,
-                    SPLIT(user_email, '@')[SAFE_OFFSET(1)] as domain
-                FROM source
-    execution:
-        trigger: { type: 'schedule', properties: { cron: '0 3 * * *' } }
-        runtime: { type: 'bigquery-job' }
-    stateManagement:
-        backend: gcs
-        properties: { bucket: 'fluid-state-prod', path: 'state/05-layered-product.json' }
-```
-
----
-
-## 6. Orchestration with dbt <a name="6-orchestration-with-dbt"></a>
-
-> **Goal:** Orchestrate dbt models with FLUID.  
-> **Concepts:** dbt integration, model inheritance.
-
-```yaml
-# 06-with-dbt.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: users.silver.dbt_enriched_users
-    owner: { team: 'analytics-engineering' }
-
-consumes:
-    - type: fluid-product
-        name: landing.bronze.quality_checked_users
-
-exposes:
-    - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'silver', table: 'dbt_users' }
-        contract:
-            inheritFrom: dbt
-            model: 'dim_users'
-
-build:
-    transformation:
-        engine: dbt
-        properties:
-            projectDir: './dbt/acme_project/'
-            command: 'run'
-            models: ['dim_users']
-    execution:
-        trigger: { type: 'schedule', properties: { cron: '0 4 * * *' } }
-        runtime: { type: 'airflow' }
-    stateManagement: { backend: gcs, properties: { bucket: 'fluid-state-prod' } }
-```
-
----
-
-## 7. Streaming Ingestion (Kafka) <a name="7-streaming-ingestion-kafka"></a>
-
-> **Goal:** Ingest streaming data from Kafka.  
-> **Concepts:** Streaming triggers, offset management.
-
-```yaml
-# 07-streaming-kafka.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: events.bronze.raw_pageviews
-    owner: { team: 'data-platform' }
-
-consumes:
-    - type: kafka
-        connection: secret:prod-kafka-creds
-        format: { type: 'json' }
-        properties:
-            topic: 'prod.web.pageviews'
-            consumerGroup: 'fluid-gcs-sink-v1'
-
-exposes:
-    - location:
-            type: gcs
-            format: { type: 'parquet' }
-            properties: { bucket: 'acme-bronze-layer', path: 'raw_pageviews/' }
-        contract:
-            schema: { columns: [{name: event_id, type: STRING}, {name: url, type: STRING}] }
-
-build:
-    execution:
-        trigger: { type: 'streaming' }
-        runtime: { type: 'gcp-dataflow', properties: { jobTemplate: 'kafka-to-gcs' } }
-    stateManagement:
-        backend: bigquery_table
-        properties: { project: 'acme-prod-dwh', dataset: 'fluid_state', table: 'kafka_offsets' }
-```
-
----
-
-## 8. Adding Privacy Treatments <a name="8-adding-privacy-treatments"></a>
-
-> **Goal:** Automatically hash PII columns.  
-> **Concepts:** Privacy block, column transformation.
-
-```yaml
-# 08-with-privacy.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: users.bronze.privacy_users
-    owner: { team: 'data-platform' }
-
-consumes: # ... same as example 2 ...
-
-exposes:
-    - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'bronze', table: 'privacy_users' }
-        contract:
-            schema:
-                columns:
-                    - { name: 'user_id', type: 'STRING' }
-                    - { name: 'email_hash', type: 'STRING' }
-                    - { name: 'created_at', type: 'TIMESTAMP' }
-            privacy:
-                - classification: PII
-                    columns: [email]
-                    treatment:
-                        type: hashing
-                        properties: { algorithm: 'SHA256' }
-                        newColumn: 'email_hash'
-
-build: # ... same as example 2 ...
-```
-
----
-
-## 9. Egress Flow to an External System <a name="9-egress-flow-to-an-external-system"></a>
-
-> **Goal:** Send data to a partner via SFTP.  
-> **Concepts:** EgressFlow kind, external destinations.
-
-```yaml
-# 09-egress-flow.fluid.yml
-fluidVersion: "1.0"
-kind: EgressFlow
-
-metadata:
-    dataProduct: partners.egress.daily_lead_export
-    owner: { team: 'marketing-ops' }
-
-consumes:
-    - type: fluid-product
-        name: marketing.gold.qualified_leads_for_partners
-
-exposes:
-    - location:
-            type: sftp
-            connection: secret:partner-xyz-sftp-creds
-            format: { type: 'csv', properties: { header: true } }
-            properties:
-                host: 'sftp.partnerxyz.com'
-                path: '/uploads/'
-                filename: 'acme_leads_{{ execution_date }}.csv'
-        contract:
-            schema: { columns: [{name: lead_id, type: STRING}, {name: company_name, type: STRING}] }
-
-build:
-    transformation:
-        engine: sql
-        properties: { query: "SELECT id as lead_id, company as company_name FROM source" }
-    execution:
-        trigger: { type: 'schedule', properties: { cron: '0 8 * * *' } }
-        runtime: { type: 'gcp-cloud-run' }
-    stateManagement: { backend: gcs, properties: { bucket: 'fluid-state-prod' } }
-```
-
----
-
-## 10. Product with Access Policies <a name="10-product-with-access-policies"></a>
-
-> **Goal:** Define who can access trusted data and under what conditions.  
-> **Concepts:** Access policies, privacy views, row-level security.
-
-```yaml
-# 10-with-access-policy.fluid.yml
-fluidVersion: "1.0"
-kind: DataProduct
-metadata:
-    dataProduct: customers.gold.trusted_customer_view
-    owner: { team: 'customer-domain' }
-
-consumes:
-    - type: fluid-product
-        name: customers.silver.trusted_customers
-
-exposes:
-    - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'gold', table: 'customer_view' }
-        contract: # ... contract definition ...
-        accessPolicy:
-            visibility: internal
-            grants:
-                - principal: group:analytics@acme.com
-                    permissions: [readData]
-                    scope: { privacyView: treated }
-                - principal: user:support.lead@acme.com
-                    permissions: [readData]
-                    scope:
-                        privacyView: cleartext
-                        columns: [customer_id, full_name, email]
-                        rowFilter: "status = 'escalated'"
-
-build: # ... build definition ...
-```
-
----
-
-## 🎉 **Congratulations!**
-
-You’ve just explored the **core patterns of FLUID**.  
-Use these examples as templates, inspiration, and a launchpad for your own data products!
-
----
-
-> **💡 Pro Tip:**  
-> Mix and match these patterns to create robust, secure, and scalable data pipelines with FLUID!
-
----
-
-## 📎 Appendix A — The Smallest Valid 0.7.2 Contract ("Hello FLUID")
-
-> **Goal:** The minimum viable `fluid-schema-0.7.2.json` contract — every `required` field satisfied, nothing optional.
-> **Why it's here:** The ten foundational examples above use the human-friendly FLUID 1.0 spec grammar. This appendix shows the same idea expressed in the authoritative JSON-Schema grammar (`fluidVersion: "0.7.2"`) that `schema/fluid-schema-0.7.2.json` validates against. Useful as a smoke-test baseline: if this one validates, your toolchain is wired up correctly.
-
-The contract below describes a local DuckDB query that emits a single Parquet table — a "Hello, FLUID" for the 0.7.2 schema.
-
-```yaml
-# appendix-a-hello-fluid.yml  —  validates against schema/fluid-schema-0.7.2.json
-fluidVersion: "0.7.2"
-kind: DataProduct
-id: local.hello.fluid_v1
-name: Hello FLUID
-description: The smallest valid 0.7.2 contract — a local DuckDB query that emits a single Parquet table.
-
-metadata:
-  owner:
-    team: platform
-    email: platform@example.com
-
-exposes:
-  - exposeId: greeting
-    title: Hello FLUID greeting
+  - exposeId: hello
     kind: table
     contract:
       schema:
-        - { name: message, type: STRING, required: true }
+        - { name: id, type: STRING, required: true }
     binding:
       platform: local
-      format: parquet
-      location:
-        path: ./out/greeting.parquet
-
-build:
-  pattern: embedded-logic
-  engine: sql
-  properties:
-    language: sql
-    sql: "SELECT 'Hello, FLUID' AS message"
+      format:   parquet
+      location: { path: "./hello.parquet" }
 ```
 
-**How to run it**
+That's it. Everything else in this guide is opt-in.
 
-The 0.7.2 schema is authored alongside `forge-cli` (the reference CLI for FLUID contracts). Once installed, a round-trip looks like:
-
-```bash
-# validate
-forge validate appendix-a-hello-fluid.yml
-
-# build — runs the embedded SQL through DuckDB and writes ./out/greeting.parquet
-forge build appendix-a-hello-fluid.yml
-```
-
-Every 0.7.2 release is expected to ship with this contract intact; if it stops validating against `schema/fluid-schema-0.7.2.json`, something has regressed.
+> 💡 `contract` must define at least one of `schema` or `openapiRef` — an empty `contract: {}` fails validation. We use a one-column `schema` here.
 
 ---
 
+## 2. Add a schema
+
+> **Goal:** describe the columns of the exposed table.
+> **New in this step:** `exposes[].contract.schema[]`.
+
+```yaml
+# 02-with-schema.fluid.yml
+fluidVersion: "0.7.3"
+kind: DataProduct
+id:   demo.bronze.payments
+name: "Raw Payments"
+metadata:
+  owner: { team: data-platform, email: data-platform@company.com }
+  layer: Bronze
+exposes:
+  - exposeId: payment_events
+    kind: table
+    contract:
+      schema:
+        - { name: payment_id, type: STRING,  required: true,  description: "Unique payment id" }
+        - { name: amount,     type: NUMERIC, required: true,  description: "Payment amount" }
+        - { name: currency,   type: STRING,  required: true,  description: "ISO 4217 currency code" }
+        - { name: created_at, type: TIMESTAMP, required: true }
+    binding:
+      platform: gcp
+      format:   bigquery_table
+      location: { project: company-data, dataset: bronze_finance, table: payments }
+```
+
+Why bother: every consumer (humans, BI tools, AI agents) now has a machine-readable contract for the columns they'll see.
+
+---
+
+## 3. Add data quality
+
+> **Goal:** assert that certain quality conditions must hold for the data to be considered valid.
+> **New in this step:** `exposes[].contract.dq.rules[]`.
+
+```yaml
+# 03-with-dq.fluid.yml
+# ... (everything from example 2, plus:)
+exposes:
+  - exposeId: payment_events
+    kind: table
+    contract:
+      schema:
+        - { name: payment_id, type: STRING,  required: true }
+        - { name: amount,     type: NUMERIC, required: true }
+        - { name: currency,   type: STRING,  required: true }
+      dq:
+        rules:
+          - id: positive_amount
+            type: valid_values                          # type ∈ freshness | completeness | uniqueness | valid_values | accuracy | schema | anomaly_detection | drift_detection
+            selector: "amount > 0"
+            severity: error                             # severity ∈ info | warn | error | critical
+          - id: known_currency
+            type: valid_values
+            selector: "currency IN ('USD','EUR','GBP','JPY')"
+            severity: warn
+          - id: freshness_15m
+            type: freshness
+            selector: created_at
+            window: PT15M                               # ISO-8601 duration window
+            severity: error
+    binding:
+      platform: gcp
+      format:   bigquery_table
+      location: { project: company-data, dataset: bronze_finance, table: payments }
+```
+
+DQ rules run as part of every build. `severity: error` fails the pipeline; `warn` annotates the run.
+
+---
+
+## 4. Add a build (embedded SQL)
+
+> **Goal:** describe how the data actually gets produced.
+> **New in this step:** the `build` block with `pattern: embedded-logic`.
+
+```yaml
+# 04-with-build.fluid.yml
+# ... (everything from example 3, plus:)
+build:
+  pattern: embedded-logic
+  engine:  sql
+  properties:
+    sql: |
+      SELECT
+        payment_id,
+        amount,
+        currency,
+        created_at
+      FROM raw_source.payments
+      WHERE amount > 0
+  execution:
+    trigger:
+      type: schedule                                # schedule | event | manual | dependency | dataset | schedule_and_dataset | timetable
+      schedule: "0 * * * *"                         # cron expression (or named preset)
+    retries:
+      maxAttempts: 3
+      backoffStrategy: exponential                  # fixed | exponential | linear
+      initialDelay: PT60S                           # ISO-8601 duration
+```
+
+`embedded-logic` keeps the transformation in-file. For dbt-style references, use `hybrid-reference` (next example).
+
+---
+
+## 5. Consume another product
+
+> **Goal:** depend on another FLUID product upstream, and reference a dbt model for the build.
+> **New in this step:** `consumes[]` + `build.pattern: hybrid-reference`.
+
+```yaml
+# 05-customer-ltv.fluid.yml
+fluidVersion: "0.7.3"
+kind: DataProduct
+id:   analytics.silver.customer_ltv
+name: "Customer Lifetime Value"
+metadata:
+  owner: { team: analytics, email: analytics@company.com }
+  layer: Silver
+
+consumes:
+  - productId: demo.bronze.payments        # from example 4
+    exposeId:  payment_events
+  - productId: crm.bronze.raw_customers
+    exposeId:  customer_data
+    versionConstraint: "^2.0.0"
+
+exposes:
+  - exposeId: customer_ltv
+    kind: table
+    contract:
+      schema:
+        - { name: customer_id,     type: STRING,  required: true, tags: [identifier] }
+        - { name: total_spent,     type: NUMERIC, required: true }
+        - { name: order_count,     type: INTEGER, required: true }
+        - { name: avg_order_value, type: NUMERIC, required: true }
+    binding:
+      platform: gcp
+      format:   bigquery_table
+      location: { project: company-data, dataset: silver_analytics, table: customer_ltv }
+
+build:
+  pattern: hybrid-reference
+  engine:  dbt
+  repository: "github.com/acme/analytics-dbt"
+  properties:
+    model: customer_ltv                    # path within the dbt repo
+```
+
+Now the orchestrator can auto-build the DAG: `demo.bronze.payments` → `analytics.silver.customer_ltv`.
+
+---
+
+## 6. Restrict access with `accessPolicy`
+
+> **Goal:** declare exactly who can read this product. The platform generates cloud IAM bindings from this block.
+> **New in this step:** root-level `accessPolicy` (⭐ 0.7.1).
+
+```yaml
+# 06-with-access.fluid.yml
+# ... (everything from example 5, plus:)
+accessPolicy:
+  grants:
+    - principal: "group:analytics-team@company.com"
+      permissions: [read, select, query]
+      resources:   ["$.exposes[?(@.kind=='table')]"]
+    - principal: "serviceAccount:airflow@acme-prod.iam.gserviceaccount.com"
+      permissions: [read, select]
+      conditions:
+        ipRanges: ["10.0.0.0/8"]
+    - principal: "user:alice@company.com"   # individual grant — labels go in commit msg / PR, not the contract
+      permissions: [read, select, query]
+```
+
+The `resources` field uses JSONPath to target subsets of `exposes` — useful when some ports are public and others are restricted. The schema's `accessPolicy.grants[]` block accepts only `principal`, `permissions`, `resources`, and `conditions` — keep ticket/audit context in your commit message or PR, not the contract.
+
+---
+
+## 7. Govern AI consumers with `agentPolicy`
+
+> **Goal:** decide *whether* AI agents may read this product, *which models*, and *for what purposes*.
+> **New in this step:** `agentPolicy` under `exposes[].policy.agentPolicy` (⭐ 0.7.1).
+> ⚠️ **Important shape note:** `agentPolicy` is **per-expose**, not top-level — it lives inside `exposes[].policy.agentPolicy`. (Some prior release notes show it at the root; the schema has never accepted it there.)
+
+```yaml
+# 07-with-agent-policy.fluid.yml
+# ... (everything from example 6, plus inside the relevant expose:)
+exposes:
+  - exposeId: customer_ltv
+    kind: table
+    # ...contract, binding as before...
+    policy:                                       # ← expose-level policy block
+      authn: iam                                  # oidc | oauth2 | api_key | none | custom | iam | jwt
+      authz:
+        readers: ["group:analytics-team@company.com"]
+      privacy:
+        masking:                                  # schema uses column+strategy, not a `piiColumns` shortcut
+          - { column: email, strategy: tokenize }
+      agentPolicy:                                # ⭐ 0.7.1
+        allowedModels:   [gpt-4, gpt-4-turbo, claude-3-opus, claude-3-sonnet]
+        deniedModels:    [gpt-3.5-turbo]          # legacy, not approved for PII
+        maxTokensPerRequest: 8192
+        maxTokensPerDay:     500000
+        # allowedUseCases / deniedUseCases use a CONTROLLED VOCABULARY — not free strings.
+        # Valid values: inference | reasoning | analysis | summarization | classification |
+        #               embedding | search | qa | code_generation | fine_tuning | training | rag
+        allowedUseCases: [inference, qa, rag, summarization, analysis]
+        deniedUseCases:  [training, fine_tuning]
+        canReason: true
+        canStore:  false                          # ephemeral processing only
+        retentionPolicy: { maxRetentionDays: 0, requireDeletion: true }
+        auditRequired: true                       # log all AI consumption (required for SOC2)
+        purposeLimitation: "Customer-LTV analytics and retention modeling only."
+```
+
+This block is enforced by FLUID-aware AI gateways. An LLM request that doesn't match `allowedModels` ∧ `allowedUseCases` ∧ token quotas is rejected before it ever sees the data.
+
+> 💡 **Custom business use-case names don't validate.** The schema enforces a fixed twelve-value vocabulary. Use `purposeLimitation` (free text) when you need to express something more specific like "Customer support chatbot only."
+
+---
+
+## 8. Pin to a jurisdiction with `sovereignty`
+
+> **Goal:** enforce data residency — apply-time blocks any `binding` that would land data outside the allowed region.
+> **New in this step:** root-level `sovereignty` (⭐ 0.7.1).
+
+```yaml
+# 08-with-sovereignty.fluid.yml
+# ... (everything from example 7, plus:)
+sovereignty:
+  jurisdiction: EU
+  allowedRegions: [europe-west1, europe-west3, europe-west4]
+  deniedRegions:  [us-central1, us-east1, asia-southeast1]
+  dataResidency:  true
+  crossBorderTransfer: false
+  regulatoryFramework: [GDPR]
+  enforcementMode: strict                         # strict (block apply) | advisory (warn) | audit (log only)
+  validationRequired: true                        # CI fails if binding location violates
+```
+
+With `enforcementMode: strict` and `validationRequired: true`, contract-apply diff-checks every `binding.location` against `allowedRegions` and refuses to deploy mismatches. No more "we accidentally provisioned a PII table in us-east1."
+
+---
+
+## 9. Define business semantics
+
+> **Goal:** give an LLM or BI tool the *business* meaning of the columns — so "What's our MRR?" returns the *correct* SQL, not an invented one.
+> **New in this step:** `exposes[].semantics` (⭐ 0.7.2).
+
+```yaml
+# 09-with-semantics.fluid.yml
+fluidVersion: "0.7.3"
+kind: DataProduct
+id:   analytics.gold.orders_revenue
+name: "Orders Revenue Semantic Model"
+metadata:
+  owner: { team: finance-data, email: finance-data@company.com }
+  layer: Gold
+
+exposes:
+  - exposeId: orders
+    kind: table
+    contract:
+      schema:
+        - { name: order_id,     type: STRING,    required: true }
+        - { name: customer_id,  type: STRING,    required: true }
+        - { name: amount,       type: NUMERIC,   required: true }
+        - { name: status,       type: STRING,    required: true }
+        - { name: discount,     type: NUMERIC }
+        - { name: completed_at, type: TIMESTAMP, required: true }
+
+    semantics:
+      name: orders_revenue_model
+      description: "Canonical semantic model for revenue analytics."
+      defaultAggTimeDimension: order_date
+
+      entities:
+        - { name: order,    type: primary, expr: order_id }
+        - { name: customer, type: foreign, expr: customer_id }
+
+      measures:
+        - { name: order_amount,  agg: sum,            expr: amount,   description: "Sum of order amounts" }
+        - { name: order_count,   agg: count_distinct, expr: order_id, createMetric: true }
+        - { name: total_discount, agg: sum,           expr: discount }
+
+      dimensions:
+        - { name: order_date, type: time,        expr: completed_at, typeParams: { timeGranularity: day } }
+        - { name: region,     type: categorical }
+
+      metrics:
+        - name: gross_revenue
+          description: "Total value of completed orders."
+          type: simple
+          measure: order_amount
+          filter: "status = 'completed'"
+        - name: net_revenue
+          description: "GAAP-compliant net revenue — completed orders minus discounts."
+          type: derived
+          inputMetrics: [gross_revenue, total_discount]
+          expr: "gross_revenue - total_discount"
+          owner: "finance-data@company.com"
+
+    binding:
+      platform: snowflake
+      format:   snowflake_table
+      location: { database: ANALYTICS, schema: GOLD, table: ORDERS }
+```
+
+Now an agent asked *"what is net revenue last quarter?"* reads the `net_revenue` metric definition and produces the canonically-correct SQL instead of guessing.
+
+The shape mirrors **dbt MetricFlow** and **Snowflake Semantic Views** — portable across engines.
+
+---
+
+## 10. Source-aligned acquisition
+
+> **Goal:** ingest an external system (Postgres CDC → Iceberg) as a first-class FLUID product, with delivery guarantees, schema-evolution semantics, DLP, and signed connector images.
+> **New in this step:** `build.pattern: acquisition` (⭐ 0.7.3) — the flagship feature of 0.7.3.
+
+```yaml
+# 10-acquisition.fluid.yml
+fluidVersion: "0.7.3"
+kind: DataProduct
+id:   crm.bronze.customers_cdc
+name: "Customers CDC from Production Postgres"
+description: "Source-aligned ingestion of the customers table from prod Postgres into the bronze Iceberg lake."
+metadata:
+  owner: { team: data-platform, email: data-platform@company.com }
+  layer: Bronze
+
+exposes:
+  - exposeId: customers
+    kind: table
+    contract:
+      schema:
+        - { name: customer_id,  type: STRING,    required: true,  tags: [primary-key] }
+        - { name: email,        type: STRING,    required: true,  sensitivity: tokenized }
+        - { name: country,      type: STRING,    required: true }
+        - { name: created_at,   type: TIMESTAMP, required: true }
+        - { name: updated_at,   type: TIMESTAMP, required: true }
+        - { name: _ingested_at, type: TIMESTAMP, required: true, description: "FLUID-emitted ingestion timestamp" }
+      dq:
+        rules:
+          - { id: not_null_pk,  type: completeness, selector: "customer_id IS NOT NULL",         severity: error }
+          - { id: valid_email,  type: valid_values, selector: "email RLIKE '^[^@]+@[^@]+\\.[^@]+$'", severity: warn }
+          - { id: unique_pk,    type: uniqueness,   selector: customer_id,                       severity: error }
+    policy:                                          # expose-level (sibling of contract), not inside contract
+      authn: iam
+      authz:
+        readers: ["group:customer-success@company.com"]
+      privacy:
+        masking:
+          - { column: email, strategy: tokenize }
+      agentPolicy:                                   # ⭐ per-expose location for AI/LLM governance
+        allowedModels: [claude-3-opus, gpt-4-turbo]
+        allowedUseCases: [inference, qa, rag, summarization]   # controlled vocab (not free strings)
+        deniedUseCases:  [training, fine_tuning]
+        canStore: false
+        auditRequired: true
+        purposeLimitation: "Customer-support context and analytics only — never for marketing targeting or credit decisions."
+    binding:
+      platform: aws
+      format:   iceberg
+      location: { bucket: acme-bronze, path: "crm/customers/" }
+      icebergConfig:                                 # NB: icebergConfig.partitionSpec uses OBJECT form;
+        writeVersion: 2                              #     acquisitionSink.partitionBy below uses STRING form
+        fileFormat:   parquet
+        partitionSpec: [ { sourceColumn: _ingested_at, transform: day } ]
+
+build:
+  pattern: acquisition                             # schema validates build.properties below as acquisitionPattern
+  engine:  debezium                                # CDC engine
+  capabilities: [cdc, schema_evolution, dlp_scan, at_least_once]
+
+  properties:                                      # ← acquisitionPattern lives here
+    source:
+      kind: postgres
+      mode: cdc
+      cursor_field: updated_at
+      connection:
+        secretRef: "vault://pg-prod-readonly"      # URI form required (vault:// aws:// gcp:// azure:// env://)
+      streams: [public.customers]
+      watermark: { strategy: lsn }                 # Postgres LSN-based
+
+    sink:
+      format: iceberg
+      catalog: glue
+      partitionBy: ["day(_ingested_at)"]           # acquisitionSink uses STRING array (function-form)
+
+    delivery:
+      guarantee: at_least_once
+      idempotencyKey: "${stream}|${lsn}"
+      dlq:
+        enabled: true
+        sink: { format: parquet, location: "s3://acme-dlq/customers/" }
+        maxRecordsBeforeAbort: 10000
+        alertOn: [pii_classification_failed, schema_violation, quality_gate_failed]
+
+    schemaEvolution:
+      policy: evolve_safe                          # additive allowed, removals warn, type changes fail
+      onAddedColumn:   include                     # include | warn | fail
+      onRemovedColumn: warn                        # drop    | warn | fail
+      onTypeChange:    fail                        # cast    | warn | fail
+
+    preLand: [dlp_scan, tokenize_pii, quality_gate, emit_lineage_input]
+
+    cost:
+      budget:
+        monthly: { rows: 50000000, bytes: "200GB", computeMinutes: 600 }
+        onExceed: warn                             # warn | abort
+      chargeback: { team: data-platform, costCenter: ENG-1407 }
+
+    catalog:
+      register: [datahub]
+      documentation: auto
+
+    concurrency:
+      lock: { scope: product }                     # single in-flight run per product
+
+    debezium:
+      connector_class: io.debezium.connector.postgresql.PostgresConnector
+      deployment: { mode: managed }                # Forge provisions via Helm
+      image_signature:
+        verifier: cosign                           # cosign is the only verifier today
+        publicKey: "k8s://acme/cosign-pub"
+        slsaProvenance: required                   # required | optional | disabled
+
+orchestration:
+  engine: airflow
+  generateOnChange: true
+
+# (agentPolicy is on the expose above, under exposes[].policy.agentPolicy)
+
+sovereignty:
+  jurisdiction: EU
+  allowedRegions: [eu-west-1, eu-central-1]
+  deniedRegions:  [us-east-1, us-west-2]
+  regulatoryFramework: [GDPR]
+  enforcementMode: strict                          # strict | advisory | audit
+  validationRequired: true
+
+accessPolicy:
+  grants:
+    - principal: "group:customer-success@company.com"
+      permissions: [read, select]
+    - principal: "serviceAccount:ml-platform@acme-prod.iam.gserviceaccount.com"
+      permissions: [read, select]
+
+retention:                                         # ⭐ 0.7.3
+  runState: P30D
+  runLogs:  P90D
+  lineage:  P365D
+  dlq:      P180D
+
+lifecycle:
+  state: active
+```
+
+This single file expresses, end-to-end:
+
+- **What** is published (Iceberg table, schema, DQ rules, PII treatment)
+- **How** it's produced (Debezium CDC from prod Postgres, exactly-once intent, schema-evolution policy, DLP pre-land hooks, signed connector image)
+- **Who** may read it (group + service-account grants, agent policy for AI)
+- **Where** it may live (EU only, GDPR)
+- **How long** operational artifacts stick around
+
+A FLUID-aware platform takes this file, provisions the connector, registers it in DataHub, wires the orchestrator, applies the IAM bindings, and starts emitting OpenLineage events — all from this one contract.
+
+---
+
+## Where to go from here
+
+- [**docs/anatomy.md**](docs/anatomy.md) — guided tour of every top-level block.
+- [**docs/schema-cheatsheet.md**](docs/schema-cheatsheet.md) — one-row-per-field lookup table.
+- [**schema-diffs/**](schema-diffs/) — auto-generated diffs between each version.
+- [**specs/0.7.3/fluid-spec.html**](specs/0.7.3/fluid-spec.html) — exhaustive field-by-field reference.

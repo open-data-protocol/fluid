@@ -1,9 +1,9 @@
 # Schema Changes: 0.7.1 → 0.7.2
 
-**Total changes:** 12
-- ✅ Added: 4
-- ❌ Removed: 0
-- 📝 Modified: 8
+**Total changes:** 27
+- ✅ Added: 14
+- ❌ Removed: 2
+- 📝 Modified: 11
 
 ---
 
@@ -92,11 +92,115 @@
 }
 ```
 
+### `$defs.binding.properties.properties`
+```json
+{
+  type: "object"
+  description: "Provider-specific binding properties (e.g., cluster_by, comment for Snowflake)."
+  additionalProperties: true
+}
+```
+
+### `$defs.column.properties.type.anyOf`
+```json
+[{"type": "string", "enum": ["string", "text", "varchar", "varchar2", "nvarchar", "char", "nchar", "character", "clob", "int", "integer", "int2", "int4", "int8", "int16", "int32", "int64", "tinyint", "smallint", "mediumint", "bigint", "long", "longint", "serial", "bigserial", "float", "float4", "float8", "float32", "float64", "double", "real", "decimal", "dec", "numeric", "number", "bignumeric", "money", "boolean", "bool", "bit", "date", "time", "datetime", "datetime2", "smalldatetime", "timestamp", "timestamptz", "timestamp_tz", "timestamp_ntz", "timestamp_ltz", "timestampntz", "interval", "year", "variant", "object", "array", "struct", "map", "record", "row", "json", "jsonb", "super", "binary", "varbinary", "bytes", "blob", "bytea", "raw", "geography", "geometry", "geom", "point", "uuid", "uniqueidentifier", "guid", "enum", "hll"]}, {"type": "string", "pattern": "(?i)^\\s*(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\\s+with(out)?\\s+time\\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)\\s*(\\(\\s*[0-9A-Za-z_,\\s'\\\"-]*\\s*\\))?\\s*$"}]
+```
+
+### `$defs.column.properties.type.description`
+```json
+"Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form..."
+```
+
+### `$defs.expose.properties.crawler`
+```json
+{
+  type: "object"
+  description: "AWS Glue crawler configuration for auto-discovery of schema from S3 paths."
+  properties: {
+    name: {
+      type: "string"
+      description: "Glue crawler name."
+    }
+    role: {
+      type: "string"
+      description: "IAM role ARN for the crawler."
+    }
+    schedule: {
+      type: "string"
+      description: "Cron schedule expression (e.g., 'cron(0 6 * * ? *)')."
+    }
+    classifiers: {
+      type: "array"
+      description: "Custom classifier names to apply."
+      items: {
+        type: "string"
+      }
+    }
+    schemaChangePolicy: {
+      type: "object"
+      description: "Policy for schema changes detected by the crawler."
+      properties: {
+        updateBehavior: {
+          type: "string"
+          enum: ["UPDATE_IN_DATABASE", "LOG"]
+        }
+        deleteBehavior: {
+          type: "string"
+          enum: ["LOG", "DELETE_FROM_DATABASE", "DEPRECATE_IN_DATABASE"]
+        }
+      }
+    }
+  }
+}
+```
+
 ### `$defs.expose.properties.description`
 ```json
 {
   type: "string"
   description: "Detailed description of the exposed resource."
+}
+```
+
+### `$defs.expose.properties.iceberg`
+```json
+{
+  type: "object"
+  description: "AWS Glue Iceberg table management configuration (snapshots, compaction)."
+  properties: {
+    writeFormat: {
+      type: "string"
+      enum: ["parquet", "orc", "avro"]
+      description: "Underlying file format for Iceberg data files."
+    }
+    snapshotRetention: {
+      type: "object"
+      description: "Snapshot retention policy."
+      properties: {
+        maxSnapshotAgeMs: {
+          type: "integer"
+          description: "Maximum age of snapshots in milliseconds."
+        }
+        minSnapshotsToKeep: {
+          type: "integer"
+          description: "Minimum number of snapshots to retain."
+        }
+      }
+    }
+    compaction: {
+      type: "object"
+      description: "Iceberg compaction settings."
+      properties: {
+        enabled: {
+          type: "boolean"
+        }
+        targetFileSizeMb: {
+          type: "integer"
+          description: "Target file size in MB after compaction."
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -106,6 +210,38 @@
   $ref: "#/$defs/semanticModel"
   description: "NEW in v0.7.2: Semantic model definition mapping physical columns to business concepts. Defines enti..."
 }
+```
+
+### `$defs.exposeContract.properties.quality`
+```json
+{
+  type: "array"
+  description: "Simplified SQL-expression data quality rules (alternate form of dq.rules for inline assertions)."
+  items: {
+    type: "object"
+    required: ["rule", "expression", "severity"]
+    properties: {
+      rule: {
+        type: "string"
+        description: "Rule identifier."
+      }
+      expression: {
+        type: "string"
+        description: "SQL or boolean expression that must evaluate to true."
+      }
+      severity: {
+        type: "string"
+        enum: ["error", "warning", "info"]
+        description: "Severity when the rule fails."
+      }
+    }
+  }
+}
+```
+
+### `$defs.notification.additionalProperties`
+```json
+false
 ```
 
 ### `$defs.semanticModel`
@@ -192,7 +328,85 @@
 }
 ```
 
+### `properties.metadata.properties.provenance`
+```json
+{
+  type: "object"
+  description: "Generation envelope injected by `fluid forge` / `fluid init` — records how, when and by which tool/c..."
+  properties: {
+    schema_version: {
+      type: "integer"
+      description: "Envelope schema version."
+    }
+    kind: {
+      type: "string"
+      description: "Envelope discriminator, e.g. 'ContractMetadata'."
+    }
+    generated_at: {
+      type: "string"
+      format: "date-time"
+      description: "ISO 8601 UTC timestamp of generation."
+    }
+    generated_by: {
+      type: "object"
+      description: "Tool, version and command that generated the contract."
+      properties: {
+        tool: {
+          type: "string"
+        }
+        version: {
+          type: "string"
+        }
+        command: {
+          type: "string"
+        }
+      }
+    }
+  }
+}
+```
+
+### `properties.metadata.properties.tags`
+```json
+{
+  $ref: "#/$defs/tags"
+  description: "Product-level tags on metadata for discovery and categorization."
+}
+```
+
+### `properties.orchestration`
+```json
+{
+  $ref: "#/$defs/orchestration"
+  description: "Top-level orchestration configuration for scheduling and workflow engines."
+}
+```
+
+## ❌ Removed Properties
+
+### `$defs.column.properties.type.minLength`
+```json
+1
+```
+
+### `$defs.column.properties.type.type`
+```json
+"string"
+```
+
 ## 📝 Modified Properties
+
+### `$defs.accessPolicy.properties.grants.items.properties.permissions.items.enum`
+
+**Before:**
+```json
+[...9 items...]
+```
+
+**After:**
+```json
+[...10 items...]
+```
 
 ### `$defs.binding.properties.format.enum`
 
@@ -204,6 +418,30 @@
 **After:**
 ```json
 [...14 items...]
+```
+
+### `$defs.build.properties.engine.enum`
+
+**Before:**
+```json
+[...5 items...]
+```
+
+**After:**
+```json
+[...6 items...]
+```
+
+### `$defs.sensitivityLevel.enum`
+
+**Before:**
+```json
+[...11 items...]
+```
+
+**After:**
+```json
+[...12 items...]
 ```
 
 ### `$id`
