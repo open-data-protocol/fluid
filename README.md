@@ -125,31 +125,31 @@ Four active "open data product" specs share overlapping names and adjacent scope
 
 ```mermaid
 flowchart TB
-    classDef fluid     fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
-    classDef forge     fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
-    classDef bitolDp   fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef bitolDc   fill:#059669,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef odpsv4    fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
-    classDef mcp       fill:#F59E0B,color:#fff,stroke:#78350F,stroke-width:2px
+    classDef fluid    fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
+    classDef forge    fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
+    classDef bitolDp  fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef bitolDc  fill:#059669,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef odpsv4   fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
+    classDef mcp      fill:#F59E0B,color:#fff,stroke:#78350F,stroke-width:2px
 
-    F["📄 <b>FLUID v0.7.3</b><br/>(.fluid.yml — one file)<br/><br/>exposes · build · orchestration<br/>agentPolicy · sovereignty<br/>semantics · retention · accessPolicy"]:::fluid
+    F["FLUID v0.7.3<br/>.fluid.yml — one file<br/>exposes / build / orchestration<br/>agentPolicy / sovereignty<br/>semantics / retention / accessPolicy"]:::fluid
 
-    FC["⚙️ <b>forge-cli</b><br/>(reference compiler)<br/><br/>validates · plans · applies<br/>generates IaC + Airflow DAGs<br/>emits Bitol artifacts · enforces agentPolicy"]:::forge
+    FC["forge-cli<br/>reference compiler<br/>validates / plans / applies<br/>generates IaC + Airflow DAGs<br/>emits Bitol artifacts"]:::forge
 
-    subgraph bitol ["🟢 Bitol (LF AI & Data)"]
+    subgraph bitol ["Bitol — LF AI and Data"]
         direction LR
-        OP["📋 <b>Bitol ODPS v1.0</b><br/>(product manifest)<br/><br/>inputPorts / outputPorts<br/>contractId references<br/>SBOM · lifecycle status"]:::bitolDp
-        OC["📐 <b>Bitol ODCS v3.1</b><br/>(technical contract)<br/><br/>schema · dataQuality · SLA<br/>roles · pricing · servers"]:::bitolDc
+        OP["Bitol ODPS v1.0<br/>product manifest<br/>inputPorts / outputPorts<br/>contractId references<br/>SBOM / lifecycle"]:::bitolDp
+        OC["Bitol ODCS v3.1<br/>technical contract<br/>schema / dataQuality / SLA<br/>roles / pricing / servers"]:::bitolDc
     end
 
-    V4["🛍️ <b>ODPS v4</b><br/>(commercial wrapper · optional)<br/><br/>pricingPlans · paymentGateways<br/>license · i18n · dataAccess<br/>marketplace metadata"]:::odpsv4
+    V4["ODPS v4<br/>commercial wrapper — optional<br/>pricingPlans / paymentGateways<br/>license / i18n / dataAccess<br/>marketplace metadata"]:::odpsv4
 
-    MCP["🤖 <b>MCP server</b><br/>(LLM-facing handle)"]:::mcp
+    MCP["MCP server<br/>LLM-facing handle"]:::mcp
 
-    F  ==>|"<b>forge compile</b>"| FC
-    FC ==>|"<b>emits 1 ODPS + N ODCS</b>"| OP
-    OP -.->|"ports.contractId →"| OC
-    V4 -.->|"contract.contractURL →"| OC
+    F  ==>|"forge compile"| FC
+    FC ==>|"emits 1 ODPS + N ODCS"| OP
+    OP -.->|"ports.contractId ref"| OC
+    V4 -.->|"contract.contractURL ref"| OC
     V4 ==>|"agent access"| MCP
 
     click F "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
