@@ -99,222 +99,255 @@ See [**examples.md**](examples.md) for the ten-step progression from this minima
 
 ---
 
-## Comparison with Open Data Product Specification (ODPS) v4.0
+## 🔄 How FLUID Compares to ODCS, Bitol ODPS, and ODPS v4
 
-While both FLUID and ODPS aim to standardize data product specifications, they represent fundamentally different paradigms for data management:
+Four active "open data product" specs share overlapping names and adjacent scopes — three are Linux Foundation projects. This section disambiguates them, shows how they fit together, and presents a capability matrix sourced directly from each spec's published JSON Schema.
 
-### Philosophy & Approach
-- **FLUID**: **DataOps-native** approach emphasizing compliance-as-code, automated governance, and infrastructure-first data engineering
-- **ODPS**: Business-first approach emphasizing data marketplace operations and commercial exchange
+### TL;DR
 
-### Core Purpose
-- **FLUID**: Enable **end-to-end data product lifecycle automation** with embedded compliance, quality, and governance from inception
-- **ODPS**: Facilitate data product discovery, pricing, and commercial exchange between organizations
+- 🟢 **Bitol ODCS** — column-level technical contract (schema · DQ · SLA · roles · pricing tier)
+- 🟢 **Bitol ODPS** — thin product manifest that references ODCS contracts via `contractId`
+- 🟣 **ODPS v4** — commercial wrapper (pricing plans · payment gateways · license · i18n · marketplace)
+- 🔵 **FLUID** — operational superset (contract + build + orchestration + agentic governance + sovereignty + multi-layer DQ + semantics); compiles to Bitol ODPS+ODCS via `forge-cli` for ecosystem interop
 
-### Architecture Philosophy
+> All four are open source (Apache 2.0; FLUID is MIT). They aren't mutually exclusive — see the diagram below.
 
-#### FLUID: Compliance-as-Code + DataOps Excellence
-- **Single Source of Truth**: All governance, quality, lineage, and access policies embedded in version-controlled `.fluid.yml`
-- **Proactive Compliance**: Governance enforced at build-time, not bolt-on post-deployment
-- **Infrastructure Automation**: Native CI/CD integration with GitOps workflows
-- **Developer-Centric**: Engineers define compliance rules alongside code, ensuring alignment
+### Disambiguation — which "ODPS" is which?
 
-#### ODPS: Business Operations + Marketplace Focus
-- **Separation of Concerns**: Business metadata separate from technical implementation
-- **Reactive Governance**: Quality and SLA monitoring applied after deployment
-- **Commercial Operations**: Built for data monetization and external sales
-- **Business-Centric**: Product managers define commercial terms separately from technical teams
+| Acronym | Maintainer | Latest | What it is |
+|---|---|---|---|
+| **ODCS** (Open Data Contract Standard) | LF AI & Data · Bitol | v3.1.0 — Dec 2025 | Column-level technical contract; producer↔consumer agreement for one dataset |
+| **Bitol ODPS** (Open Data Product Standard) | LF AI & Data · Bitol | v1.0.0 — Sep 2025 | Thin product manifest; bundles ODCS contracts via `contractId` on input/output ports |
+| **ODPS v4** (Open Data Product Specification) | LF · [Open-Data-Product-Initiative](https://github.com/Open-Data-Product-Initiative/v4.0) | v4.0 — Jul 2025 · v4.1 — Oct 2025 | Business + commercial wrapper: pricing · license · multi-language · marketplace |
+| **FLUID** | open-data-protocol | v0.7.3 — this repo | End-to-end operational contract: schema + build + orchestration + agentic governance + sovereignty + semantics |
 
-### DataOps & Compliance Advantages: FLUID vs ODPS
+### How they actually fit together
 
-| **DataOps Capability** | **FLUID v0.5.7** | **ODPS v4.0** | **FLUID Advantage** |
-|------------------------|-------------------|----------------|---------------------|
-| **Compliance-as-Code** | ✅ **Native**: Quality rules, policies, lineage embedded in specification | ⚠️ **External**: Requires separate DQ tools and monitoring systems | **Unified compliance** reduces tool sprawl and config drift |
-| **GitOps Integration** | ✅ **Native**: Version-controlled `.fluid.yml` drives entire lifecycle | ⚠️ **Manual**: Business metadata managed separately from code | **Automated deployments** with compliance validation |
-| **Developer Experience** | ✅ **Streamlined**: Single file defines data product + governance | ⚠️ **Complex**: Multiple systems for business vs technical concerns | **Faster development** with embedded governance |
-| **Environment Promotion** | ✅ **Automated**: Same `.fluid.yml` works across dev/staging/prod | ⚠️ **Manual**: Business configs need separate environment management | **Consistent governance** across environments |
-| **Change Management** | ✅ **Integrated**: Schema evolution + quality rules versioned together | ⚠️ **Fragmented**: Technical and business changes managed separately | **Atomic updates** prevent configuration skew |
-| **Audit Trail** | ✅ **Complete**: Full lineage from source to governance in git history | ⚠️ **Partial**: Technical changes tracked separately from business rules | **Comprehensive audit** for compliance teams |
-| **Testing Strategy** | ✅ **Holistic**: Data quality + business logic tested together | ⚠️ **Split**: Technical tests separate from business validation | **Higher confidence** in production deployments |
-| **Rollback Capability** | ✅ **Atomic**: Entire data product + governance rolled back as unit | ⚠️ **Complex**: Technical and business rollbacks require coordination | **Safer operations** with unified rollback |
+```mermaid
+flowchart TB
+    classDef fluid     fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
+    classDef forge     fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
+    classDef bitolDp   fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef bitolDc   fill:#059669,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef odpsv4    fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
+    classDef mcp       fill:#F59E0B,color:#fff,stroke:#78350F,stroke-width:2px
 
-### Key Differentiators Favoring FLUID
+    F["📄 <b>FLUID v0.7.3</b><br/>(.fluid.yml — one file)<br/><br/>exposes · build · orchestration<br/>agentPolicy · sovereignty<br/>semantics · retention · accessPolicy"]:::fluid
 
-| Feature | FLUID v0.5.7 | ODPS v4.0 | **Why FLUID Wins** |
-|---------|--------------|-----------|---------------------|
-| **Build Automation** | ✅ **Comprehensive**: dbt, Airflow, Python, multi-stage orchestration | ❌ **None**: No pipeline automation capabilities | **End-to-end automation** reduces operational overhead |
-| **Compliance-as-Code** | ✅ **Native**: Quality, lineage, policies embedded in spec | ⚠️ **External**: Requires integration with separate DQ tools | **Unified governance** prevents compliance drift |
-| **DataOps Workflows** | ✅ **Native**: GitOps, CI/CD, environment promotion built-in | ❌ **Manual**: No workflow automation | **Faster, safer deployments** with automated validation |
-| **Schema Evolution** | ✅ **Managed**: Built-in schema versioning and compatibility rules | ⚠️ **Manual**: No automated schema management | **Reduced breaking changes** with automated compatibility checks |
-| **Dependency Management** | ✅ **Explicit**: Formal `consumes` relationships with version constraints | ⚠️ **Informal**: Only recommendation links between products | **Reliable data lineage** prevents upstream breakage |
-| **AI/ML Integration** | ✅ **Native**: ML pipelines, feature stores, model deployment patterns | ⚠️ **Limited**: Basic AI agent access via MCP | **Complete ML lifecycle** support for modern data teams |
-| **Developer Velocity** | ✅ **High**: Single file defines entire data product lifecycle | ⚠️ **Fragmented**: Multiple systems and specifications to manage | **Faster iteration** with unified development experience |
-| **Operational Excellence** | ✅ **Proactive**: Issues prevented through design-time validation | ⚠️ **Reactive**: Problems discovered after deployment | **Higher reliability** with shift-left quality approach |
+    FC["⚙️ <b>forge-cli</b><br/>(reference compiler)<br/><br/>validates · plans · applies<br/>generates IaC + Airflow DAGs<br/>emits Bitol artifacts · enforces agentPolicy"]:::forge
 
-### Enterprise Benefits: Why DataOps Teams Choose FLUID
+    subgraph bitol ["🟢 Bitol (LF AI & Data)"]
+        direction LR
+        OP["📋 <b>Bitol ODPS v1.0</b><br/>(product manifest)<br/><br/>inputPorts / outputPorts<br/>contractId references<br/>SBOM · lifecycle status"]:::bitolDp
+        OC["📐 <b>Bitol ODCS v3.1</b><br/>(technical contract)<br/><br/>schema · dataQuality · SLA<br/>roles · pricing · servers"]:::bitolDc
+    end
 
-#### 🚀 **Accelerated Development Velocity**
-- **Single specification** eliminates context switching between business and technical tools
-- **Embedded governance** removes compliance bottlenecks from development cycle
-- **Automated deployments** with built-in quality gates reduce manual toil
+    V4["🛍️ <b>ODPS v4</b><br/>(commercial wrapper · optional)<br/><br/>pricingPlans · paymentGateways<br/>license · i18n · dataAccess<br/>marketplace metadata"]:::odpsv4
 
-#### 🛡️ **Enhanced Compliance & Governance**
-- **Compliance-as-code** makes governance requirements explicit and testable
-- **Version-controlled policies** provide complete audit trails for regulatory requirements
-- **Proactive validation** prevents non-compliant data products from reaching production
+    MCP["🤖 <b>MCP server</b><br/>(LLM-facing handle)"]:::mcp
 
-#### 📈 **Operational Excellence**
-- **Unified monitoring** of technical and business metrics from single specification
-- **Atomic updates** eliminate configuration drift between environments
-- **Comprehensive lineage** enables rapid impact analysis for changes
+    F  ==>|"<b>forge compile</b>"| FC
+    FC ==>|"<b>emits 1 ODPS + N ODCS</b>"| OP
+    OP -.->|"ports.contractId →"| OC
+    V4 -.->|"contract.contractURL →"| OC
+    V4 ==>|"agent access"| MCP
 
-#### 🤖 **AI-Ready Architecture**
-- **Native ML support** for modern data teams building intelligent products
-- **Contract-driven development** enables reliable AI agent integration
-- **Feature store patterns** built into the specification
-
-### When to Choose Each Approach
-
-#### **Choose FLUID v0.5.7 for:**
-- ✅ **DataOps transformation** initiatives
-- ✅ **Compliance-heavy industries** (finance, healthcare, government)
-- ✅ **Engineering-led data teams** prioritizing automation
-- ✅ **AI/ML-centric** organizations building intelligent products
-- ✅ **Internal data products** requiring tight governance
-
-#### **Choose ODPS v4.0 for:**
-- ✅ **Data marketplace** operations
-- ✅ **Commercial data sales** with complex pricing models
-- ✅ **Business-led** data product organizations
-- ✅ **External data distribution** requiring legal frameworks
-- ✅ **Multi-vendor ecosystems** needing business standardization
-
-### Where ODPS Excels: Intentional Design Boundaries
-
-FLUID's focused scope is a **deliberate design decision**. Rather than trying to be everything to everyone, FLUID concentrates on what it does best—DataOps and technical governance—while acknowledging where ODPS provides superior capabilities:
-
-#### 🎯 **ODPS's Domain of Excellence**
-
-**Commercial Data Operations:**
-- **Sophisticated pricing models**: 12 standardized pricing patterns with payment gateway integration
-- **Legal framework management**: Comprehensive licensing, IPR, and contract governance
-- **Multi-stakeholder governance**: Business process workflows with detailed lifecycle states
-- **Marketplace operations**: Product catalogs, payment processing, and customer relationship management
-
-**Business-Oriented Data Products:**
-- **Rich business metadata**: Value propositions, use cases, brand management, and marketing content
-- **Multi-language support**: ISO 639-1 compliant internationalization for global data products
-- **Access diversity**: Multiple consumption patterns (API, file, SQL, AI agents) per single product
-- **SLA sophistication**: 11 monitoring dimensions with enterprise tool integrations (SodaCL, Montecarlo, DQOps)
-
-#### 🎯 **FLUID's Intentional Boundaries**
-
-**What FLUID Deliberately Doesn't Do:**
-- ❌ **Commercial operations**: No pricing, billing, or payment processing
-- ❌ **Legal frameworks**: No licensing or IPR management
-- ❌ **Marketing metadata**: No brand slogans, value propositions, or sales content
-- ❌ **Multi-language UIs**: English-first specification for technical teams
-
-**Why These Are Design Choices, Not Limitations:**
-
-1. **Focus Drives Excellence**: By concentrating on DataOps and technical governance, FLUID delivers deeper automation and better developer experience in its domain
-
-2. **Tool Ecosystem Integration**: FLUID is designed to work *with* existing business systems, not replace them. Your data products can use FLUID for technical implementation while leveraging other tools for commercial operations
-
-3. **Separation of Concerns**: Technical teams need different abstractions than business teams. FLUID optimizes for engineering workflows while remaining compatible with business-oriented specifications
-
-4. **Evolutionary Architecture**: Organizations can start with FLUID for technical governance and later add ODPS for commercial operations as they mature their data product strategy
-
-#### 🤝 **Intentional Compatibility: The Hybrid Approach**
-
-FLUID's design explicitly enables **complementary coexistence** with business-focused specifications:
-
-```yaml
-# FLUID: Technical implementation and governance
-fluidVersion: "0.7.1"
-kind: "DataProduct"
-id: "analytics.gold.customer_segments"
-
-# NEW in v0.7.1: AI model governance
-agentPolicy:
-  allowedModels: ["gpt-4", "claude-3-opus"]
-  maxTokensPerRequest: 4096
-
-# Technical contract and automation
-exposes:
-  - exposeId: "segments_api"
-    kind: "api"
-    contract:
-      # Reference to ODPS business specification
-      businessMetadata: "./customer-segments-odps.yaml"
-      # FLUID handles technical contract
-      schema: [...]
-      dq: [...]
-    binding:
-      platform: "kubernetes"
-      format: "http_api"
-
-# FLUID handles build automation
-build:
-  engine: "python"
-  pattern: "embedded-logic"
-  # ... technical implementation details
+    click F  "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
+    click FC "https://github.com/Agenticstiger/forge-cli" "forge-cli on GitHub"
+    click OP "https://github.com/bitol-io/open-data-product-standard" "Bitol ODPS on GitHub"
+    click OC "https://github.com/bitol-io/open-data-contract-standard" "Bitol ODCS on GitHub"
+    click V4 "https://github.com/Open-Data-Product-Initiative/v4.0" "ODPS v4 on GitHub"
 ```
 
-```yaml
-# ODPS: Business packaging and commercialization  
-# File: customer-segments-odps.yaml
-schema: https://opendataproducts.org/v4.0/schema/odps.yaml
-version: 4.0
-product:
-  details:
-    en:
-      name: "Customer Segmentation Analytics"
-      valueProposition: "AI-powered customer segments for personalized marketing"
-      # ... business metadata
-  
-  pricingPlans:
-    declarative:
-      en:
-        - name: "Professional API Access"
-          price: 299
-          # ... commercial details
-          
-  # Reference back to FLUID technical implementation
-  dataAccess:
-    api:
-      accessURL: "https://api.company.com/segments"  # ← Deployed by FLUID
-      specsURL: "./fluid-generated-openapi.yaml"     # ← Generated by FLUID
+> 🖱️ Every node in the diagram links to its source repository.
+
+> **From the forge-cli README:** *"Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS"* — export produces *"1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."*
+
+---
+
+### 📊 Capability matrix
+
+Field names are quoted exactly from each spec's published JSON Schema. Legend: ✅ deterministic in spec · ⚠️ partial / requires inference · ❌ silent. Grouped into five thematic clusters — skim to your area of interest.
+
+#### 📐 Data shape & quality
+
+| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+|---|---|---|---|---|
+| **Schema** (types · nullability · descriptions) | ✅ `exposes[].contract.schema[]` — `name`/`type`/`required`/`sensitivity`/`semanticType` | ✅ `schema[].properties[]` — `logicalType`/`physicalType`/`primaryKey`/`classification` | ❌ delegated to `contractId` | ❌ delegated to `contract.contractURL` |
+| **Data quality** | ✅ **3-layer**: declarative `dq.rules[]` (8 types: `freshness`/`completeness`/`uniqueness`/`valid_values`/`accuracy`/`schema`/`anomaly_detection`/`drift_detection`) + `acquisitionPattern.preLand` gates + `quality.{gates, onError: route_to_dlq\|abort_run\|best_effort}` | ✅ rich `dataQuality` — `type`/`dimension`/`method`/`severity`/`businessImpact` + library checks (rowCount, nullValues, …) + SQL + custom | ❌ none (delegated) | ✅ `dataQuality.declarative` — 8 dimensions + `$ref` to SodaCL/Montecarlo/DQOps |
+| **SLA / SLO** | ✅ `exposes[].qos` — `availability`/`freshnessSLO`/`dataLossSLO`/`latencyP95` | ✅ `slaProperties[]` — 11 dimensions | ❌ none | ✅ `SLA.declarative` — 11 dimensions, declarative + executable |
+| **Privacy / sensitivity** | ✅ `column.sensitivity` (12-value enum) + `policy.privacy.masking[]` | ✅ per-column `classification` | ❌ none | ⚠️ `dataGovernance.dataPrivacy.applicablePrivacyLaws[]` (metadata) |
+
+#### 🔒 Access, governance & legal
+
+| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+|---|---|---|---|---|
+| **Access policies (RBAC / IAM)** | ✅ root `accessPolicy.grants[]` + `policy.authn/authz` + JSONPath resource selectors + `conditions` (IP/time) | ✅ `roles[]` + `servers[].roles` | ❌ none | ⚠️ `dataGovernance.accessPermissions` (free text) |
+| **Lineage** | ✅ top-level `lineage` graph + `consumes[]` + build `outputs` | ⚠️ column-level via `transformSourceObjects`/`transformLogic` (hints) | ⚠️ product-level via `outputPorts[].inputContracts[]` | ⚠️ `dataOps.lineage` (pointer to external tool) |
+| **AI / LLM governance** | ✅ `policy.agentPolicy` — `allowedModels`/`deniedModels`/token caps/controlled-vocab `allowedUseCases`/`canReason`/`canStore`/`auditRequired`/`purposeLimitation` | ❌ none | ❌ none | ⚠️ `dataAccess.<x>.outputPorttype: AI` (`specification: MCP`) — access only, no policy |
+| **Sovereignty / residency** | ✅ `sovereignty` — `jurisdiction`/`allowedRegions`/`deniedRegions`/`enforcementMode: strict\|advisory\|audit`/`dataResidency`/`crossBorderTransfer` | ❌ none | ❌ none | ⚠️ partial via `license.scope.geographicalArea[]` + `dataOps.infrastructure.region` |
+| **Legal framework** | ✅ **regulatory & cross-border** — 10 `regulatoryFramework` (GDPR/CCPA/CPRA/HIPAA/PIPEDA/LGPD/PDPA/POPIA/DPA/APPI) + 6 `transferMechanisms` (SCCs/BCRs/Adequacy/DPF/Consent/Derogation) + `governance.lakeFormation` (AWS LF-TBAC) | ❌ none | ❌ none | ✅ **commercial / contractual** — `license.<lang>` with `scope`/`termination`/`governance.{ownership, damages, warranties, forceMajeure, audit}`. Complementary to FLUID's regulatory side. |
+
+#### ⚙️ Build & operations
+
+| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+|---|---|---|---|---|
+| **Build / transformation logic** | ✅ `build` — 4 patterns (`hybrid-reference`/`embedded-logic`/`multi-stage`/`acquisition`) | ❌ none | ❌ none | ⚠️ `dataOps.build` (pointer to scriptURL, not in-spec logic) |
+| **Source-aligned ingestion** | ✅ `acquisitionPattern` — 6 engines: `duckdb`/`airbyte`/`meltano`/`dlt`/`kafka-connect`/`debezium` | ❌ none | ❌ none | ❌ none |
+| **Orchestration** | ✅ `orchestration` — `airflow`/`dagster`/`prefect`/`kubeflow`/`custom`/`none` | ❌ none | ❌ none | ⚠️ `dataOps.infrastructure.{platform, containerTool}` (metadata only) |
+| **Retention** (run state · logs · lineage · DLQ) | ✅ top-level `retention` (ISO-8601 durations) | ❌ none | ❌ none | ❌ none |
+| **Delivery guarantees** (at-least / exactly-once + DLQ) | ✅ `acquisitionDelivery` | ❌ none | ❌ none | ❌ none |
+
+#### 🧭 Discovery & semantics
+
+| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+|---|---|---|---|---|
+| **Semantic model** (entities · measures · metrics) | ✅ `exposes[].semantics` — aligns with the [**OSI Open Semantic Interchange**](https://open-semantic-interchange.org/) v1.0 standard; MetricFlow round-trip on roadmap | ❌ none | ❌ none | ❌ none |
+| **Business metadata** | ⚠️ `description`/`domain`/`docs`/`column.businessName` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ✅ `details.<lang>` — full: `valueProposition`/`useCases[]`/`brandSlogan`/`productSeries`/`categories`/`standards`/`logoURL` |
+| **Multi-access** (table + API + stream from one product) | ✅ `exposes[]` — each entry independent: kind/contract/policy/binding | ❌ single contract | ⚠️ `outputPorts[]` (free-form `type`) | ✅ `dataAccess` — first-class enum: `file`/`API`/`SQL`/`AI`/`gRPC`/`sFTP` |
+
+#### ♻️ Lifecycle & supply chain
+
+| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+|---|---|---|---|---|
+| **Lifecycle states** | ✅ `lifecycle.state` — 4 states (`preview` → `active` → `deprecated` → `retired`) | ⚠️ free-form `status` string | ✅ 5-state enum | ✅ 8-state enum |
+| **Versioning + schema evolution** | ✅ `schemaEvolution` (`strategy`/`compatibility`/`changePolicy`) + 4-policy enum on contracts | ⚠️ `version` only (SemVer convention) | ⚠️ port + product `version` | ⚠️ `version` + `details.<lang>.productVersion` |
+| **SBOM** | ⚠️ via `acquisitionImageSignature` (Cosign + SLSA) | ❌ none | ✅ `outputPorts[].sbom[]` (type + url) | ❌ none |
+
+---
+
+### ⚙️ The reference compiler — `forge-cli`
+
+The matrix above shows what each spec *covers*. **[`forge-cli`](https://github.com/Agenticstiger/forge-cli)** is what turns a FLUID contract into deployed reality and Bitol-compatible outputs.
+
+[![Repo](https://img.shields.io/badge/Agenticstiger%2Fforge--cli-FF6B35?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Agenticstiger/forge-cli)
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-1E3A8A?style=for-the-badge)](https://github.com/Agenticstiger/forge-cli/blob/main/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-forge--docs-A78BFA?style=for-the-badge&logo=readthedocs&logoColor=white)](https://agenticstiger.github.io/forge_docs/)
+
+It consumes a `.fluid.yml` and emits:
+
+| Stage | Output |
+|---|---|
+| 🟢 **Bitol export** | `1 ODPS doc + N <contractId>.odcs.yaml` files — Bitol v1.0.0 as the default, center-stage ODPS |
+| 🟠 **Orchestration** | Native **Airflow / Dagster / Prefect** DAGs from the `orchestration` block |
+| 🟣 **Infrastructure** | **OpenTofu / Terraform** IaC for BigQuery / Snowflake / AWS / GCP |
+| 🔵 **Governance** | **IAM bindings** from `accessPolicy.grants[]` + **AI gateway** enforcement of `agentPolicy` |
+| 🔴 **Supply chain** | **Cosign-verified** connector images + **SLSA provenance** checks on ingest |
+
+> *"What Terraform did for infrastructure, FLUID Forge does for data products."* — [forge-cli README](https://github.com/Agenticstiger/forge-cli)
+
+### When to use which
+
+- **Use Bitol ODCS alone** when you need a portable, vendor-neutral **column-level contract** any data-mesh tool can consume. The smallest unit of producer↔consumer agreement.
+- **Use Bitol ODPS** when you want a thin manifest to bundle multiple ODCS contracts into one product (ports + SBOM + lifecycle) without build automation or AI governance.
+- **Use opendataproducts.org's ODPS v4** when you're **commercializing data products** — pricing tiers, payment integration, multi-language license, marketplace metadata. It expects an ODCS-shaped contract underneath.
+- **Use FLUID** as your **authoring layer** when you want one file to drive the full lifecycle — source-aligned acquisition, build, orchestration, agentic governance, sovereignty, multi-layer DQ, and semantics — *and* you want Bitol-compatible outputs for catalog/contract-registry interop. FLUID is the only spec covering the operational + agentic surface today.
+
+### Composing them
+
+The cleanest production stack uses all four where each is strongest:
+
+| Layer | Spec | Role |
+|---|---|---|
+| Author | **FLUID** | Single `.fluid.yml` per product — version-controlled, schema-validated, agent-policy-enforced |
+| Compile | **forge-cli** | Emits Bitol ODPS + ODCS files, generates Airflow DAGs, applies IAM grants, runs DLP pre-land hooks |
+| Catalog | **Bitol ODCS + ODPS** | What DataHub / OpenMetadata / Datamesh Manager read for discovery and contracts |
+| Commercialize | **ODPS v4** | Wraps the ODCS for external marketplace publishing — pricing, license, multi-language, payment |
+
+### Sources
+
+- [Bitol ODCS — open-data-contract-standard](https://github.com/bitol-io/open-data-contract-standard) (v3.1.0)
+- [Bitol ODPS — open-data-product-standard](https://github.com/bitol-io/open-data-product-standard) (v1.0.0)
+- [opendataproducts.org ODPS v4](https://opendataproducts.org/v4.0/) · [v4.0 repo](https://github.com/Open-Data-Product-Initiative/v4.0) · [v4.1 release](https://github.com/Open-Data-Product-Initiative/v4.1)
+- [forge-cli — the FLUID reference compiler](https://github.com/Agenticstiger/forge-cli) (emits Bitol ODPS + ODCS)
+- [Linux Foundation AI & Data — Bitol project](https://lfaidata.foundation/projects/bitol/)
+
+---
+
+## 🤖 The Agentic-Native Layer
+
+**"Agentic-native"** isn't a marketing label — it's a concrete set of failure modes that any data product spec must address before AI agents can safely consume it at production scale. This section maps those failure modes to spec features, **tests them against each spec's own canonical example file**, and is honest about where FLUID also falls short.
+
+### Methodology
+
+Each spec was evaluated against the **canonical example file its maintainers publish**, asking four questions an LLM agent must answer before consuming a data product. Each cell below records whether the spec gives a **deterministic** (✅), **partial** (⚠️), or **silent** (❌) answer.
+
+| Spec | Example file used |
+|---|---|
+| Bitol ODCS v3.1 | [`full-example.odcs.yaml`](https://github.com/bitol-io/open-data-contract-standard/blob/main/docs/examples/all/full-example.odcs.yaml) (seller/payments contract) |
+| Bitol ODPS v1.0 | [`customer-data-product.odps.yaml`](https://github.com/bitol-io/open-data-product-standard/blob/main/docs/examples/customer-data-product.odps.yaml) |
+| ODPS v4 | [`urbanpulse_final.yml`](https://github.com/Open-Data-Product-Initiative/v4.0/blob/main/source/examples/Refs/urbanpulse_final.yml) (UrbanPulse Events) |
+| FLUID v0.7.3 | [Example 10 (Customers CDC)](examples.md#10-source-aligned-acquisition) |
+
+### The four agent failure modes
+
+These are the failures that get LLM-driven data products taken offline:
+
+| # | Failure mode | What an agent must determine | Real consequence if undetermined |
+|---|---|---|---|
+| **F1** | **PII leakage** | Which columns are PII? With what masking strategy? | Agent surfaces customer emails / SSNs in answers → privacy incident |
+| **F2** | **Disallowed use** | Am I permitted to use this data for *training*? *RAG*? *Credit scoring*? | Model trained on data with `training: deny` → contract breach, lawsuit |
+| **F3** | **Metric hallucination** | What is "revenue"? "MRR"? "MAU"? Can I derive them? | Agent invents a SQL expression → wrong number reported to executive |
+| **F4** | **Sovereignty violation** | Where is the data located? Am I (running in `us-east-1`) allowed to read EU-resident PII? | Cross-border PII transfer → GDPR fine |
+
+### Results of the test
+
+Honest verdict per spec per failure mode. `✅` = deterministic answer in the spec; `⚠️` = partial (requires inference or external lookup); `❌` = silent.
+
+| | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4 (opendataproducts.org) | **FLUID v0.7.3** |
+|---|---|---|---|---|
+| **F1 — PII leakage** | ⚠️ `classification: restricted` per column gives a tier ("treat as PII") but **no masking strategy** (hash? tokenize? mask?). Agent has to guess. | ❌ Manifest-only; PII detail lives in the referenced ODCS — agent must dereference. | ❌ No per-column classification at the v4 layer; delegated to `contract.contractURL`. | ✅ `column.sensitivity` (12-value enum) **plus** `exposes[].policy.privacy.masking[].strategy` (`mask`/`hash`/`tokenize`/`encrypt`/`k_anonymity`). |
+| **F2 — Disallowed use** | ❌ No agent-policy fields. `roles[]` is generic IAM. | ❌ Silent. | ⚠️ Has `pricingPlans` for MCP-agent access tiers and an English-prose `license.scope.restrictions` — but **no machine-readable use-case allow/deny list**. Agent would need NLP on the license text. | ✅ `agentPolicy.allowedUseCases` / `deniedUseCases` use a **12-value controlled vocabulary** (`inference, reasoning, analysis, summarization, classification, embedding, search, qa, code_generation, fine_tuning, training, rag`). Plus `allowedModels` / `deniedModels` and token caps. |
+| **F3 — Metric hallucination** | ❌ Has column-level `description` and `businessName` but no metric definitions. Agent asked "what's our revenue?" must guess SQL from column names. | ❌ Silent. | ❌ Has `categories` and `valueProposition` (marketing prose) but no metric definitions. | ✅ `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr`. The agent reads the metric definition verbatim instead of inventing SQL. |
+| **F4 — Sovereignty violation** | ❌ `servers[].host` exists but no jurisdiction/region/policy fields. | ❌ Silent. | ⚠️ `license.scope.geographicalArea: [EU, US]` indicates **where the data may be used** (legal scope), and `dataOps.infrastructure.region` hints where it lives — but no enforcement mode. | ✅ `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode: strict\|advisory\|audit` / `validationRequired: true` — apply-time blocks cross-border bindings. |
+
+### Where FLUID is still maturing — roadmap & honest gaps
+
+The four ✅s above cover the failure modes that matter most for safe agent consumption. Remaining items are operational/tracked-on-roadmap:
+
+- 🛣️ **MCP binding** — `exposes[].binding.mcp` is on the FLUID roadmap. Once landed, FLUID matches ODPS v4's `dataAccess.interface: MCP` for direct LLM tool calls.
+- 🛣️ **dbt MetricFlow compatibility** — FLUID's `semantics` block already aligns with the [**OSI (Open Semantic Interchange)**](https://open-semantic-interchange.org/) v1.0 standard (Apache 2.0, Jan 2026); MetricFlow round-trip compatibility is on the roadmap.
+- ⚠️ **`purposeLimitation` is free text** — human-readable but not deterministically enforceable without an NLU layer. Shared limitation with every spec that supports purpose clauses.
+- ⚠️ **Controlled vocab is mechanism-flavored** — `allowedUseCases: [inference, qa, rag, …]` describes *how* an AI uses the data, not *why*. Business use cases (`credit-scoring`, `marketing-targeting`) live in `purposeLimitation`. A vocabulary extension is under discussion.
+- ⚠️ **Semantics is opt-in** — authors who skip the `semantics` block leave F3 (metric hallucination) open. The spec supports it; adoption is the gap.
+
+### What broke when running the tests
+
+Two concrete findings against the canonical examples:
+
+- **F3 — hallucination, against the ODCS example.** Asked *"what was last month's daily transaction volume?"* against the seller/payments contract, a naive LLM agent writes `SELECT txn_ref_dt, COUNT(*) FROM tbl_1 WHERE txn_ref_dt >= DATE_SUB(CURRENT_DATE, 30)`. The contract has no metric defining "transaction volume" and no row-grain documentation, so the SQL is plausible-but-ungrounded. A FLUID `semantics.measures: [{name: transaction_count, agg: count_distinct, expr: txn_id}]` block would have produced a verifiable expression.
+- **F4 — sovereignty, against the ODPS v4 example.** UrbanPulse Events declares `license.scope.geographicalArea: [EU, US]`. An agent running in `us-east-1` cannot determine whether that grants *runtime access* or merely *consumer rights of use* — the clause governs the latter. FLUID's `sovereignty.enforcementMode: strict` removes the ambiguity at apply time.
+
+### Complementary protocols worth knowing about
+
+None of these specs replace each other — they live at different layers. Production agentic data products typically combine several:
+
+| Protocol | Layer | What it does | Relationship to FLUID |
+|---|---|---|---|
+| **[MCP](https://modelcontextprotocol.io/)** (Model Context Protocol) | Access | How an LLM tool calls a data product (JSON-RPC over stdio/SSE). Anthropic-led, broad adoption. | `binding.mcp` on the **FLUID roadmap**. ODPS v4 has it today via `dataAccess.interface: MCP`. |
+| **[OSI](https://open-semantic-interchange.org/)** (Open Semantic Interchange) v1.0 | Semantic | Vendor-neutral semantic-layer spec (Snowflake + Databricks + AtScale + Qlik …), Apache 2.0, Jan 2026. | **FLUID `semantics` aligns with OSI** — interoperable with any OSI-compliant BI/AI tool. |
+| **[dbt MetricFlow](https://docs.getdbt.com/docs/build/about-metricflow)** / **Snowflake Semantic Views** | Semantic | Engine-specific metric definitions. | FLUID `semantics` is shape-compatible; **MetricFlow round-trip on roadmap**. |
+| **[OpenLineage](https://openlineage.io/)** | Lineage events | Runtime lineage events from any tool. | FLUID's `acquisitionPattern.lineage.emit: true` produces OpenLineage events per batch. |
+| **[OPA / Rego](https://www.openpolicyagent.org/)** | Policy enforcement | Policy-as-code engine. | An OPA sidecar evaluates FLUID's `accessPolicy` JSONPath selectors at request time. |
+| **[Cosign](https://docs.sigstore.dev/cosign/overview/) / [SLSA](https://slsa.dev/)** | Supply chain | Container image signing + provenance. | Required by FLUID's `acquisition.<engine>.image_signature`. |
+
+### Practical conclusion
+
+**FLUID v0.7.3 is the only one of the four specs that gives an LLM deterministic answers to all four agent failure modes today.** That isn't marketing — it's what the test above shows when run against each spec's own canonical example.
+
+FLUID's scope is deliberately the **operational + governance layer** — contract, build, orchestration, agent policy, sovereignty, semantics, DQ. Commercial layers (pricing, payment, multi-language marketplace) are out of scope on purpose; pair FLUID with ODPS v4 when you need them:
+
+```
+  FLUID  (author + agent governance + semantics + sovereignty + multi-layer DQ)
+    │
+    ├── forge-cli → Bitol ODPS + ODCS    (catalog + data-mesh interop)
+    │
+    └── ODPS v4 wrapper (optional)        (commercial publishing + MCP access)
+                  │
+                  └── MCP server          (the LLM-side handle)
 ```
 
-#### 🏗️ **Strategic Design Philosophy**
-
-**FLUID's "Do One Thing Well" Approach:**
-- **Technical Excellence**: Deep automation capabilities for data engineering teams
-- **Ecosystem Friendly**: Designed to integrate with, not replace, existing business tools
-- **Evolutionary Path**: Start with FLUID for technical governance, add business layers as needed
-
-**The Result: Best of Both Worlds**
-- Use **FLUID** for rapid development, automated compliance, and technical governance
-- Use **ODPS** for commercial operations, legal frameworks, and business metadata
-- **Combine them** for enterprises needing both technical excellence and business operations
-
-This architectural approach allows organizations to:
-✅ **Start fast** with FLUID's engineering-focused approach  
-✅ **Scale commercially** by adding ODPS business layers  
-✅ **Avoid vendor lock-in** through specification compatibility  
-✅ **Optimize teams** by matching tools to team responsibilities  
-
-### The FLUID Advantage: DataOps Excellence
-
-FLUID represents the **evolution of data engineering** from reactive, tool-specific configurations to **proactive, unified specifications**. By embedding compliance, quality, and governance directly into the data product definition, FLUID enables organizations to achieve:
-
-- **Higher velocity** through automated compliance validation
-- **Better reliability** through design-time quality enforcement
-- **Reduced complexity** through unified specifications
-- **Enhanced auditability** through version-controlled governance
-
-In an era where **data governance is becoming a competitive advantage**, FLUID provides the foundation for building trustworthy, scalable, and compliant data ecosystems ready for both human and AI consumption.
+> **PRs welcome** to add a `binding.mcp` block or extend the `allowedUseCases` vocabulary. The agentic-native layer is still being built in the open — and FLUID is currently leading on the governance dimensions that matter most.
 
 ---
 
@@ -713,224 +746,6 @@ This structure separates **interface** (what you get) from **implementation** (h
 FLUID is **not** a new central tool or platform. It does not replace Airflow, dbt, or Snowflake. It does **not** require a monolithic "Agentic Executor."
 
 Instead, FLUID fosters a **decentralized, compliant ecosystem**. Tools become "FLUID-aware"—for example, Airflow dynamically generates DAGs from FLUID files, and data catalogs ingest lineage from FLUID repositories. FLUID is the shared language, not the central brain.
-
----
-
-## 🔄 FLUID 0.7.1 vs. OpenAPI Data Specification (OPDS) v4
-
-Understanding when to use FLUID versus OPDS v4 is crucial for making the right architectural decisions for your data ecosystem.
-
-### **Quick Decision Matrix:**
-
-| **Use FLUID When** | **Use OPDS v4 When** |
-|---------------------|----------------------|
-| Building **data products** with complex transformations | Exposing **data APIs** with simple CRUD operations |
-| Need **end-to-end governance** (build → deploy → consume) | Need **API contract** definition and documentation |
-| **Multi-modal pipelines** (batch, streaming, ML) | **Request/response** data access patterns |
-| **Domain-driven data mesh** architecture | **Service-oriented** or microservices architecture |
-| **Declarative infrastructure** as code | **Imperative API** development workflows |
-
-### **Detailed Comparison:**
-
-| **Aspect** | **FLUID 0.7.1** | **OPDS v4** |
-|------------|------------------|--------------|
-| **Primary Purpose** | End-to-end data product lifecycle management | API specification and documentation |
-| **Scope** | Data ingestion → transformation → consumption | HTTP API endpoints and schemas |
-| **Governance Model** | Built-in data quality, lineage, and access policies | API versioning and compatibility |
-| **Build Patterns** | `hybrid-reference`, `embedded-logic`, `multi-stage` | Code generation from OpenAPI specs |
-| **Data Paradigms** | Batch, streaming, ML pipelines, feature stores | Request/response, real-time queries |
-| **Metadata Richness** | Business context, ownership, SLAs, observability | API documentation, examples, parameters |
-| **Execution Model** | Tool-agnostic specification (dbt, Airflow, etc.) | HTTP server implementations |
-| **Consumer Experience** | Data contracts with quality guarantees | API contracts with response schemas |
-| **Versioning** | Semantic versioning with schema evolution | API version paths and deprecation |
-| **Discovery** | Federated catalogs, lineage graphs | API registries, service mesh |
-
-### **Architecture Patterns:**
-
-#### **🏗️ When FLUID Excels:**
-
-**Data Mesh / Domain-Driven Architecture:**
-```yaml
-# FLUID: Complete data product specification
-fluidVersion: "0.7.1"
-kind: "DataProduct"
-id: "finance.gold.risk_metrics"
-
-# NEW in v0.7.1: Agentic governance
-agentPolicy:
-  allowedModels: ["gpt-4", "claude-3"]
-  maxTokensPerDay: 50000
-
-# Includes: sources, transformations, quality, access, observability
-consumes: [...]
-exposes: [...]  
-build: [...]
-metadata: [...]
-```
-
-**Multi-Stage Data Pipelines:**
-- Bronze → Silver → Gold transformations
-- ML training → inference → monitoring
-- Streaming + batch processing hybrid
-
-**Enterprise Governance:**
-- Data quality as code
-- Automated lineage tracking  
-- Policy-driven access control
-- SLA monitoring and alerting
-
-#### **🌐 When OPDS v4 Excels:**
-
-**API-First Data Access:**
-```yaml
-# OPDS: API specification focus
-openapi: 3.1.0
-info:
-  title: Customer Data API
-  version: 4.0.0
-paths:
-  /customers/{id}:
-    get:
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Customer'
-```
-
-**Microservices Data Layer:**
-- Service-to-service data exchange
-- Real-time query interfaces
-- API gateway integration
-- Developer portal documentation
-
-**Request/Response Patterns:**
-- Interactive dashboards
-- Mobile applications
-- Third-party integrations
-- Real-time analytics APIs
-
-### **Hybrid Approach: Best of Both Worlds**
-
-Many organizations benefit from using **both** specifications together:
-
-```yaml
-# FLUID: Data product that exposes an API
-fluidVersion: "0.7.1"
-kind: "DataProduct"
-id: "customer.api.profiles_v1"
-
-# NEW: AI model restrictions
-agentPolicy:
-  allowedModels: ["gpt-4-turbo"]
-  maxTokensPerRequest: 4096
-
-exposes:
-  - exposeId: "customer_api"
-    kind: "api"
-    contract:
-      openapiRef: "./customer-profiles-api-v4.yaml"  # ← OPDS v4 spec
-    binding:
-      platform: "kubernetes"
-      format: "http_api"
-      location:
-        baseUrl: "https://api.company.com/customers"
-
-build:
-  engine: "python"
-  pattern: "embedded-logic"
-  # API server implementation details
-```
-
-### **Migration Strategy:**
-
-#### **From OPDS v4 → FLUID:**
-1. **Wrap existing APIs** in FLUID specifications
-2. **Add governance layers** (quality, lineage, policies)  
-3. **Extend to full pipelines** beyond just API endpoints
-4. **Implement data mesh** patterns gradually
-
-#### **From FLUID → OPDS v4:**
-1. **Extract API specifications** from FLUID `exposes.contract.openapiRef`
-2. **Focus on service boundaries** rather than data pipelines
-3. **Simplify to request/response** patterns
-4. **Optimize for developer experience**
-
-### **Revised Concept Mapping: FLUID 0.7.1 ↔ OPDS v4.0**
-
-Let me provide a more accurate comparison based on careful analysis of both specifications:
-
-| **Concept Domain** | **FLUID 0.7.1** | **OPDS v4.0** | **Analysis** |
-|-------------------|------------------|----------------|---------------|
-| **Product Definition** | `id`, `name`, `description`, `domain` | `productID`, `name`, `description`, `valueProposition`, `productSeries` | **OPDS stronger**: Richer business context with value propositions and product series grouping |
-| **Lifecycle Management** | `lifecycle.state` (4 states: preview→active→deprecated→retired) | `status` (8 states: announcement→draft→development→testing→acceptance→production→sunset→retired) | **OPDS stronger**: More granular lifecycle tracking for business processes |
-| **Data Contracts** | Embedded `contract.schema[]` with inline field definitions | External `contract` with `contractURL` or inline `spec`, supports ODCS/DCS standards | **Different approaches**: FLUID=embedded simplicity, OPDS=external contract management standards |
-| **Quality Management** | Built-in `dq.rules[]` with anomaly detection | Comprehensive `dataQuality` with both declarative targets AND executable monitoring (SodaCL, Montecarlo, DQOps, Custom) | **OPDS stronger**: Industry-standard DQ tool integration + declarative/executable pattern |
-| **SLA Framework** | Basic `qos` (availability, freshness, latency) | Comprehensive `SLA` with declarative objectives AND executable monitoring, support contacts, detailed dimensions | **OPDS significantly stronger**: Production-grade SLA management |
-| **Access Methods** | Single `binding` per expose | Multiple `dataAccess[]` items with different `outputPortType` (file, API, SQL, AI, gRPC, sFTP) and formats | **OPDS stronger**: Multiple access patterns per product |
-| **Business Operations** | No commercial support | Complete `pricingPlans[]`, `paymentGateways[]`, `license` with legal frameworks | **OPDS exclusive**: Full commercial data product support |
-| **Data Governance** | Technical governance via `policy`, `observability` | Business governance via `license.governance`, `dataHolder` legal entities | **Different focus**: FLUID=technical, OPDS=business/legal |
-| **Pipeline Orchestration** | Complete `build` patterns (hybrid-reference, embedded-logic, multi-stage) | No transformation/pipeline logic | **FLUID exclusive**: Data engineering and pipeline management |
-| **Dependency Management** | Formal `consumes[]` with version constraints | Informal `recommendedDataProducts[]` | **FLUID stronger**: Explicit dependency management |
-| **Metadata Richness** | Technical metadata (`tags`, `labels`, `businessContext`) | Business metadata (`categories`, `standards`, `useCases[]`, `brandSlogan`) | **Different purposes**: FLUID=technical discovery, OPDS=business discovery |
-| **Versioning Strategy** | Semantic versioning with `schemaEvolution` | Product versioning with `versionNotes` and `issues` tracking | **FLUID stronger**: Technical schema evolution, OPDS stronger for business version communication |
-| **AI/LLM Governance** | ✅ NEW: `agentPolicy` with model whitelisting, usage quotas, audit logging | ❌ No AI-specific governance | **FLUID exclusive**: Granular control over AI model access and usage boundaries |
-| **Data Sovereignty** | ✅ NEW: `sovereignty` with jurisdiction, residency, cross-border controls | ⚠️ Basic geographic metadata | **FLUID stronger**: Automated compliance enforcement at infrastructure level |
-| **Orchestration** | ✅ NEW: Provider-first tasks with direct cloud action invocation | ❌ No orchestration capabilities | **FLUID exclusive**: Native multi-cloud workflow management |
-
-### **Corrected Strength Analysis:**
-
-#### **🎯 OPDS v4.0 Actually Excels At:**
-- **Production SLA Management**: Comprehensive monitoring-as-code with industry tools
-- **Business Product Management**: Value propositions, use cases, product series
-- **Commercial Operations**: Complete pricing, billing, legal, and payment frameworks  
-- **Multi-Access Patterns**: Supporting diverse consumption methods per product
-- **Quality Tooling**: Integration with enterprise DQ tools (SodaCL, Montecarlo, DQOps)
-- **Lifecycle Granularity**: Detailed business process states
-
-#### **🎯 FLUID 0.7.1 Actually Excels At:**
-- **Data Engineering**: Complete pipeline orchestration and transformation logic
-- **Technical Governance**: Embedded contracts, lineage tracking, schema evolution
-- **AI/ML Workflows**: Native support for ML pipelines and agentic consumption
-- **Agentic Governance** ⭐NEW: AI model whitelisting, usage quotas, audit logging
-- **Data Sovereignty** ⭐NEW: Jurisdiction enforcement, regional constraints, cross-border controls
-- **Provider-First Orchestration** ⭐NEW: Direct cloud provider action invocation
-- **Access Automation** ⭐NEW: Root-level IAM policy generation
-- **Dependency Management**: Formal inter-product relationships with version constraints
-- **Multi-Environment**: Environment-specific configurations (dev/staging/prod)
-- **Developer Experience**: Unified specification for technical teams
-
-#### **🤔 Where I Was Wrong Initially:**
-1. **Underestimated OPDS quality management** - It's actually more comprehensive with tool integrations
-2. **Missed OPDS SLA sophistication** - It's production-grade with monitoring-as-code
-3. **Overlooked OPDS access diversity** - Multiple access methods vs FLUID's single binding
-4. **Didn't appreciate business vs technical focus** - They serve different organizational needs
-
-### **Decision Framework:**
-
-**Choose FLUID 0.7.1 if you need:**
-- ✅ **End-to-end data pipeline governance**
-- ✅ **AI/ML pipeline orchestration** 
-- ✅ **Automated quality & lineage tracking**
-- ✅ **Multi-environment data mesh architecture**
-- ✅ **Agentic AI consumption with contracts**
-- ✅ **AI model governance** (NEW: agentPolicy)
-- ✅ **Data sovereignty enforcement** (NEW: jurisdiction control)
-- ✅ **Provider-first orchestration** (NEW: direct cloud actions)
-
-**Choose OPDS v4.0 if you need:**
-- ✅ **Commercial data marketplace**
-- ✅ **Legal compliance & licensing frameworks**
-- ✅ **Business-oriented data catalogs**
-- ✅ **Payment processing & billing integration**
-- ✅ **Multi-access method data products**
-
-**Use both together when:**
-- ✅ Building **commercial data platforms** with technical governance
-- ✅ Need **marketplace capabilities** + **pipeline orchestration**
-- ✅ **Hybrid internal/external** data product distribution
-- ✅ **Enterprise governance** + **ecosystem monetization**
 
 ---
 
