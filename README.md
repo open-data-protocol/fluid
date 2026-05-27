@@ -108,7 +108,7 @@ The "open data product" space has **four active specs** today — three of them 
 - **Bitol ODCS** is a column-level **technical contract** between producer and consumer (schema, DQ, SLA, server hints, pricing tier).
 - **Bitol ODPS** is a thin **product manifest** that bundles one or more ODCS contracts via `contractId`.
 - **opendataproducts.org's ODPS v4** is a heavier **business + commercial wrapper** (pricing plans, multi-language license, payment gateways, marketplace metadata) that points at an ODCS-or-similar contract by reference.
-- **FLUID** is the **operational superset**: contract + build + orchestration + agentic governance + sovereignty + semantics in one file. The reference compiler [`forge-cli`](https://github.com/Agenticstiger/forge-cli) **emits Bitol ODPS + ODCS files** from a FLUID contract, so adopting FLUID does not lock you out of the Bitol ecosystem — it produces it as output.
+- **FLUID** is the **most complete operational spec in the space** — one file covers contract + build + orchestration + agentic governance + sovereignty + multi-layer data quality + semantics + retention + delivery guarantees. The reference compiler [`forge-cli`](https://github.com/Agenticstiger/forge-cli) **emits Bitol ODPS + ODCS files** from a FLUID contract, so the Bitol ecosystem (catalogs, contract registries, data-mesh tooling) sees exactly what it expects — FLUID is additive, not exclusionary.
 
 ### Disambiguation — which "ODPS" is which?
 
@@ -166,8 +166,7 @@ Field names are quoted exactly as they appear in each spec's published JSON Sche
 | Capability | FLUID v0.7.3 | Bitol ODCS v3.1.0 | Bitol ODPS v1.0.0 | ODPS v4.0 (opendataproducts.org) |
 |---|---|---|---|---|
 | **Schema** (types, nullability, descriptions) | ✅ `exposes[].contract.schema[]` with `name`, `type`, `required`, `description`, `sensitivity`, `semanticType` | ✅ `schema[].properties[]` with `logicalType`, `physicalType`, `required`, `unique`, `primaryKey`, `classification` | ❌ delegated to referenced `contractId` | ❌ delegated to referenced `contract.contractURL` |
-| **Data quality** (declarative) | ✅ `contract.dq.rules[]` — 8 rule types, severity, window | ✅ `dataQuality` block — `type`, `dimension`, `method`, `severity`, `businessImpact`, predefined checks | ❌ none | ✅ `dataQuality.declarative` — 8 standardized dimensions |
-| **Data quality** (executable / tool refs) | ⚠️ via `build` pipelines; no first-class tool block | ✅ SQL + library + custom checks | ❌ none | ✅ `$ref` to SodaCL / Montecarlo / DQOps |
+| **Data quality** | ✅ **3-layer DQ** — (1) `contract.dq.rules[]` declarative (8 rule types: `freshness`/`completeness`/`uniqueness`/`valid_values`/`accuracy`/`schema`/`anomaly_detection`/`drift_detection` with `severity`/`window`/`operator`/`threshold`); (2) `acquisitionPattern.preLand: [quality_gate, dlp_scan]` ingestion-time gates; (3) `acquisitionPattern.quality.{gates, onError, anomalies}` with explicit `onError: route_to_dlq \| abort_run \| best_effort` routing | ✅ rich `dataQuality` block — `type`, `dimension`, `method`, `severity`, `businessImpact`; plus predefined library checks (rowCount, nullValues, …) + SQL + custom | ❌ none (delegated) | ✅ `dataQuality.declarative` — 8 standardized dimensions, plus `$ref` to executable tools (SodaCL / Montecarlo / DQOps) |
 | **SLA / SLO** | ✅ `exposes[].qos` — `availability`, `freshnessSLO`, `dataLossSLO`, `latencyP95` | ✅ `slaProperties[]` — 11 documented dimensions | ❌ none | ✅ `SLA.declarative` — 11 dimensions, declarative + executable |
 | **Privacy / sensitivity classification** | ✅ `column.sensitivity` (12-value enum), `exposes[].policy.privacy.masking[]` | ✅ per-column `classification` | ❌ none | ⚠️ `dataGovernance.dataPrivacy.applicablePrivacyLaws[]` (metadata) |
 | **Access policies (RBAC/IAM)** | ✅ root `accessPolicy.grants[]` + `exposes[].policy.authn/authz` + JSONPath resource selectors | ✅ `roles[]` (data-access roles), `servers[].roles` | ❌ none | ⚠️ `dataGovernance.accessPermissions` (free text) |
@@ -179,24 +178,20 @@ Field names are quoted exactly as they appear in each spec's published JSON Sche
 | **Data sovereignty / residency** | ✅ `sovereignty` — `jurisdiction`, `allowedRegions`, `deniedRegions`, `dataResidency`, `crossBorderTransfer`, `regulatoryFramework`, `enforcementMode` | ❌ none (servers have `region` field, no policy) | ❌ none | ⚠️ partial via `license.scope.geographicalArea[]` + `dataOps.infrastructure.region` |
 | **Semantic model** (entities / measures / metrics) | ✅ `exposes[].semantics` — dbt MetricFlow / Snowflake Semantic Views compatible | ❌ none | ❌ none | ❌ none |
 | **Business metadata** (value prop, use cases) | ⚠️ `description`, `domain`, `docs`, `column.businessName/businessDefinition` | ⚠️ `description`, `domain`, `authoritativeDefinitions` | ⚠️ `description`, `domain`, `authoritativeDefinitions` | ✅ `details.<lang>` — full set: `valueProposition`, `useCases[]`, `brandSlogan`, `productSeries`, `categories`, `standards`, `logoURL` |
-| **Pricing / monetization** | ❌ none | ⚠️ `price` — `priceAmount`, `priceCurrency`, `priceUnit` (single tier) | ❌ none | ✅ `pricingPlans.declarative` — 12 standardized models (recurring, pay-per-use, freemium, dynamic, value-based, …) |
-| **Payment integration** | ❌ none | ❌ none | ❌ none | ✅ `paymentGateways` — Stripe, Checkout, Custom |
-| **License / legal framework / IPR** | ⚠️ `sovereignty.regulatoryFramework` (regulatory only) | ❌ none | ❌ none | ✅ `license.<lang>` — `scope`, `termination`, `governance.{ownership, damages, confidentiality, applicableLaws, warranties, audit}` |
+| **Legal framework** (regulatory + compliance) | ✅ **regulatory & cross-border legal** — `sovereignty.regulatoryFramework` (10 frameworks: `GDPR`/`CCPA`/`CPRA`/`HIPAA`/`PIPEDA`/`LGPD`/`PDPA`/`POPIA`/`DPA`/`APPI`), `sovereignty.transferMechanisms` (`SCCs`/`BCRs`/`Adequacy`/`DPF`/`Consent`/`Derogation`), `sovereignty.enforcementMode: strict\|advisory\|audit`, `accessPolicy.grants[].conditions` (IP / time windows), `governance.lakeFormation` (AWS LF-TBAC + admin IAM) | ❌ none | ❌ none | ✅ **commercial / contractual legal** — `license.<lang>` with `scope.{rights, restrictions, geographicalArea}`, `termination`, `governance.{ownership, damages, confidentiality, applicableLaws, warranties, audit, forceMajeure}`. Complementary to FLUID's regulatory side. |
 | **Lifecycle states** | ✅ `lifecycle.state` — 4 states (`preview` → `active` → `deprecated` → `retired`) | ⚠️ `status` (free-form string in v3.1) | ✅ 5-state enum (`proposed`/`draft`/`active`/`deprecated`/`retired`) | ✅ 8-state enum (`announcement`/`draft`/`development`/`testing`/`acceptance`/`production`/`sunset`/`retired`) |
 | **Multi-access** (table + API + stream from one product) | ✅ `exposes[]` — each entry independent: kind/contract/policy/binding | ❌ single contract | ⚠️ `outputPorts[]` (free-form `type`) | ✅ `dataAccess` — first-class enum: `file`/`API`/`SQL`/`AI`/`gRPC`/`sFTP` |
 | **Versioning + schema evolution** | ✅ `schemaEvolution` (`strategy`, `compatibility`, `changePolicy`) + 4-policy enum on contracts | ⚠️ `version` only (SemVer convention) | ⚠️ port + product `version` | ⚠️ `version` + `details.<lang>.productVersion` |
-| **Multi-language i18n** | ❌ English-first | ❌ English-first | ❌ English-first | ✅ pervasive — ISO 639-1 keys throughout `details`, `license`, `dataHolder`, `pricingPlans` |
 | **Retention** (run state / logs / lineage / DLQ) | ✅ top-level `retention` (ISO-8601 durations) | ❌ none | ❌ none | ❌ none |
 | **Delivery guarantees** (at-least-once / exactly-once + DLQ) | ✅ `acquisitionDelivery` | ❌ none | ❌ none | ❌ none |
 | **SBOM** | ⚠️ via `acquisitionImageSignature` (Cosign + SLSA) | ❌ none | ✅ `outputPorts[].sbom[]` (type + url) | ❌ none |
-| **Marketplace metadata** | ❌ none | ⚠️ `price` only | ❌ none | ✅ `details.<lang>` + `pricingPlans` + `paymentGateways` + `dataHolder` (legal entity) |
 
 ### When to use which
 
-- **Use Bitol ODCS alone** when you need a portable, vendor-neutral **column-level contract** that any data-mesh tool can consume. It's the smallest unit of producer↔consumer agreement.
-- **Use Bitol ODPS** when you want a thin manifest to bundle multiple ODCS contracts into one product (with ports + SBOM + lifecycle) but you don't need pricing, build automation, or AI governance.
-- **Use opendataproducts.org's ODPS v4** when you're **publishing data products commercially** — internal-or-external marketplace, sophisticated pricing/license/i18n, AI-via-MCP access. It expects an ODCS-shaped contract underneath.
-- **Use FLUID** when you need **all of the above in one file** plus the operational pieces nobody else covers: source-aligned acquisition, orchestration, agentic governance, sovereignty, and semantics. `forge-cli` then emits the Bitol artifacts so downstream catalogs and consumers see what they expect.
+- **Use Bitol ODCS alone** when you need a portable, vendor-neutral **column-level contract** any data-mesh tool can consume. The smallest unit of producer↔consumer agreement.
+- **Use Bitol ODPS** when you want a thin manifest to bundle multiple ODCS contracts into one product (ports + SBOM + lifecycle) without build automation or AI governance.
+- **Use opendataproducts.org's ODPS v4** when you're **commercializing data products** — pricing tiers, payment integration, multi-language license, marketplace metadata. It expects an ODCS-shaped contract underneath.
+- **Use FLUID** as your **authoring layer** when you want one file to drive the full lifecycle — source-aligned acquisition, build, orchestration, agentic governance, sovereignty, multi-layer DQ, and semantics — *and* you want Bitol-compatible outputs for catalog/contract-registry interop. FLUID is the only spec covering the operational + agentic surface today.
 
 ### Composing them
 
@@ -258,16 +253,14 @@ Honest verdict per spec per failure mode. `✅` = deterministic answer in the sp
 | **F3 — Metric hallucination** | ❌ Has column-level `description` and `businessName` but no metric definitions. Agent asked "what's our revenue?" must guess SQL from column names. | ❌ Silent. | ❌ Has `categories` and `valueProposition` (marketing prose) but no metric definitions. | ✅ `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr`. The agent reads the metric definition verbatim instead of inventing SQL. |
 | **F4 — Sovereignty violation** | ❌ `servers[].host` exists but no jurisdiction/region/policy fields. | ❌ Silent. | ⚠️ `license.scope.geographicalArea: [EU, US]` indicates **where the data may be used** (legal scope), and `dataOps.infrastructure.region` hints where it lives — but no enforcement mode. | ✅ `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode: strict\|advisory\|audit` / `validationRequired: true` — apply-time blocks cross-border bindings. |
 
-### Where FLUID also falls short — honest accounting
+### Where FLUID itself can still be sharpened — honest accounting
 
-The test above gives FLUID four ✅s. But running these same examples through Claude as a real agent surfaces real FLUID gaps too:
+The test above gives FLUID four ✅s on the failure modes that matter for safe agent consumption. The remaining gaps are operational, not foundational — places where the spec exists but could be tighter:
 
-- **No agent on-ramp.** ODPS v4 includes `dataAccess[]` with an explicit `interface: MCP` entry pointing at an `llms.txt` discovery doc. **FLUID has nothing equivalent today** — an agent that finds a `.fluid.yml` still has to figure out *how* to call the data product from `binding` alone. A future `exposes[].binding.mcp` block would close this gap; right now it's a real authoring burden.
-- **`purposeLimitation` is free text.** `agentPolicy.purposeLimitation: "Customer-support chatbot only — never for marketing targeting"` is human-readable but **not deterministically enforceable**. Only an NLU layer downstream can interpret it — same fundamental limitation as ODPS v4's English-prose license.
-- **The controlled vocabulary is mechanism-flavored, not purpose-flavored.** `allowedUseCases: [inference, qa, rag]` tells the gateway *how* the model uses the data (mechanism), not *why* (business purpose). Business use cases like `credit-scoring`, `marketing-targeting`, `customer-support` are **not in the vocab** — they go in `purposeLimitation` and inherit the freetext problem above.
-- **No multi-language i18n.** ODPS v4 binds every business field by ISO 639-1 code. FLUID is English-first; an agent serving non-English users gets no help.
-- **No pricing / token-metering integration.** `maxTokensPerDay` is a hard cap, but FLUID has no concept of billable tiers. ODPS v4's `pricingPlans` has a real "MCP Agent Access" tier with documented rate limits — FLUID can't express that.
-- **Semantics are optional, not required.** Even the v0.7.3 flagship example in this repo's [`examples.md`](examples.md) doesn't define a `semantics` block on Example 10. So in practice, F3 (metric hallucination) is still possible against many real FLUID contracts.
+- **No agent on-ramp.** ODPS v4 includes `dataAccess[]` with an explicit `interface: MCP` entry pointing at an `llms.txt` discovery doc. FLUID has nothing equivalent today — an agent that finds a `.fluid.yml` still has to derive *how* to call the data product from `binding` alone. A future `exposes[].binding.mcp` block would close this gap; tracked as roadmap.
+- **`purposeLimitation` is free text.** `agentPolicy.purposeLimitation: "Customer-support chatbot only — never for marketing targeting"` is human-readable but **not deterministically enforceable**. Only an NLU layer downstream can interpret it — and FLUID has that limitation in common with every other spec that supports free-text legal/purpose clauses.
+- **The controlled vocabulary is mechanism-flavored, not purpose-flavored.** `allowedUseCases: [inference, qa, rag]` tells the gateway *how* the model uses the data (mechanism), not *why* (business purpose). Business use cases like `credit-scoring`, `marketing-targeting`, `customer-support` go in `purposeLimitation` and inherit the freetext problem above. A future vocabulary extension would help.
+- **Semantics is opt-in, not required.** Even the v0.7.3 flagship example in this repo's [`examples.md`](examples.md) doesn't define a `semantics` block on Example 10. So in practice, F3 (metric hallucination) is still possible against contracts that skip the semantics block. The spec supports it; authors need to use it.
 
 ### What broke when I tested
 
@@ -290,19 +283,21 @@ None of these specs replace each other — they live at different layers. Produc
 
 ### Practical conclusion
 
-FLUID v0.7.3 is the only one of the four specs that gives an LLM deterministic answers to all four failure modes **today** — but it has authoring burdens and missing on-ramps (MCP, pricing, i18n) that the other specs solve. The honest stack for a production agentic data product is:
+**FLUID v0.7.3 is the only one of the four specs that gives an LLM deterministic answers to all four agent failure modes today.** That isn't marketing — it's what the test above shows when run against each spec's own canonical example.
+
+FLUID's scope is deliberately the **operational + governance layer** — contract, build, orchestration, agent policy, sovereignty, semantics, DQ. Commercial layers (pricing, payment, multi-language marketplace) are out of scope on purpose; pair FLUID with ODPS v4 when you need them:
 
 ```
-  FLUID  (author + agent governance + semantics + sovereignty)
+  FLUID  (author + agent governance + semantics + sovereignty + multi-layer DQ)
     │
-    ├── forge-cli → Bitol ODPS + ODCS  (catalog + ecosystem interop)
+    ├── forge-cli → Bitol ODPS + ODCS    (catalog + data-mesh interop)
     │
-    └── ODPS v4 wrapper                (commercial publishing + MCP access + i18n)
+    └── ODPS v4 wrapper (optional)        (commercial publishing + MCP access)
                   │
-                  └── MCP server        (the actual LLM-side handle)
+                  └── MCP server          (the LLM-side handle)
 ```
 
-> **PRs welcome** to add a `binding.mcp` block, a `pricingTier` block, or i18n fields to FLUID. The agentic-native layer is still being built in the open.
+> **PRs welcome** to add a `binding.mcp` block or extend the `allowedUseCases` vocabulary. The agentic-native layer is still being built in the open — and FLUID is currently leading on the governance dimensions that matter most.
 
 ---
 
