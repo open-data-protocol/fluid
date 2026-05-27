@@ -121,43 +121,68 @@ The "open data product" space has **four active specs** today — three of them 
 
 ### How they actually fit together
 
+```mermaid
+flowchart TB
+    classDef fluid     fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
+    classDef forge     fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
+    classDef bitolDp   fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef bitolDc   fill:#059669,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef odpsv4    fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
+    classDef mcp       fill:#F59E0B,color:#fff,stroke:#78350F,stroke-width:2px
+
+    F["📄 <b>FLUID v0.7.3</b><br/>(.fluid.yml — one file)<br/><br/>exposes · build · orchestration<br/>agentPolicy · sovereignty<br/>semantics · retention · accessPolicy"]:::fluid
+
+    FC["⚙️ <b>forge-cli</b><br/>(reference compiler)<br/><br/>validates · plans · applies<br/>generates IaC + Airflow DAGs<br/>emits Bitol artifacts · enforces agentPolicy"]:::forge
+
+    subgraph bitol ["🟢 Bitol (LF AI & Data)"]
+        direction LR
+        OP["📋 <b>Bitol ODPS v1.0</b><br/>(product manifest)<br/><br/>inputPorts / outputPorts<br/>contractId references<br/>SBOM · lifecycle status"]:::bitolDp
+        OC["📐 <b>Bitol ODCS v3.1</b><br/>(technical contract)<br/><br/>schema · dataQuality · SLA<br/>roles · pricing · servers"]:::bitolDc
+    end
+
+    V4["🛍️ <b>ODPS v4</b><br/>(commercial wrapper · optional)<br/><br/>pricingPlans · paymentGateways<br/>license · i18n · dataAccess<br/>marketplace metadata"]:::odpsv4
+
+    MCP["🤖 <b>MCP server</b><br/>(LLM-facing handle)"]:::mcp
+
+    F  ==>|"<b>forge compile</b>"| FC
+    FC ==>|"<b>emits 1 ODPS + N ODCS</b>"| OP
+    OP -.->|"ports.contractId →"| OC
+    V4 -.->|"contract.contractURL →"| OC
+    V4 ==>|"agent access"| MCP
+
+    click F  "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
+    click FC "https://github.com/Agenticstiger/forge-cli" "forge-cli on GitHub"
+    click OP "https://github.com/bitol-io/open-data-product-standard" "Bitol ODPS on GitHub"
+    click OC "https://github.com/bitol-io/open-data-contract-standard" "Bitol ODCS on GitHub"
+    click V4 "https://github.com/Open-Data-Product-Initiative/v4.0" "ODPS v4 on GitHub"
 ```
-                                  ┌──────────────────────────────────────┐
-                                  │   FLUID v0.7.3 (.fluid.yml)          │
-                                  │                                      │
-                                  │   exposes[]   build           agent  │
-                                  │   consumes[]  orchestration   sov.   │
-                                  │   semantics   acquisition     access │
-                                  │   retention   schemaEvolution policy │
-                                  └────────────────┬─────────────────────┘
-                                                   │
-                                            forge-cli compiles
-                                                   │
-                  ┌────────────────────────────────┴─────────────────────────────────┐
-                  ▼                                                                  ▼
-   ┌────────────────────────────┐                            ┌──────────────────────────────────────┐
-   │  Bitol ODPS v1.0.0         │   ports.contractId ──────► │  Bitol ODCS v3.1.0                   │
-   │  - product manifest        │                            │  - schema (columns, types)           │
-   │  - inputPorts/outputPorts  │                            │  - dataQuality (DQ rules)            │
-   │  - SBOM per output port    │                            │  - slaProperties (SLA dimensions)    │
-   │  - lifecycle status (5)    │                            │  - roles, support, price, servers    │
-   └────────────────────────────┘                            └──────────────────────────────────────┘
 
-           For commercial publishing, wrap the ODCS output in:
+> 🖱️ Every node in the diagram links to its source repository. Hover for tooltips.
 
-                       ┌──────────────────────────────────────────────┐
-                       │  ODPS v4 (opendataproducts.org)              │
-                       │  - product.contract → references the ODCS    │
-                       │  - pricingPlans (12 standardized models)     │
-                       │  - paymentGateways (Stripe, Checkout, …)     │
-                       │  - license.scope/termination/governance      │
-                       │  - details.<lang> (i18n by ISO 639-1)        │
-                       │  - dataAccess (file/API/SQL/AI-MCP/gRPC/sFTP)│
-                       └──────────────────────────────────────────────┘
-```
-
-> **The forge-cli README states it treats "Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS" and that export produces "1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."**
+> **From the forge-cli README:** *"Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS"* — export produces *"1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."*
 > FLUID is not a competitor to Bitol — it's an authoring layer that produces Bitol artifacts.
+
+---
+
+### ⚙️ The reference compiler — `forge-cli`
+
+[![Repo](https://img.shields.io/badge/Agenticstiger%2Fforge--cli-FF6B35?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Agenticstiger/forge-cli)
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-1E3A8A?style=for-the-badge)](https://github.com/Agenticstiger/forge-cli/blob/main/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-forge--docs-A78BFA?style=for-the-badge&logo=readthedocs&logoColor=white)](https://agenticstiger.github.io/forge_docs/)
+
+**[`Agenticstiger/forge-cli`](https://github.com/Agenticstiger/forge-cli)** is the FLUID reference compiler. It consumes a `.fluid.yml` and turns it into a fully-deployed, governed, ecosystem-interoperable data product:
+
+| Stage | What forge produces |
+|---|---|
+| 🟢 **Bitol export** | `1 ODPS doc + N <contractId>.odcs.yaml` files (default, center-stage ODPS = Bitol v1.0.0) |
+| 🟠 **Orchestration** | Native **Airflow / Dagster / Prefect** DAGs from your `orchestration` block |
+| 🟣 **Infrastructure** | **OpenTofu / Terraform** IaC for BigQuery / Snowflake / AWS / GCP |
+| 🔵 **Governance** | **IAM bindings** from `accessPolicy.grants[]` + **AI gateway** enforcement of `agentPolicy` |
+| 🔴 **Supply chain** | **Cosign-verified** connector images + **SLSA provenance** checks on ingest |
+
+> *"What Terraform did for infrastructure, FLUID Forge does for data products."* — [forge-cli README](https://github.com/Agenticstiger/forge-cli)
+
+[**→ Explore forge-cli on GitHub**](https://github.com/Agenticstiger/forge-cli) · [**→ forge-docs**](https://agenticstiger.github.io/forge_docs/)
 
 ### Capability matrix
 
