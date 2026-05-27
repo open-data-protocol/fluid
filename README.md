@@ -125,38 +125,32 @@ Four active "open data product" specs share overlapping names and adjacent scope
 
 ```mermaid
 flowchart TB
-    classDef fluid    fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
-    classDef forge    fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
-    classDef bitolDp  fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef bitolDc  fill:#059669,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef odpsv4   fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
-    classDef mcp      fill:#F59E0B,color:#fff,stroke:#78350F,stroke-width:2px
+    classDef fluid  fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
+    classDef forge  fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
+    classDef bitol  fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef odpsv4 fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
 
-    F["FLUID v0.7.3<br/>.fluid.yml — one file<br/>exposes / build / orchestration<br/>agentPolicy / sovereignty<br/>semantics / retention / accessPolicy"]:::fluid
+    F["FLUID v0.7.3"]:::fluid
+    FC["forge-cli"]:::forge
 
-    FC["forge-cli<br/>reference compiler<br/>validates / plans / applies<br/>generates IaC + Airflow DAGs<br/>emits Bitol artifacts"]:::forge
-
-    subgraph bitol ["Bitol — LF AI and Data"]
+    subgraph bitol ["Bitol"]
         direction LR
-        OP["Bitol ODPS v1.0<br/>product manifest<br/>inputPorts / outputPorts<br/>contractId references<br/>SBOM / lifecycle"]:::bitolDp
-        OC["Bitol ODCS v3.1<br/>technical contract<br/>schema / dataQuality / SLA<br/>roles / pricing / servers"]:::bitolDc
+        OP["Bitol ODPS v1.0"]:::bitol
+        OC["Bitol ODCS v3.1"]:::bitol
     end
 
-    V4["ODPS v4<br/>commercial wrapper — optional<br/>pricingPlans / paymentGateways<br/>license / i18n / dataAccess<br/>marketplace metadata"]:::odpsv4
-
-    MCP["MCP server<br/>LLM-facing handle"]:::mcp
+    V4["ODPS v4 (optional)"]:::odpsv4
 
     F  ==>|"forge compile"| FC
     FC ==>|"emits 1 ODPS + N ODCS"| OP
-    OP -.->|"ports.contractId ref"| OC
-    V4 -.->|"contract.contractURL ref"| OC
-    V4 ==>|"agent access"| MCP
+    OP -.->|"contractId"| OC
+    V4 -.->|"contractURL"| OC
 
-    click F "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
-    click FC "https://github.com/Agenticstiger/forge-cli" "forge-cli on GitHub"
-    click OP "https://github.com/bitol-io/open-data-product-standard" "Bitol ODPS on GitHub"
-    click OC "https://github.com/bitol-io/open-data-contract-standard" "Bitol ODCS on GitHub"
-    click V4 "https://github.com/Open-Data-Product-Initiative/v4.0" "ODPS v4 on GitHub"
+    click F "https://github.com/open-data-protocol/fluid"
+    click FC "https://github.com/Agenticstiger/forge-cli"
+    click OP "https://github.com/bitol-io/open-data-product-standard"
+    click OC "https://github.com/bitol-io/open-data-contract-standard"
+    click V4 "https://github.com/Open-Data-Product-Initiative/v4.0"
 ```
 
 > 🖱️ Every node in the diagram links to its source repository.
