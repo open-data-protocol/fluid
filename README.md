@@ -125,34 +125,27 @@ Four active "open data product" specs share overlapping names and adjacent scope
 ### How they actually fit together
 
 ```mermaid
-flowchart TB
-    classDef fluid  fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
-    classDef forge  fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
-    classDef bitol  fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef odpsv4 fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
+flowchart LR
+    classDef core fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:4px,font-weight:bold
+    classDef opt  fill:#94A3B8,color:#fff,stroke:#475569,stroke-width:1px,stroke-dasharray:6 3
 
-    F["FLUID v0.7.3"]:::fluid
-    FC["forge-cli"]:::forge
+    F["FLUID v0.7.3<br/>your .fluid.yml<br/>standalone — complete on its own"]:::core
 
-    subgraph bitol ["Bitol"]
-        direction LR
-        OP["Bitol ODPS v1.0"]:::bitol
-        OC["Bitol ODCS v3.1"]:::bitol
-    end
+    FC["forge-cli<br/>reference compiler<br/>(emits IaC + Airflow DAGs)"]:::opt
+    BIT["Bitol ODPS + ODCS<br/>(catalog interop)"]:::opt
+    V4["ODPS v4 wrapper<br/>(commercial publishing)"]:::opt
 
-    V4["ODPS v4 (optional)"]:::odpsv4
-
-    F  ==>|"forge compile"| FC
-    FC ==>|"emits 1 ODPS + N ODCS"| OP
-    OP -.->|"contractId"| OC
-    V4 -.->|"contractURL"| OC
+    F -.->|"want compile + deploy?"| FC
+    F -.->|"want catalog interop?"| BIT
+    F -.->|"want commercial publishing?"| V4
 
     click F "https://github.com/open-data-protocol/fluid"
     click FC "https://github.com/Agenticstiger/forge-cli"
-    click OP "https://github.com/bitol-io/open-data-product-standard"
-    click OC "https://github.com/bitol-io/open-data-contract-standard"
+    click BIT "https://github.com/bitol-io"
     click V4 "https://github.com/Open-Data-Product-Initiative/v4.0"
 ```
+
+> **FLUID stands on its own.** The boxes above (with dashed borders) are **optional adapters** — pick only what you need. Most teams start with just FLUID, then add `forge-cli` once they want compiled IaC / Airflow DAGs, then add Bitol catalog export when they want data-mesh registry interop, then add ODPS v4 if they're publishing data products commercially.
 
 > 🖱️ Every node in the diagram links to its source repository.
 
