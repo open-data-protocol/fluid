@@ -152,7 +152,7 @@ flowchart TB
     V4 -.->|"contract.contractURL →"| OC
     V4 ==>|"agent access"| MCP
 
-    click F  "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
+    click F "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
     click FC "https://github.com/Agenticstiger/forge-cli" "forge-cli on GitHub"
     click OP "https://github.com/bitol-io/open-data-product-standard" "Bitol ODPS on GitHub"
     click OC "https://github.com/bitol-io/open-data-contract-standard" "Bitol ODCS on GitHub"
