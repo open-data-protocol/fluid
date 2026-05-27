@@ -47,8 +47,9 @@ exposes:  [ ... ]                # [req] ports you publish (each requires expose
 
 build:                           #       how the product is produced
   pattern: hybrid-reference      #       | embedded-logic | multi-stage | acquisition (⭐ 0.7.3)
-  engine:  dbt | sql | python | spark | glue | custom | duckdb | airbyte | meltano | dlt | kafka-connect | debezium
-  properties: { ... }            #       pattern-specific block — acquisitionPattern when pattern=acquisition (⭐ 0.7.3)
+  engine:  dbt | sql | python | spark | glue | custom        # transformation engines
+           | duckdb | airbyte | meltano | dlt | kafka-connect | debezium   # ⭐ 0.7.3 acquisition
+  properties: { ... }            #       pattern-specific (⭐ 0.7.3: acquisitionPattern)
 
 orchestration: { engine: airflow | dagster | prefect | kubeflow | custom | none, tasks: [...] }   # ⭐ 0.7.0+
 sovereignty:   { jurisdiction, allowedRegions, deniedRegions, enforcementMode, … }   # ⭐ 0.7.1
@@ -125,38 +126,32 @@ Four active "open data product" specs share overlapping names and adjacent scope
 
 ```mermaid
 flowchart TB
-    classDef fluid     fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
-    classDef forge     fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
-    classDef bitolDp   fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef bitolDc   fill:#059669,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef odpsv4    fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
-    classDef mcp       fill:#F59E0B,color:#fff,stroke:#78350F,stroke-width:2px
+    classDef fluid  fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
+    classDef forge  fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
+    classDef bitol  fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
+    classDef odpsv4 fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
 
-    F["📄 <b>FLUID v0.7.3</b><br/>(.fluid.yml — one file)<br/><br/>exposes · build · orchestration<br/>agentPolicy · sovereignty<br/>semantics · retention · accessPolicy"]:::fluid
+    F["FLUID v0.7.3"]:::fluid
+    FC["forge-cli"]:::forge
 
-    FC["⚙️ <b>forge-cli</b><br/>(reference compiler)<br/><br/>validates · plans · applies<br/>generates IaC + Airflow DAGs<br/>emits Bitol artifacts · enforces agentPolicy"]:::forge
-
-    subgraph bitol ["🟢 Bitol (LF AI & Data)"]
+    subgraph bitol ["Bitol"]
         direction LR
-        OP["📋 <b>Bitol ODPS v1.0</b><br/>(product manifest)<br/><br/>inputPorts / outputPorts<br/>contractId references<br/>SBOM · lifecycle status"]:::bitolDp
-        OC["📐 <b>Bitol ODCS v3.1</b><br/>(technical contract)<br/><br/>schema · dataQuality · SLA<br/>roles · pricing · servers"]:::bitolDc
+        OP["Bitol ODPS v1.0"]:::bitol
+        OC["Bitol ODCS v3.1"]:::bitol
     end
 
-    V4["🛍️ <b>ODPS v4</b><br/>(commercial wrapper · optional)<br/><br/>pricingPlans · paymentGateways<br/>license · i18n · dataAccess<br/>marketplace metadata"]:::odpsv4
+    V4["ODPS v4 (optional)"]:::odpsv4
 
-    MCP["🤖 <b>MCP server</b><br/>(LLM-facing handle)"]:::mcp
+    F  ==>|"forge compile"| FC
+    FC ==>|"emits 1 ODPS + N ODCS"| OP
+    OP -.->|"contractId"| OC
+    V4 -.->|"contractURL"| OC
 
-    F  ==>|"<b>forge compile</b>"| FC
-    FC ==>|"<b>emits 1 ODPS + N ODCS</b>"| OP
-    OP -.->|"ports.contractId →"| OC
-    V4 -.->|"contract.contractURL →"| OC
-    V4 ==>|"agent access"| MCP
-
-    click F  "https://github.com/open-data-protocol/fluid" "FLUID on GitHub"
-    click FC "https://github.com/Agenticstiger/forge-cli" "forge-cli on GitHub"
-    click OP "https://github.com/bitol-io/open-data-product-standard" "Bitol ODPS on GitHub"
-    click OC "https://github.com/bitol-io/open-data-contract-standard" "Bitol ODCS on GitHub"
-    click V4 "https://github.com/Open-Data-Product-Initiative/v4.0" "ODPS v4 on GitHub"
+    click F "https://github.com/open-data-protocol/fluid"
+    click FC "https://github.com/Agenticstiger/forge-cli"
+    click OP "https://github.com/bitol-io/open-data-product-standard"
+    click OC "https://github.com/bitol-io/open-data-contract-standard"
+    click V4 "https://github.com/Open-Data-Product-Initiative/v4.0"
 ```
 
 > 🖱️ Every node in the diagram links to its source repository.
@@ -167,52 +162,54 @@ flowchart TB
 
 ### 📊 Capability matrix
 
-Field names are quoted exactly from each spec's published JSON Schema. Legend: ✅ deterministic in spec · ⚠️ partial / requires inference · ❌ silent. Grouped into five thematic clusters — skim to your area of interest.
+Legend: ✅ deterministic in spec · ⚠️ partial · ❌ silent. Headers abbreviated for width: **F** = FLUID v0.7.3 · **ODCS** = Bitol ODCS v3.1 · **ODPS** = Bitol ODPS v1.0 · **v4** = ODPS v4.0. Field-level detail lives in [`docs/schema-cheatsheet.md`](docs/schema-cheatsheet.md) — this matrix is the at-a-glance scoreboard.
 
 #### 📐 Data shape & quality
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Schema** (types · nullability · descriptions) | ✅ `exposes[].contract.schema[]` — `name`/`type`/`required`/`sensitivity`/`semanticType` | ✅ `schema[].properties[]` — `logicalType`/`physicalType`/`primaryKey`/`classification` | ❌ delegated to `contractId` | ❌ delegated to `contract.contractURL` |
-| **Data quality** | ✅ **3-layer**: declarative `dq.rules[]` (8 types: `freshness`/`completeness`/`uniqueness`/`valid_values`/`accuracy`/`schema`/`anomaly_detection`/`drift_detection`) + `acquisitionPattern.preLand` gates + `quality.{gates, onError: route_to_dlq\|abort_run\|best_effort}` | ✅ rich `dataQuality` — `type`/`dimension`/`method`/`severity`/`businessImpact` + library checks (rowCount, nullValues, …) + SQL + custom | ❌ none (delegated) | ✅ `dataQuality.declarative` — 8 dimensions + `$ref` to SodaCL/Montecarlo/DQOps |
-| **SLA / SLO** | ✅ `exposes[].qos` — `availability`/`freshnessSLO`/`dataLossSLO`/`latencyP95` | ✅ `slaProperties[]` — 11 dimensions | ❌ none | ✅ `SLA.declarative` — 11 dimensions, declarative + executable |
-| **Privacy / sensitivity** | ✅ `column.sensitivity` (12-value enum) + `policy.privacy.masking[]` | ✅ per-column `classification` | ❌ none | ⚠️ `dataGovernance.dataPrivacy.applicablePrivacyLaws[]` (metadata) |
+| Schema | ✅ | ✅ | ❌ delegated | ❌ delegated |
+| Data quality | ✅ 3-layer | ✅ rich | ❌ | ✅ declarative |
+| SLA / SLO | ✅ 4 SLOs | ✅ 11 dims | ❌ | ✅ 11 dims |
+| Privacy / sensitivity | ✅ 12-value + masking | ✅ per-column | ❌ | ⚠️ metadata only |
 
 #### 🔒 Access, governance & legal
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Access policies (RBAC / IAM)** | ✅ root `accessPolicy.grants[]` + `policy.authn/authz` + JSONPath resource selectors + `conditions` (IP/time) | ✅ `roles[]` + `servers[].roles` | ❌ none | ⚠️ `dataGovernance.accessPermissions` (free text) |
-| **Lineage** | ✅ top-level `lineage` graph + `consumes[]` + build `outputs` | ⚠️ column-level via `transformSourceObjects`/`transformLogic` (hints) | ⚠️ product-level via `outputPorts[].inputContracts[]` | ⚠️ `dataOps.lineage` (pointer to external tool) |
-| **AI / LLM governance** | ✅ `policy.agentPolicy` — `allowedModels`/`deniedModels`/token caps/controlled-vocab `allowedUseCases`/`canReason`/`canStore`/`auditRequired`/`purposeLimitation` | ❌ none | ❌ none | ⚠️ `dataAccess.<x>.outputPorttype: AI` (`specification: MCP`) — access only, no policy |
-| **Sovereignty / residency** | ✅ `sovereignty` — `jurisdiction`/`allowedRegions`/`deniedRegions`/`enforcementMode: strict\|advisory\|audit`/`dataResidency`/`crossBorderTransfer` | ❌ none | ❌ none | ⚠️ partial via `license.scope.geographicalArea[]` + `dataOps.infrastructure.region` |
-| **Legal framework** | ✅ **regulatory & cross-border** — 10 `regulatoryFramework` (GDPR/CCPA/CPRA/HIPAA/PIPEDA/LGPD/PDPA/POPIA/DPA/APPI) + 6 `transferMechanisms` (SCCs/BCRs/Adequacy/DPF/Consent/Derogation) + `governance.lakeFormation` (AWS LF-TBAC) | ❌ none | ❌ none | ✅ **commercial / contractual** — `license.<lang>` with `scope`/`termination`/`governance.{ownership, damages, warranties, forceMajeure, audit}`. Complementary to FLUID's regulatory side. |
+| Access (IAM) | ✅ grants + conditions | ✅ roles | ❌ | ⚠️ free-text |
+| Lineage | ✅ top-level graph | ⚠️ column hints | ⚠️ product-level | ⚠️ pointer |
+| AI / LLM governance | ✅ `agentPolicy` | ❌ | ❌ | ⚠️ MCP access only |
+| Sovereignty / residency | ✅ jurisdiction + enforcement | ❌ | ❌ | ⚠️ partial |
+| Legal framework | ✅ regulatory · 10 + 6 | ❌ | ❌ | ✅ commercial · license / IPR |
 
 #### ⚙️ Build & operations
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Build / transformation logic** | ✅ `build` — 4 patterns (`hybrid-reference`/`embedded-logic`/`multi-stage`/`acquisition`) | ❌ none | ❌ none | ⚠️ `dataOps.build` (pointer to scriptURL, not in-spec logic) |
-| **Source-aligned ingestion** | ✅ `acquisitionPattern` — 6 engines: `duckdb`/`airbyte`/`meltano`/`dlt`/`kafka-connect`/`debezium` | ❌ none | ❌ none | ❌ none |
-| **Orchestration** | ✅ `orchestration` — `airflow`/`dagster`/`prefect`/`kubeflow`/`custom`/`none` | ❌ none | ❌ none | ⚠️ `dataOps.infrastructure.{platform, containerTool}` (metadata only) |
-| **Retention** (run state · logs · lineage · DLQ) | ✅ top-level `retention` (ISO-8601 durations) | ❌ none | ❌ none | ❌ none |
-| **Delivery guarantees** (at-least / exactly-once + DLQ) | ✅ `acquisitionDelivery` | ❌ none | ❌ none | ❌ none |
+| Build / transformation | ✅ 4 patterns | ❌ | ❌ | ⚠️ pointer only |
+| Source-aligned ingestion | ✅ 6 engines | ❌ | ❌ | ❌ |
+| Orchestration | ✅ Airflow / Dagster / Prefect / Kubeflow | ❌ | ❌ | ⚠️ metadata only |
+| Retention | ✅ `retention` | ❌ | ❌ | ❌ |
+| Delivery guarantees | ✅ `acquisitionDelivery` | ❌ | ❌ | ❌ |
 
 #### 🧭 Discovery & semantics
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Semantic model** (entities · measures · metrics) | ✅ `exposes[].semantics` — aligns with the [**OSI Open Semantic Interchange**](https://open-semantic-interchange.org/) v1.0 standard; MetricFlow round-trip on roadmap | ❌ none | ❌ none | ❌ none |
-| **Business metadata** | ⚠️ `description`/`domain`/`docs`/`column.businessName` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ✅ `details.<lang>` — full: `valueProposition`/`useCases[]`/`brandSlogan`/`productSeries`/`categories`/`standards`/`logoURL` |
-| **Multi-access** (table + API + stream from one product) | ✅ `exposes[]` — each entry independent: kind/contract/policy/binding | ❌ single contract | ⚠️ `outputPorts[]` (free-form `type`) | ✅ `dataAccess` — first-class enum: `file`/`API`/`SQL`/`AI`/`gRPC`/`sFTP` |
+| Semantic model | ✅ `semantics` · [OSI](https://open-semantic-interchange.org/) v1.0 | ❌ | ❌ | ❌ |
+| Business metadata | ⚠️ basic | ⚠️ basic | ⚠️ basic | ✅ full i18n `details.<lang>` |
+| Multi-access | ✅ `exposes[]` independent | ❌ single | ⚠️ free-form | ✅ 6-value enum |
 
 #### ♻️ Lifecycle & supply chain
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Lifecycle states** | ✅ `lifecycle.state` — 4 states (`preview` → `active` → `deprecated` → `retired`) | ⚠️ free-form `status` string | ✅ 5-state enum | ✅ 8-state enum |
-| **Versioning + schema evolution** | ✅ `schemaEvolution` (`strategy`/`compatibility`/`changePolicy`) + 4-policy enum on contracts | ⚠️ `version` only (SemVer convention) | ⚠️ port + product `version` | ⚠️ `version` + `details.<lang>.productVersion` |
-| **SBOM** | ⚠️ via `acquisitionImageSignature` (Cosign + SLSA) | ❌ none | ✅ `outputPorts[].sbom[]` (type + url) | ❌ none |
+| Lifecycle states | ✅ 4-state | ⚠️ free-form | ✅ 5-state | ✅ 8-state |
+| Versioning + schema evolution | ✅ `schemaEvolution` + 4-policy | ⚠️ `version` only | ⚠️ port + product | ⚠️ `productVersion` |
+| SBOM | ⚠️ image signature | ❌ | ✅ `sbom[]` | ❌ |
+
+> Each capability links to its field-level reference in [`docs/schema-cheatsheet.md`](docs/schema-cheatsheet.md). MetricFlow round-trip is on the FLUID roadmap.
 
 ---
 
@@ -292,14 +289,21 @@ These are the failures that get LLM-driven data products taken offline:
 
 ### Results of the test
 
-Honest verdict per spec per failure mode. `✅` = deterministic answer in the spec; `⚠️` = partial (requires inference or external lookup); `❌` = silent.
+Verdict per spec per failure mode (✅ deterministic · ⚠️ partial · ❌ silent). Details in the prose below.
 
-| | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4 (opendataproducts.org) | **FLUID v0.7.3** |
+| Failure mode | ODCS | ODPS | v4 | **FLUID** |
 |---|---|---|---|---|
-| **F1 — PII leakage** | ⚠️ `classification: restricted` per column gives a tier ("treat as PII") but **no masking strategy** (hash? tokenize? mask?). Agent has to guess. | ❌ Manifest-only; PII detail lives in the referenced ODCS — agent must dereference. | ❌ No per-column classification at the v4 layer; delegated to `contract.contractURL`. | ✅ `column.sensitivity` (12-value enum) **plus** `exposes[].policy.privacy.masking[].strategy` (`mask`/`hash`/`tokenize`/`encrypt`/`k_anonymity`). |
-| **F2 — Disallowed use** | ❌ No agent-policy fields. `roles[]` is generic IAM. | ❌ Silent. | ⚠️ Has `pricingPlans` for MCP-agent access tiers and an English-prose `license.scope.restrictions` — but **no machine-readable use-case allow/deny list**. Agent would need NLP on the license text. | ✅ `agentPolicy.allowedUseCases` / `deniedUseCases` use a **12-value controlled vocabulary** (`inference, reasoning, analysis, summarization, classification, embedding, search, qa, code_generation, fine_tuning, training, rag`). Plus `allowedModels` / `deniedModels` and token caps. |
-| **F3 — Metric hallucination** | ❌ Has column-level `description` and `businessName` but no metric definitions. Agent asked "what's our revenue?" must guess SQL from column names. | ❌ Silent. | ❌ Has `categories` and `valueProposition` (marketing prose) but no metric definitions. | ✅ `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr`. The agent reads the metric definition verbatim instead of inventing SQL. |
-| **F4 — Sovereignty violation** | ❌ `servers[].host` exists but no jurisdiction/region/policy fields. | ❌ Silent. | ⚠️ `license.scope.geographicalArea: [EU, US]` indicates **where the data may be used** (legal scope), and `dataOps.infrastructure.region` hints where it lives — but no enforcement mode. | ✅ `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode: strict\|advisory\|audit` / `validationRequired: true` — apply-time blocks cross-border bindings. |
+| **F1** — PII leakage | ⚠️ tier, no strategy | ❌ | ❌ | ✅ `sensitivity` + `masking[]` |
+| **F2** — Disallowed use | ❌ | ❌ | ⚠️ MCP tiers, no policy | ✅ `agentPolicy` controlled vocab |
+| **F3** — Metric hallucination | ❌ | ❌ | ❌ | ✅ `semantics.metrics` |
+| **F4** — Sovereignty violation | ❌ | ❌ | ⚠️ legal scope only | ✅ `sovereignty.enforcementMode` |
+
+**What each verdict means:**
+
+- **F1 — PII leakage.** ODCS gives a `classification: restricted` per column (a tier label), but no masking strategy — an agent has to guess between hash/tokenize/mask. ODPS is manifest-only; PII lives in the referenced ODCS. v4 delegates to `contract.contractURL`. FLUID's `column.sensitivity` (12-value enum) + `exposes[].policy.privacy.masking[].strategy` (`mask`/`hash`/`tokenize`/`encrypt`/`k_anonymity`) is machine-actionable.
+- **F2 — Disallowed use.** No agent-policy fields in ODCS or ODPS. v4 has `pricingPlans` for MCP-agent tiers and an English-prose `license.scope.restrictions`, but no machine-readable use-case allow/deny list. FLUID's `agentPolicy.allowedUseCases` / `deniedUseCases` use the 12-value controlled vocabulary plus token caps and `allowedModels` / `deniedModels`.
+- **F3 — Metric hallucination.** No spec other than FLUID defines metrics at the contract level. FLUID's `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr` gives the agent a verbatim definition to use instead of inventing SQL.
+- **F4 — Sovereignty violation.** v4's `license.scope.geographicalArea: [EU, US]` indicates *where the data may be used* (legal scope), not *where it may be read from* — agents can over- or under-block. FLUID's `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode` blocks cross-border bindings at apply time.
 
 ### Where FLUID is still maturing — roadmap & honest gaps
 
@@ -367,14 +371,14 @@ build:
   properties:                     # ← pattern-specific block; acquisitionPattern shape
     source:
       kind: postgres              # filesystem | postgres | mysql | http | salesforce | stripe | …
-      mode: incremental_dedup     # full_refresh | incremental_append | incremental_dedup | incremental_merge | cdc | streaming
+      mode: incremental_dedup     # 6 modes: full_refresh | incremental_* (3) | cdc | streaming
       cursor_field: updated_at
       connection:
         secretRef: "vault://pg-prod-readonly"   # must be a URI: vault:// aws:// gcp:// azure:// env://
       streams: [public.customers, public.orders]
     sink:
       format: iceberg             # iceberg | delta | parquet | snowflake_table | bigquery_table | …
-      partitionBy: ["day(ingested_at)"]    # function-form strings (acquisitionSink uses strings; binding.icebergConfig uses objects)
+      partitionBy: ["day(ingested_at)"]    # string array (function-form)
     delivery:
       guarantee: at_least_once    # at_most_once | at_least_once | exactly_once
       idempotencyKey: "${stream}|${batch_id}"
