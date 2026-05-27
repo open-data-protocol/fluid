@@ -167,52 +167,54 @@ flowchart TB
 
 ### 📊 Capability matrix
 
-Field names are quoted exactly from each spec's published JSON Schema. Legend: ✅ deterministic in spec · ⚠️ partial / requires inference · ❌ silent. Grouped into five thematic clusters — skim to your area of interest.
+Legend: ✅ deterministic in spec · ⚠️ partial · ❌ silent. Headers abbreviated for width: **F** = FLUID v0.7.3 · **ODCS** = Bitol ODCS v3.1 · **ODPS** = Bitol ODPS v1.0 · **v4** = ODPS v4.0. Field-level detail lives in [`docs/schema-cheatsheet.md`](docs/schema-cheatsheet.md) — this matrix is the at-a-glance scoreboard.
 
 #### 📐 Data shape & quality
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Schema** (types · nullability · descriptions) | ✅ `exposes[].contract.schema[]` — `name`/`type`/`required`/`sensitivity`/`semanticType` | ✅ `schema[].properties[]` — `logicalType`/`physicalType`/`primaryKey`/`classification` | ❌ delegated to `contractId` | ❌ delegated to `contract.contractURL` |
-| **Data quality** | ✅ **3-layer**: declarative `dq.rules[]` (8 types: `freshness`/`completeness`/`uniqueness`/`valid_values`/`accuracy`/`schema`/`anomaly_detection`/`drift_detection`) + `acquisitionPattern.preLand` gates + `quality.{gates, onError: route_to_dlq\|abort_run\|best_effort}` | ✅ rich `dataQuality` — `type`/`dimension`/`method`/`severity`/`businessImpact` + library checks (rowCount, nullValues, …) + SQL + custom | ❌ none (delegated) | ✅ `dataQuality.declarative` — 8 dimensions + `$ref` to SodaCL/Montecarlo/DQOps |
-| **SLA / SLO** | ✅ `exposes[].qos` — `availability`/`freshnessSLO`/`dataLossSLO`/`latencyP95` | ✅ `slaProperties[]` — 11 dimensions | ❌ none | ✅ `SLA.declarative` — 11 dimensions, declarative + executable |
-| **Privacy / sensitivity** | ✅ `column.sensitivity` (12-value enum) + `policy.privacy.masking[]` | ✅ per-column `classification` | ❌ none | ⚠️ `dataGovernance.dataPrivacy.applicablePrivacyLaws[]` (metadata) |
+| Schema | ✅ | ✅ | ❌ delegated | ❌ delegated |
+| Data quality | ✅ 3-layer | ✅ rich | ❌ | ✅ declarative |
+| SLA / SLO | ✅ 4 SLOs | ✅ 11 dims | ❌ | ✅ 11 dims |
+| Privacy / sensitivity | ✅ 12-value + masking | ✅ per-column | ❌ | ⚠️ metadata only |
 
 #### 🔒 Access, governance & legal
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Access policies (RBAC / IAM)** | ✅ root `accessPolicy.grants[]` + `policy.authn/authz` + JSONPath resource selectors + `conditions` (IP/time) | ✅ `roles[]` + `servers[].roles` | ❌ none | ⚠️ `dataGovernance.accessPermissions` (free text) |
-| **Lineage** | ✅ top-level `lineage` graph + `consumes[]` + build `outputs` | ⚠️ column-level via `transformSourceObjects`/`transformLogic` (hints) | ⚠️ product-level via `outputPorts[].inputContracts[]` | ⚠️ `dataOps.lineage` (pointer to external tool) |
-| **AI / LLM governance** | ✅ `policy.agentPolicy` — `allowedModels`/`deniedModels`/token caps/controlled-vocab `allowedUseCases`/`canReason`/`canStore`/`auditRequired`/`purposeLimitation` | ❌ none | ❌ none | ⚠️ `dataAccess.<x>.outputPorttype: AI` (`specification: MCP`) — access only, no policy |
-| **Sovereignty / residency** | ✅ `sovereignty` — `jurisdiction`/`allowedRegions`/`deniedRegions`/`enforcementMode: strict\|advisory\|audit`/`dataResidency`/`crossBorderTransfer` | ❌ none | ❌ none | ⚠️ partial via `license.scope.geographicalArea[]` + `dataOps.infrastructure.region` |
-| **Legal framework** | ✅ **regulatory & cross-border** — 10 `regulatoryFramework` (GDPR/CCPA/CPRA/HIPAA/PIPEDA/LGPD/PDPA/POPIA/DPA/APPI) + 6 `transferMechanisms` (SCCs/BCRs/Adequacy/DPF/Consent/Derogation) + `governance.lakeFormation` (AWS LF-TBAC) | ❌ none | ❌ none | ✅ **commercial / contractual** — `license.<lang>` with `scope`/`termination`/`governance.{ownership, damages, warranties, forceMajeure, audit}`. Complementary to FLUID's regulatory side. |
+| Access (IAM) | ✅ grants + conditions | ✅ roles | ❌ | ⚠️ free-text |
+| Lineage | ✅ top-level graph | ⚠️ column hints | ⚠️ product-level | ⚠️ pointer |
+| AI / LLM governance | ✅ `agentPolicy` | ❌ | ❌ | ⚠️ MCP access only |
+| Sovereignty / residency | ✅ jurisdiction + enforcement | ❌ | ❌ | ⚠️ partial |
+| Legal framework | ✅ regulatory · 10 + 6 | ❌ | ❌ | ✅ commercial · license / IPR |
 
 #### ⚙️ Build & operations
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Build / transformation logic** | ✅ `build` — 4 patterns (`hybrid-reference`/`embedded-logic`/`multi-stage`/`acquisition`) | ❌ none | ❌ none | ⚠️ `dataOps.build` (pointer to scriptURL, not in-spec logic) |
-| **Source-aligned ingestion** | ✅ `acquisitionPattern` — 6 engines: `duckdb`/`airbyte`/`meltano`/`dlt`/`kafka-connect`/`debezium` | ❌ none | ❌ none | ❌ none |
-| **Orchestration** | ✅ `orchestration` — `airflow`/`dagster`/`prefect`/`kubeflow`/`custom`/`none` | ❌ none | ❌ none | ⚠️ `dataOps.infrastructure.{platform, containerTool}` (metadata only) |
-| **Retention** (run state · logs · lineage · DLQ) | ✅ top-level `retention` (ISO-8601 durations) | ❌ none | ❌ none | ❌ none |
-| **Delivery guarantees** (at-least / exactly-once + DLQ) | ✅ `acquisitionDelivery` | ❌ none | ❌ none | ❌ none |
+| Build / transformation | ✅ 4 patterns | ❌ | ❌ | ⚠️ pointer only |
+| Source-aligned ingestion | ✅ 6 engines | ❌ | ❌ | ❌ |
+| Orchestration | ✅ Airflow / Dagster / Prefect / Kubeflow | ❌ | ❌ | ⚠️ metadata only |
+| Retention | ✅ `retention` | ❌ | ❌ | ❌ |
+| Delivery guarantees | ✅ `acquisitionDelivery` | ❌ | ❌ | ❌ |
 
 #### 🧭 Discovery & semantics
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Semantic model** (entities · measures · metrics) | ✅ `exposes[].semantics` — aligns with the [**OSI Open Semantic Interchange**](https://open-semantic-interchange.org/) v1.0 standard; MetricFlow round-trip on roadmap | ❌ none | ❌ none | ❌ none |
-| **Business metadata** | ⚠️ `description`/`domain`/`docs`/`column.businessName` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ✅ `details.<lang>` — full: `valueProposition`/`useCases[]`/`brandSlogan`/`productSeries`/`categories`/`standards`/`logoURL` |
-| **Multi-access** (table + API + stream from one product) | ✅ `exposes[]` — each entry independent: kind/contract/policy/binding | ❌ single contract | ⚠️ `outputPorts[]` (free-form `type`) | ✅ `dataAccess` — first-class enum: `file`/`API`/`SQL`/`AI`/`gRPC`/`sFTP` |
+| Semantic model | ✅ `semantics` · [OSI](https://open-semantic-interchange.org/) v1.0 | ❌ | ❌ | ❌ |
+| Business metadata | ⚠️ basic | ⚠️ basic | ⚠️ basic | ✅ full i18n `details.<lang>` |
+| Multi-access | ✅ `exposes[]` independent | ❌ single | ⚠️ free-form | ✅ 6-value enum |
 
 #### ♻️ Lifecycle & supply chain
 
-| Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
+| Capability | F | ODCS | ODPS | v4 |
 |---|---|---|---|---|
-| **Lifecycle states** | ✅ `lifecycle.state` — 4 states (`preview` → `active` → `deprecated` → `retired`) | ⚠️ free-form `status` string | ✅ 5-state enum | ✅ 8-state enum |
-| **Versioning + schema evolution** | ✅ `schemaEvolution` (`strategy`/`compatibility`/`changePolicy`) + 4-policy enum on contracts | ⚠️ `version` only (SemVer convention) | ⚠️ port + product `version` | ⚠️ `version` + `details.<lang>.productVersion` |
-| **SBOM** | ⚠️ via `acquisitionImageSignature` (Cosign + SLSA) | ❌ none | ✅ `outputPorts[].sbom[]` (type + url) | ❌ none |
+| Lifecycle states | ✅ 4-state | ⚠️ free-form | ✅ 5-state | ✅ 8-state |
+| Versioning + schema evolution | ✅ `schemaEvolution` + 4-policy | ⚠️ `version` only | ⚠️ port + product | ⚠️ `productVersion` |
+| SBOM | ⚠️ image signature | ❌ | ✅ `sbom[]` | ❌ |
+
+> Each capability links to its field-level reference in [`docs/schema-cheatsheet.md`](docs/schema-cheatsheet.md). MetricFlow round-trip is on the FLUID roadmap.
 
 ---
 
