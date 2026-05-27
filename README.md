@@ -288,14 +288,21 @@ These are the failures that get LLM-driven data products taken offline:
 
 ### Results of the test
 
-Honest verdict per spec per failure mode. `✅` = deterministic answer in the spec; `⚠️` = partial (requires inference or external lookup); `❌` = silent.
+Verdict per spec per failure mode (✅ deterministic · ⚠️ partial · ❌ silent). Details in the prose below.
 
-| | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4 (opendataproducts.org) | **FLUID v0.7.3** |
+| Failure mode | ODCS | ODPS | v4 | **FLUID** |
 |---|---|---|---|---|
-| **F1 — PII leakage** | ⚠️ `classification: restricted` per column gives a tier ("treat as PII") but **no masking strategy** (hash? tokenize? mask?). Agent has to guess. | ❌ Manifest-only; PII detail lives in the referenced ODCS — agent must dereference. | ❌ No per-column classification at the v4 layer; delegated to `contract.contractURL`. | ✅ `column.sensitivity` (12-value enum) **plus** `exposes[].policy.privacy.masking[].strategy` (`mask`/`hash`/`tokenize`/`encrypt`/`k_anonymity`). |
-| **F2 — Disallowed use** | ❌ No agent-policy fields. `roles[]` is generic IAM. | ❌ Silent. | ⚠️ Has `pricingPlans` for MCP-agent access tiers and an English-prose `license.scope.restrictions` — but **no machine-readable use-case allow/deny list**. Agent would need NLP on the license text. | ✅ `agentPolicy.allowedUseCases` / `deniedUseCases` use a **12-value controlled vocabulary** (`inference, reasoning, analysis, summarization, classification, embedding, search, qa, code_generation, fine_tuning, training, rag`). Plus `allowedModels` / `deniedModels` and token caps. |
-| **F3 — Metric hallucination** | ❌ Has column-level `description` and `businessName` but no metric definitions. Agent asked "what's our revenue?" must guess SQL from column names. | ❌ Silent. | ❌ Has `categories` and `valueProposition` (marketing prose) but no metric definitions. | ✅ `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr`. The agent reads the metric definition verbatim instead of inventing SQL. |
-| **F4 — Sovereignty violation** | ❌ `servers[].host` exists but no jurisdiction/region/policy fields. | ❌ Silent. | ⚠️ `license.scope.geographicalArea: [EU, US]` indicates **where the data may be used** (legal scope), and `dataOps.infrastructure.region` hints where it lives — but no enforcement mode. | ✅ `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode: strict\|advisory\|audit` / `validationRequired: true` — apply-time blocks cross-border bindings. |
+| **F1** — PII leakage | ⚠️ tier, no strategy | ❌ | ❌ | ✅ `sensitivity` + `masking[]` |
+| **F2** — Disallowed use | ❌ | ❌ | ⚠️ MCP tiers, no policy | ✅ `agentPolicy` controlled vocab |
+| **F3** — Metric hallucination | ❌ | ❌ | ❌ | ✅ `semantics.metrics` |
+| **F4** — Sovereignty violation | ❌ | ❌ | ⚠️ legal scope only | ✅ `sovereignty.enforcementMode` |
+
+**What each verdict means:**
+
+- **F1 — PII leakage.** ODCS gives a `classification: restricted` per column (a tier label), but no masking strategy — an agent has to guess between hash/tokenize/mask. ODPS is manifest-only; PII lives in the referenced ODCS. v4 delegates to `contract.contractURL`. FLUID's `column.sensitivity` (12-value enum) + `exposes[].policy.privacy.masking[].strategy` (`mask`/`hash`/`tokenize`/`encrypt`/`k_anonymity`) is machine-actionable.
+- **F2 — Disallowed use.** No agent-policy fields in ODCS or ODPS. v4 has `pricingPlans` for MCP-agent tiers and an English-prose `license.scope.restrictions`, but no machine-readable use-case allow/deny list. FLUID's `agentPolicy.allowedUseCases` / `deniedUseCases` use the 12-value controlled vocabulary plus token caps and `allowedModels` / `deniedModels`.
+- **F3 — Metric hallucination.** No spec other than FLUID defines metrics at the contract level. FLUID's `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr` gives the agent a verbatim definition to use instead of inventing SQL.
+- **F4 — Sovereignty violation.** v4's `license.scope.geographicalArea: [EU, US]` indicates *where the data may be used* (legal scope), not *where it may be read from* — agents can over- or under-block. FLUID's `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode` blocks cross-border bindings at apply time.
 
 ### Where FLUID is still maturing — roadmap & honest gaps
 
