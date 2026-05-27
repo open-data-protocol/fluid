@@ -149,7 +149,7 @@ flowchart LR
 
 > 🖱️ Every node in the diagram links to its source repository.
 
-> **From the forge-cli README:** *"Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS"* — export produces *"1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."*
+> **From the [forge-docs](https://agenticstiger.github.io/forge_docs/):** *"Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS"* — export produces *"1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."*
 
 ---
 
@@ -224,7 +224,7 @@ It consumes a `.fluid.yml` and emits:
 | 🔵 **Governance** | **IAM bindings** from `accessPolicy.grants[]` + **AI gateway** enforcement of `agentPolicy` |
 | 🔴 **Supply chain** | **Cosign-verified** connector images + **SLSA provenance** checks on ingest |
 
-> *"What Terraform did for infrastructure, FLUID Forge does for data products."* — [forge-cli README](https://github.com/Agenticstiger/forge-cli)
+> *"What Terraform did for infrastructure, FLUID Forge does for data products."* — [forge-docs](https://agenticstiger.github.io/forge_docs/)
 
 ### When to use which
 
@@ -249,7 +249,7 @@ The cleanest production stack uses all four where each is strongest:
 - [Bitol ODCS — open-data-contract-standard](https://github.com/bitol-io/open-data-contract-standard) (v3.1.0)
 - [Bitol ODPS — open-data-product-standard](https://github.com/bitol-io/open-data-product-standard) (v1.0.0)
 - [opendataproducts.org ODPS v4](https://opendataproducts.org/v4.0/) · [v4.0 repo](https://github.com/Open-Data-Product-Initiative/v4.0) · [v4.1 release](https://github.com/Open-Data-Product-Initiative/v4.1)
-- [forge-cli — the FLUID reference compiler](https://github.com/Agenticstiger/forge-cli) (emits Bitol ODPS + ODCS)
+- [forge-cli — the FLUID reference compiler](https://github.com/Agenticstiger/forge-cli) · [forge-docs](https://agenticstiger.github.io/forge_docs/) (emits Bitol ODPS + ODCS)
 - [Linux Foundation AI & Data — Bitol project](https://lfaidata.foundation/projects/bitol/)
 
 ---
