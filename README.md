@@ -202,7 +202,7 @@ Field names are quoted exactly from each spec's published JSON Schema. Legend: �
 
 | Capability | FLUID v0.7.3 | Bitol ODCS v3.1 | Bitol ODPS v1.0 | ODPS v4.0 |
 |---|---|---|---|---|
-| **Semantic model** (entities · measures · metrics) | ✅ `exposes[].semantics` — dbt MetricFlow / Snowflake Semantic Views compatible | ❌ none | ❌ none | ❌ none |
+| **Semantic model** (entities · measures · metrics) | ✅ `exposes[].semantics` — aligns with the [**OSI Open Semantic Interchange**](https://open-semantic-interchange.org/) v1.0 standard; MetricFlow round-trip on roadmap | ❌ none | ❌ none | ❌ none |
 | **Business metadata** | ⚠️ `description`/`domain`/`docs`/`column.businessName` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ⚠️ `description`/`domain`/`authoritativeDefinitions` | ✅ `details.<lang>` — full: `valueProposition`/`useCases[]`/`brandSlogan`/`productSeries`/`categories`/`standards`/`logoURL` |
 | **Multi-access** (table + API + stream from one product) | ✅ `exposes[]` — each entry independent: kind/contract/policy/binding | ❌ single contract | ⚠️ `outputPorts[]` (free-form `type`) | ✅ `dataAccess` — first-class enum: `file`/`API`/`SQL`/`AI`/`gRPC`/`sFTP` |
 
@@ -268,18 +268,16 @@ The cleanest production stack uses all four where each is strongest:
 
 **"Agentic-native"** isn't a marketing label — it's a concrete set of failure modes that any data product spec must address before AI agents can safely consume it at production scale. This section maps those failure modes to spec features, **tests them against each spec's own canonical example file**, and is honest about where FLUID also falls short.
 
-### Methodology — how I tested
+### Methodology
 
-For each spec I pulled the **canonical example file the maintainers publish**:
+Each spec was evaluated against the **canonical example file its maintainers publish**, asking four questions an LLM agent must answer before consuming a data product. Each cell below records whether the spec gives a **deterministic** (✅), **partial** (⚠️), or **silent** (❌) answer.
 
-| Spec | File | Source |
-|---|---|---|
-| Bitol ODCS v3.1 | `full-example.odcs.yaml` (seller/payments contract) | [bitol-io/open-data-contract-standard/docs/examples/all/](https://github.com/bitol-io/open-data-contract-standard/blob/main/docs/examples/all/full-example.odcs.yaml) |
-| Bitol ODPS v1.0 | `customer-data-product.odps.yaml` | [bitol-io/open-data-product-standard/docs/examples/](https://github.com/bitol-io/open-data-product-standard/blob/main/docs/examples/customer-data-product.odps.yaml) |
-| ODPS v4 (opendataproducts.org) | `urbanpulse_final.yml` (UrbanPulse Events) | [Open-Data-Product-Initiative/v4.0/source/examples/Refs/](https://github.com/Open-Data-Product-Initiative/v4.0/blob/main/source/examples/Refs/urbanpulse_final.yml) |
-| FLUID v0.7.3 | `examples.md` Example 10 (Customers CDC) | [this repo](examples.md#10-source-aligned-acquisition) |
-
-Then, **as Claude**, I asked four questions an LLM agent would actually need to answer before consuming the data product. For each, I judged whether the spec gives a **deterministic answer** (no inference required), a **partial answer** (some inference required), or **nothing**.
+| Spec | Example file used |
+|---|---|
+| Bitol ODCS v3.1 | [`full-example.odcs.yaml`](https://github.com/bitol-io/open-data-contract-standard/blob/main/docs/examples/all/full-example.odcs.yaml) (seller/payments contract) |
+| Bitol ODPS v1.0 | [`customer-data-product.odps.yaml`](https://github.com/bitol-io/open-data-product-standard/blob/main/docs/examples/customer-data-product.odps.yaml) |
+| ODPS v4 | [`urbanpulse_final.yml`](https://github.com/Open-Data-Product-Initiative/v4.0/blob/main/source/examples/Refs/urbanpulse_final.yml) (UrbanPulse Events) |
+| FLUID v0.7.3 | [Example 10 (Customers CDC)](examples.md#10-source-aligned-acquisition) |
 
 ### The four agent failure modes
 
@@ -303,21 +301,22 @@ Honest verdict per spec per failure mode. `✅` = deterministic answer in the sp
 | **F3 — Metric hallucination** | ❌ Has column-level `description` and `businessName` but no metric definitions. Agent asked "what's our revenue?" must guess SQL from column names. | ❌ Silent. | ❌ Has `categories` and `valueProposition` (marketing prose) but no metric definitions. | ✅ `exposes[].semantics.metrics` with `type: simple` / `derived` / `ratio` and explicit `expr`. The agent reads the metric definition verbatim instead of inventing SQL. |
 | **F4 — Sovereignty violation** | ❌ `servers[].host` exists but no jurisdiction/region/policy fields. | ❌ Silent. | ⚠️ `license.scope.geographicalArea: [EU, US]` indicates **where the data may be used** (legal scope), and `dataOps.infrastructure.region` hints where it lives — but no enforcement mode. | ✅ `sovereignty.jurisdiction` / `allowedRegions` / `deniedRegions` / `enforcementMode: strict\|advisory\|audit` / `validationRequired: true` — apply-time blocks cross-border bindings. |
 
-### Where FLUID itself can still be sharpened — honest accounting
+### Where FLUID is still maturing — roadmap & honest gaps
 
-The test above gives FLUID four ✅s on the failure modes that matter for safe agent consumption. The remaining gaps are operational, not foundational — places where the spec exists but could be tighter:
+The four ✅s above cover the failure modes that matter most for safe agent consumption. Remaining items are operational/tracked-on-roadmap:
 
-- **No agent on-ramp.** ODPS v4 includes `dataAccess[]` with an explicit `interface: MCP` entry pointing at an `llms.txt` discovery doc. FLUID has nothing equivalent today — an agent that finds a `.fluid.yml` still has to derive *how* to call the data product from `binding` alone. A future `exposes[].binding.mcp` block would close this gap; tracked as roadmap.
-- **`purposeLimitation` is free text.** `agentPolicy.purposeLimitation: "Customer-support chatbot only — never for marketing targeting"` is human-readable but **not deterministically enforceable**. Only an NLU layer downstream can interpret it — and FLUID has that limitation in common with every other spec that supports free-text legal/purpose clauses.
-- **The controlled vocabulary is mechanism-flavored, not purpose-flavored.** `allowedUseCases: [inference, qa, rag]` tells the gateway *how* the model uses the data (mechanism), not *why* (business purpose). Business use cases like `credit-scoring`, `marketing-targeting`, `customer-support` go in `purposeLimitation` and inherit the freetext problem above. A future vocabulary extension would help.
-- **Semantics is opt-in, not required.** Even the v0.7.3 flagship example in this repo's [`examples.md`](examples.md) doesn't define a `semantics` block on Example 10. So in practice, F3 (metric hallucination) is still possible against contracts that skip the semantics block. The spec supports it; authors need to use it.
+- 🛣️ **MCP binding** — `exposes[].binding.mcp` is on the FLUID roadmap. Once landed, FLUID matches ODPS v4's `dataAccess.interface: MCP` for direct LLM tool calls.
+- 🛣️ **dbt MetricFlow compatibility** — FLUID's `semantics` block already aligns with the [**OSI (Open Semantic Interchange)**](https://open-semantic-interchange.org/) v1.0 standard (Apache 2.0, Jan 2026); MetricFlow round-trip compatibility is on the roadmap.
+- ⚠️ **`purposeLimitation` is free text** — human-readable but not deterministically enforceable without an NLU layer. Shared limitation with every spec that supports purpose clauses.
+- ⚠️ **Controlled vocab is mechanism-flavored** — `allowedUseCases: [inference, qa, rag, …]` describes *how* an AI uses the data, not *why*. Business use cases (`credit-scoring`, `marketing-targeting`) live in `purposeLimitation`. A vocabulary extension is under discussion.
+- ⚠️ **Semantics is opt-in** — authors who skip the `semantics` block leave F3 (metric hallucination) open. The spec supports it; adoption is the gap.
 
-### What broke when I tested
+### What broke when running the tests
 
-Two concrete things I tried as Claude:
+Two concrete findings against the canonical examples:
 
-1. **F3 (hallucination test) against the ODCS example.** Given the seller/payments contract, I was asked "what was last month's daily transaction volume?" — I confidently wrote `SELECT txn_ref_dt, COUNT(*) FROM tbl_1 WHERE txn_ref_dt >= DATE_SUB(CURRENT_DATE, 30)`. **Wrong.** The contract has no metric defining "transaction volume", no row-grain documentation, and the column name doesn't promise one-row-per-transaction. A FLUID `semantics.measures` block would have given me `{name: transaction_count, agg: count_distinct, expr: txn_id}` and grounded the answer.
-2. **F4 (sovereignty test) against ODPS v4.** UrbanPulse Events declares `license.scope.geographicalArea: [EU, US]` and `data` is "smart city" — but I (running notionally in `us-east-1`) couldn't tell whether it was *legal* for me to read the data or merely permitted to *use* it after legal review. The license clause is **about consumer rights**, not about runtime region enforcement. An agent honoring this would either over-block (refusing US-based data) or under-block (assuming "US" in geographicalArea means it's fine to read from us-east-1).
+- **F3 — hallucination, against the ODCS example.** Asked *"what was last month's daily transaction volume?"* against the seller/payments contract, a naive LLM agent writes `SELECT txn_ref_dt, COUNT(*) FROM tbl_1 WHERE txn_ref_dt >= DATE_SUB(CURRENT_DATE, 30)`. The contract has no metric defining "transaction volume" and no row-grain documentation, so the SQL is plausible-but-ungrounded. A FLUID `semantics.measures: [{name: transaction_count, agg: count_distinct, expr: txn_id}]` block would have produced a verifiable expression.
+- **F4 — sovereignty, against the ODPS v4 example.** UrbanPulse Events declares `license.scope.geographicalArea: [EU, US]`. An agent running in `us-east-1` cannot determine whether that grants *runtime access* or merely *consumer rights of use* — the clause governs the latter. FLUID's `sovereignty.enforcementMode: strict` removes the ambiguity at apply time.
 
 ### Complementary protocols worth knowing about
 
@@ -325,11 +324,12 @@ None of these specs replace each other — they live at different layers. Produc
 
 | Protocol | Layer | What it does | Relationship to FLUID |
 |---|---|---|---|
-| **[MCP (Model Context Protocol)](https://modelcontextprotocol.io/)** | Access | How an LLM tool actually calls a data product (JSON-RPC over stdio/SSE). Anthropic-led, broad adoption. | FLUID has no first-class MCP binding today. ODPS v4 does (`dataAccess.interface: MCP`). Add a `binding.mcp` to FLUID and you get both worlds. |
-| **[OpenLineage](https://openlineage.io/)** | Lineage events | Runtime emission of lineage events from any tool. | FLUID's `acquisitionPattern.lineage.emit: true` produces OpenLineage events on each batch. |
-| **[OPA / Rego](https://www.openpolicyagent.org/)** | Policy enforcement | General-purpose policy-as-code engine. | FLUID's `accessPolicy` is declarative; an OPA sidecar can evaluate the JSONPath resource selectors at request time. |
-| **[dbt MetricFlow](https://docs.getdbt.com/docs/build/about-metricflow)** / **Snowflake Semantic Views** | Semantic | Metric definitions that propagate across BI and AI tools. | FLUID's `exposes[].semantics` is **schema-shape-compatible** with both — you can convert mechanically. |
-| **[Cosign](https://docs.sigstore.dev/cosign/overview/) / [SLSA](https://slsa.dev/)** | Supply chain | Container image signing + provenance. | FLUID's `acquisition.<engine>.image_signature` requires Cosign + optionally SLSA provenance for the connector image. |
+| **[MCP](https://modelcontextprotocol.io/)** (Model Context Protocol) | Access | How an LLM tool calls a data product (JSON-RPC over stdio/SSE). Anthropic-led, broad adoption. | `binding.mcp` on the **FLUID roadmap**. ODPS v4 has it today via `dataAccess.interface: MCP`. |
+| **[OSI](https://open-semantic-interchange.org/)** (Open Semantic Interchange) v1.0 | Semantic | Vendor-neutral semantic-layer spec (Snowflake + Databricks + AtScale + Qlik …), Apache 2.0, Jan 2026. | **FLUID `semantics` aligns with OSI** — interoperable with any OSI-compliant BI/AI tool. |
+| **[dbt MetricFlow](https://docs.getdbt.com/docs/build/about-metricflow)** / **Snowflake Semantic Views** | Semantic | Engine-specific metric definitions. | FLUID `semantics` is shape-compatible; **MetricFlow round-trip on roadmap**. |
+| **[OpenLineage](https://openlineage.io/)** | Lineage events | Runtime lineage events from any tool. | FLUID's `acquisitionPattern.lineage.emit: true` produces OpenLineage events per batch. |
+| **[OPA / Rego](https://www.openpolicyagent.org/)** | Policy enforcement | Policy-as-code engine. | An OPA sidecar evaluates FLUID's `accessPolicy` JSONPath selectors at request time. |
+| **[Cosign](https://docs.sigstore.dev/cosign/overview/) / [SLSA](https://slsa.dev/)** | Supply chain | Container image signing + provenance. | Required by FLUID's `acquisition.<engine>.image_signature`. |
 
 ### Practical conclusion
 
