@@ -48,7 +48,7 @@ exposes:  [ ... ]                # [req] ports you publish (each requires expose
 build:                           #       how the product is produced
   pattern: hybrid-reference      #       | embedded-logic | multi-stage | acquisition (⭐ 0.7.3)
   engine:  dbt | sql | python | spark | glue | custom | duckdb | airbyte | meltano | dlt | kafka-connect | debezium
-  properties: { ... }            #       pattern-specific block — acquisitionPattern when pattern=acquisition (⭐ 0.7.3)
+  properties: { ... }            #       pattern-specific (⭐ 0.7.3: acquisitionPattern)
 
 orchestration: { engine: airflow | dagster | prefect | kubeflow | custom | none, tasks: [...] }   # ⭐ 0.7.0+
 sovereignty:   { jurisdiction, allowedRegions, deniedRegions, enforcementMode, … }   # ⭐ 0.7.1
@@ -377,7 +377,7 @@ build:
       streams: [public.customers, public.orders]
     sink:
       format: iceberg             # iceberg | delta | parquet | snowflake_table | bigquery_table | …
-      partitionBy: ["day(ingested_at)"]    # function-form strings (acquisitionSink uses strings; binding.icebergConfig uses objects)
+      partitionBy: ["day(ingested_at)"]    # string array (function-form)
     delivery:
       guarantee: at_least_once    # at_most_once | at_least_once | exactly_once
       idempotencyKey: "${stream}|${batch_id}"
