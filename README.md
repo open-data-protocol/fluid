@@ -125,38 +125,31 @@ Four active "open data product" specs share overlapping names and adjacent scope
 ### How they actually fit together
 
 ```mermaid
-flowchart TB
-    classDef fluid  fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:2px
-    classDef forge  fill:#FF6B35,color:#fff,stroke:#7C2D12,stroke-width:3px
-    classDef bitol  fill:#10B981,color:#fff,stroke:#064E3B,stroke-width:2px
-    classDef odpsv4 fill:#A78BFA,color:#fff,stroke:#4C1D95,stroke-width:2px
+flowchart LR
+    classDef core fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:4px,font-weight:bold
+    classDef opt  fill:#94A3B8,color:#fff,stroke:#475569,stroke-width:1px,stroke-dasharray:6 3
 
-    F["FLUID v0.7.3"]:::fluid
-    FC["forge-cli"]:::forge
+    F["FLUID v0.7.3<br/>your .fluid.yml<br/>standalone — complete on its own"]:::core
 
-    subgraph bitol ["Bitol"]
-        direction LR
-        OP["Bitol ODPS v1.0"]:::bitol
-        OC["Bitol ODCS v3.1"]:::bitol
-    end
+    FC["forge-cli<br/>reference compiler<br/>(emits IaC + Airflow DAGs)"]:::opt
+    BIT["Bitol ODPS + ODCS<br/>(catalog interop)"]:::opt
+    V4["ODPS v4 wrapper<br/>(commercial publishing)"]:::opt
 
-    V4["ODPS v4 (optional)"]:::odpsv4
-
-    F  ==>|"forge compile"| FC
-    FC ==>|"emits 1 ODPS + N ODCS"| OP
-    OP -.->|"contractId"| OC
-    V4 -.->|"contractURL"| OC
+    F -.->|"want compile + deploy?"| FC
+    F -.->|"want catalog interop?"| BIT
+    F -.->|"want commercial publishing?"| V4
 
     click F "https://github.com/open-data-protocol/fluid"
     click FC "https://github.com/Agenticstiger/forge-cli"
-    click OP "https://github.com/bitol-io/open-data-product-standard"
-    click OC "https://github.com/bitol-io/open-data-contract-standard"
+    click BIT "https://github.com/bitol-io"
     click V4 "https://github.com/Open-Data-Product-Initiative/v4.0"
 ```
 
+> **FLUID stands on its own.** The boxes above (with dashed borders) are **optional adapters** — pick only what you need. Most teams start with just FLUID, then add `forge-cli` once they want compiled IaC / Airflow DAGs, then add Bitol catalog export when they want data-mesh registry interop, then add ODPS v4 if they're publishing data products commercially.
+
 > 🖱️ Every node in the diagram links to its source repository.
 
-> **From the forge-cli README:** *"Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS"* — export produces *"1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."*
+> **From the [forge-docs](https://agenticstiger.github.io/forge_docs/):** *"Bitol Open Data Product Standard v1.0.0 as the default, center-stage ODPS"* — export produces *"1 ODPS doc + N sibling `<contractId>.odcs.yaml` files."*
 
 ---
 
@@ -231,7 +224,7 @@ It consumes a `.fluid.yml` and emits:
 | 🔵 **Governance** | **IAM bindings** from `accessPolicy.grants[]` + **AI gateway** enforcement of `agentPolicy` |
 | 🔴 **Supply chain** | **Cosign-verified** connector images + **SLSA provenance** checks on ingest |
 
-> *"What Terraform did for infrastructure, FLUID Forge does for data products."* — [forge-cli README](https://github.com/Agenticstiger/forge-cli)
+> *"What Terraform did for infrastructure, FLUID Forge does for data products."* — [forge-docs](https://agenticstiger.github.io/forge_docs/)
 
 ### When to use which
 
@@ -256,7 +249,7 @@ The cleanest production stack uses all four where each is strongest:
 - [Bitol ODCS — open-data-contract-standard](https://github.com/bitol-io/open-data-contract-standard) (v3.1.0)
 - [Bitol ODPS — open-data-product-standard](https://github.com/bitol-io/open-data-product-standard) (v1.0.0)
 - [opendataproducts.org ODPS v4](https://opendataproducts.org/v4.0/) · [v4.0 repo](https://github.com/Open-Data-Product-Initiative/v4.0) · [v4.1 release](https://github.com/Open-Data-Product-Initiative/v4.1)
-- [forge-cli — the FLUID reference compiler](https://github.com/Agenticstiger/forge-cli) (emits Bitol ODPS + ODCS)
+- [forge-cli — the FLUID reference compiler](https://github.com/Agenticstiger/forge-cli) · [forge-docs](https://agenticstiger.github.io/forge_docs/) (emits Bitol ODPS + ODCS)
 - [Linux Foundation AI & Data — Bitol project](https://lfaidata.foundation/projects/bitol/)
 
 ---
