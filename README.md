@@ -47,7 +47,8 @@ exposes:  [ ... ]                # [req] ports you publish (each requires expose
 
 build:                           #       how the product is produced
   pattern: hybrid-reference      #       | embedded-logic | multi-stage | acquisition (⭐ 0.7.3)
-  engine:  dbt | sql | python | spark | glue | custom | duckdb | airbyte | meltano | dlt | kafka-connect | debezium
+  engine:  dbt | sql | python | spark | glue | custom        # transformation engines
+           | duckdb | airbyte | meltano | dlt | kafka-connect | debezium   # ⭐ 0.7.3 acquisition
   properties: { ... }            #       pattern-specific (⭐ 0.7.3: acquisitionPattern)
 
 orchestration: { engine: airflow | dagster | prefect | kubeflow | custom | none, tasks: [...] }   # ⭐ 0.7.0+
@@ -370,7 +371,7 @@ build:
   properties:                     # ← pattern-specific block; acquisitionPattern shape
     source:
       kind: postgres              # filesystem | postgres | mysql | http | salesforce | stripe | …
-      mode: incremental_dedup     # full_refresh | incremental_append | incremental_dedup | incremental_merge | cdc | streaming
+      mode: incremental_dedup     # 6 modes: full_refresh | incremental_* (3) | cdc | streaming
       cursor_field: updated_at
       connection:
         secretRef: "vault://pg-prod-readonly"   # must be a URI: vault:// aws:// gcp:// azure:// env://
