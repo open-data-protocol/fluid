@@ -1,0 +1,178 @@
+// =====================================================================
+// FLUID — brand palette
+// =====================================================================
+// A dark, deep-navy aesthetic with blue / violet / cyan accents,
+// glassmorphism and glow — matching the sibling forge_docs site.
+//
+// DARK is the default. Dark values live on :root so the pre-hydration
+// paint is already dark; LIGHT is a refined override applied only when
+// the theme explicitly sets data-theme="light".
+//
+// VuePress 2 default-theme variables (--vp-c-*) are re-mapped here — we
+// override values only, never fork the theme's component CSS.
+// =====================================================================
+
+// ---------------------------------------------------------------------
+// Brand primitives.
+// ---------------------------------------------------------------------
+$ff-bg:         #050813;
+$ff-surface:    #0c1226;
+$ff-surface-2:  #131a33;
+$ff-border:     #1f2a4a;
+$ff-border-2:   #2a3a5f;
+$ff-fg:         #eef2ff;
+$ff-fg-muted:   #a8b3d4;
+$ff-fg-dim:     #7d87a8;
+
+$ff-blue:       #3b82f6;
+$ff-blue-light: #60a5fa;
+$ff-blue-deep:  #1d4ed8;
+$ff-violet:     #8b5cf6;
+$ff-cyan:       #22d3ee;
+$ff-indigo:     #818cf8;
+
+$ff-amber:      #f59e0b;   // "warning" callout semantics only
+$ff-red:        #ef4444;   // "danger" callout semantics only
+
+// =====================================================================
+// DARK (default) — on :root so the first paint is dark.
+// =====================================================================
+:root {
+  // ---- Brand accent hues — same in both modes --------------------
+  --ff-c-blue:        #{$ff-blue};
+  --ff-c-blue-light:  #{$ff-blue-light};
+  --ff-c-blue-deep:   #{$ff-blue-deep};
+  --ff-c-violet:      #{$ff-violet};
+  --ff-c-cyan:        #{$ff-cyan};
+  --ff-c-indigo:      #{$ff-indigo};
+
+  // ---- Gradients (per-mode) --------------------------------------
+  --ff-hero-gradient: linear-gradient(135deg, #{$ff-blue} 0%, #{$ff-violet} 52%, #{$ff-cyan} 100%);
+  --ff-text-gradient: linear-gradient(120deg, #ffffff 0%, #{$ff-blue-light} 30%, #{$ff-blue} 64%, #{$ff-cyan} 100%);
+  --ff-hero-gradient-soft: linear-gradient(135deg, #131d40 0%, #{$ff-surface} 68%);
+
+  // ---- Glow shadows ----------------------------------------------
+  --ff-glow-blue:   0 0 0 1px rgba(59, 130, 246, .45), 0 0 38px -6px rgba(59, 130, 246, .5), inset 0 0 26px -12px rgba(59, 130, 246, .35);
+  --ff-glow-violet: 0 0 0 1px rgba(139, 92, 246, .45), 0 0 38px -6px rgba(139, 92, 246, .5);
+  --ff-glow-cyan:   0 0 0 1px rgba(34, 211, 238, .4), 0 0 38px -6px rgba(34, 211, 238, .45);
+
+  // ---- Glassmorphism + grid texture ------------------------------
+  --ff-glass-bg:      rgba(12, 18, 38, .72);
+  --ff-glass-border:  rgba(99, 122, 180, .22);
+  --ff-grid-line:     rgba(168, 179, 212, .055);
+
+  // ---- "info" callout — a violet identity ------------------------
+  --ff-c-info-bg:     rgba(139, 92, 246, .10);
+  --ff-c-info-text:   #c4b5fd;
+  --ff-c-info-border: #{$ff-violet};
+
+  // ================================================================
+  // VuePress default-theme variable contract — DARK values
+  // ================================================================
+  --vp-c-accent:        #{$ff-blue};
+  --vp-c-accent-hover:  #{$ff-blue-light};
+  --vp-c-accent-bg:     #{$ff-blue};
+  --vp-c-accent-text:   #{$ff-bg};
+  --vp-c-accent-soft:   rgba(59, 130, 246, .16);
+
+  --vp-c-bg:            #{$ff-bg};
+  --vp-c-bg-alt:        #{$ff-surface};
+  --vp-c-bg-elv:        #{$ff-surface};
+  --vp-c-bg-elv-up:     #{$ff-surface-2};
+
+  --vp-c-text:          #{$ff-fg};
+  --vp-c-text-mute:     #{$ff-fg-muted};
+  --vp-c-text-subtle:   #{$ff-fg-dim};
+
+  --vp-c-divider:       #{$ff-border};
+  --vp-c-border:        #{$ff-border};
+  --vp-c-border-hard:   #{$ff-border-2};
+  --vp-c-gutter:        #{$ff-bg};
+
+  --vp-c-code-bg:       #{$ff-surface};
+  --code-bg-color:      #0b1020;
+  --code-c-text:        #{$ff-fg};
+
+  --badge-c-tip-text:     #93c5fd;
+  --badge-c-tip-bg:       rgba(59, 130, 246, .16);
+  --badge-c-warning-text: #fcd34d;
+  --badge-c-warning-bg:   rgba(245, 158, 11, .16);
+  --badge-c-danger-text:  #fca5a5;
+  --badge-c-danger-bg:    rgba(239, 68, 68, .16);
+
+  --vp-c-tip-bg:        rgba(59, 130, 246, .10);
+  --vp-c-tip-text:      #93c5fd;
+  --vp-c-tip-border:    #{$ff-blue};
+
+  --vp-c-warning-bg:    rgba(245, 158, 11, .10);
+  --vp-c-warning-text:  #fcd34d;
+  --vp-c-warning-border:#{$ff-amber};
+
+  --vp-c-danger-bg:     rgba(239, 68, 68, .10);
+  --vp-c-danger-text:   #fca5a5;
+  --vp-c-danger-border: #{$ff-red};
+}
+
+// =====================================================================
+// LIGHT — refined override. Applied only when data-theme="light".
+// =====================================================================
+[data-theme="light"] {
+  --ff-hero-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 52%, #0891b2 100%);
+  --ff-text-gradient: linear-gradient(120deg, #1d4ed8 0%, #2563eb 42%, #0891b2 100%);
+  --ff-hero-gradient-soft: linear-gradient(135deg, #eef3ff 0%, #f3f0ff 100%);
+
+  --ff-glow-blue:   0 0 0 1px rgba(37, 99, 235, .18), 0 20px 44px -24px rgba(37, 99, 235, .55);
+  --ff-glow-violet: 0 0 0 1px rgba(124, 58, 237, .18), 0 20px 44px -24px rgba(124, 58, 237, .5);
+  --ff-glow-cyan:   0 0 0 1px rgba(8, 145, 178, .18), 0 20px 44px -24px rgba(8, 145, 178, .45);
+
+  --ff-glass-bg:      rgba(255, 255, 255, .8);
+  --ff-glass-border:  rgba(15, 23, 60, .1);
+  --ff-grid-line:     rgba(11, 16, 32, .045);
+
+  --ff-c-info-bg:     #f5f3ff;
+  --ff-c-info-text:   #6d28d9;
+  --ff-c-info-border: #{$ff-violet};
+
+  --vp-c-accent:        #2563eb;
+  --vp-c-accent-hover:  #1d4ed8;
+  --vp-c-accent-bg:     #2563eb;
+  --vp-c-accent-text:   #ffffff;
+  --vp-c-accent-soft:   rgba(37, 99, 235, .10);
+
+  --vp-c-bg:            #ffffff;
+  --vp-c-bg-alt:        #f5f7fc;
+  --vp-c-bg-elv:        #ffffff;
+  --vp-c-bg-elv-up:     #ffffff;
+
+  --vp-c-text:          #0b1020;
+  --vp-c-text-mute:     #475079;
+  --vp-c-text-subtle:   #6b7596;
+
+  --vp-c-divider:       #e4e8f3;
+  --vp-c-border:        #e4e8f3;
+  --vp-c-border-hard:   #cfd6e7;
+  --vp-c-gutter:        #eef1f8;
+
+  --vp-c-code-bg:       #eef1f8;
+  --code-bg-color:      #0b1020;
+  --code-c-text:        #{$ff-fg};
+
+  --badge-c-tip-text:     #1d4ed8;
+  --badge-c-tip-bg:       rgba(37, 99, 235, .12);
+  --badge-c-warning-text: #b45309;
+  --badge-c-warning-bg:   rgba(245, 158, 11, .14);
+  --badge-c-danger-text:  #b91c1c;
+  --badge-c-danger-bg:    rgba(239, 68, 68, .12);
+
+  --vp-c-tip-bg:        #eff4ff;
+  --vp-c-tip-text:      #1d4ed8;
+  --vp-c-tip-border:    #2563eb;
+
+  --vp-c-warning-bg:    #fff7ed;
+  --vp-c-warning-text:  #b45309;
+  --vp-c-warning-border:#{$ff-amber};
+
+  --vp-c-danger-bg:     #fef2f2;
+  --vp-c-danger-text:   #b91c1c;
+  --vp-c-danger-border: #{$ff-red};
+}

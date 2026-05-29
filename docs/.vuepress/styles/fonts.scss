@@ -1,0 +1,13 @@
+// =====================================================================
+// FLUID — self-hosted typography
+// =====================================================================
+// Geist + Geist Mono, shipped via fontsource-variable (one variable font
+// file per family, weights 100–900). Self-hosted woff2 — no Google Fonts
+// CDN round-trip, no render-blocking third-party request.
+// =====================================================================
+
+// Body + display — Geist
+@use "@fontsource-variable/geist";
+
+// Code — Geist Mono (clear 0/O, l/1/I)
+@use "@fontsource-variable/geist-mono";

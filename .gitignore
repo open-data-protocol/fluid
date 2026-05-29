@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# VuePress build output
+docs/.vuepress/dist/
+docs/.vuepress/.cache/
+docs/.vuepress/.temp/
+
+# Mirrored static assets — regenerated from canonical schema/ + specs/ at build
+# time by scripts/sync-public-assets.mjs. Do not commit the copies.
+docs/.vuepress/public/schema/
+docs/.vuepress/public/specs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code local tooling
+.claude/
+_preview/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local

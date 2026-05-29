@@ -128,15 +128,35 @@ def format_value(val: Any, indent: int = 0) -> str:
         return json.dumps(val)
 
 
-def generate_diff_markdown(old_version: str, new_version: str, 
-                          old_schema: Dict, new_schema: Dict) -> str:
+NOTE_START = "<!-- HUMAN-NOTE:START -->"
+NOTE_END = "<!-- HUMAN-NOTE:END -->"
+
+
+def extract_preserved_note(output_file: Path) -> str:
+    """Preserve a hand-written note block (between the HUMAN-NOTE markers) across
+    regenerations. The auto-generated property lists truncate enum arrays, so a
+    short human summary of breaking changes lives here and must survive re-runs."""
+    if not output_file.exists():
+        return ""
+    try:
+        text = output_file.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    if NOTE_START in text and NOTE_END in text:
+        return text[text.index(NOTE_START):text.index(NOTE_END) + len(NOTE_END)]
+    return ""
+
+
+def generate_diff_markdown(old_version: str, new_version: str,
+                          old_schema: Dict, new_schema: Dict,
+                          preserved_note: str = "") -> str:
     """Generate a markdown document showing the differences"""
     changes = compare_dicts(old_schema, new_schema)
-    
+
     # Count changes
-    total_changes = (len(changes['added']) + len(changes['removed']) + 
+    total_changes = (len(changes['added']) + len(changes['removed']) +
                     len(changes['modified']))
-    
+
     md = [
         f"# Schema Changes: {old_version} → {new_version}",
         "",
@@ -145,6 +165,11 @@ def generate_diff_markdown(old_version: str, new_version: str,
         f"- ❌ Removed: {len(changes['removed'])}",
         f"- 📝 Modified: {len(changes['modified'])}",
         "",
+    ]
+    if preserved_note:
+        md.append(preserved_note)
+        md.append("")
+    md += [
         "---",
         ""
     ]
@@ -214,12 +239,13 @@ def generate_diff(old_version: str, old_path: Path,
     with open(new_path, 'r', encoding='utf-8') as f:
         new_schema = json.load(f)
     
-    # Generate markdown
-    markdown = generate_diff_markdown(old_version, new_version, old_schema, new_schema)
-    
-    # Write to file
+    # Write to file (preserving any hand-written HUMAN-NOTE block)
     output_file = DIFFS_DIR / f"diff-{old_version}-to-{new_version}.md"
     output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Generate markdown
+    preserved_note = extract_preserved_note(output_file)
+    markdown = generate_diff_markdown(old_version, new_version, old_schema, new_schema, preserved_note)
     
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(markdown)
