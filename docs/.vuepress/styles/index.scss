@@ -1,0 +1,371 @@
+// =====================================================================
+// FLUID — global stylesheet
+// =====================================================================
+// Loaded automatically by VuePress 2 from .vuepress/styles/index.scss.
+// Restyles existing default-theme markup only — no theme fork, no custom
+// components. Selectors are the real rc.130 class names.
+// =====================================================================
+
+@use "fonts";
+@use "palette";
+
+// ---------------------------------------------------------------------
+// Typography — Geist (sans + display) and Geist Mono (code).
+// ---------------------------------------------------------------------
+:root {
+  --ff-font-sans: "Geist Variable", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ff-font-mono: "Geist Mono Variable", "SF Mono", ui-monospace, Menlo,
+    Consolas, "Liberation Mono", monospace;
+}
+
+html,
+body {
+  font-family: var(--ff-font-sans);
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--ff-font-mono);
+  font-variant-ligatures: none;
+  font-feature-settings: normal;
+}
+
+// ---------------------------------------------------------------------
+// Page surface — deep-navy background with a subtle blue/violet glow wash.
+// ---------------------------------------------------------------------
+body {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(59, 130, 246, .12), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 88% 4%, rgba(139, 92, 246, .08), transparent 55%),
+    var(--vp-c-bg);
+}
+
+::selection {
+  background: var(--vp-c-accent);
+  color: var(--vp-c-accent-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--vp-c-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+// ---------------------------------------------------------------------
+// Homepage hero (.vp-hero) — eyebrow pill, animated gradient headline,
+// pill CTAs, faint engineering-grid texture.
+// ---------------------------------------------------------------------
+.vp-hero {
+  position: relative;
+  isolation: isolate;
+  padding-top: 1rem;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -3rem -8vw 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(var(--ff-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--ff-grid-line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 58% 70% at 50% 32%, #000 8%, transparent 72%);
+    mask-image: radial-gradient(ellipse 58% 70% at 50% 32%, #000 8%, transparent 72%);
+    pointer-events: none;
+  }
+
+  &::before {
+    content: "Open standard · contract-first · agentic-native";
+    display: block;
+    width: fit-content;
+    margin: 0 auto 1.5rem;
+    padding: 0.5rem 1.05rem;
+    border-radius: 999px;
+    border: 1px solid var(--vp-c-border);
+    background: var(--ff-glass-bg);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: var(--vp-c-text-mute);
+    font-family: var(--ff-font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+}
+
+.vp-hero-image {
+  max-height: 96px;
+  margin: 0 auto 1.5rem;
+  filter: drop-shadow(0 8px 26px rgba(59, 130, 246, .35));
+}
+
+#main-title {
+  margin: 0 auto 1.4rem;
+  font-size: clamp(2.7rem, 6.4vw, 5.25rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.04;
+
+  background: var(--ff-text-gradient);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: ff-grad-flow 9s linear infinite;
+}
+
+.vp-hero-description {
+  max-width: 40rem;
+  margin: 0 auto;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  line-height: 1.5;
+  color: var(--vp-c-text-mute);
+}
+
+.vp-hero-actions {
+  gap: 0.85rem;
+  margin-top: 2rem;
+}
+
+.vp-hero-action-button {
+  border-radius: 999px;
+  padding: 0.82rem 1.7rem;
+  border: 1px solid var(--vp-c-border);
+  font-size: 0.98rem;
+  font-weight: 600;
+  transition: transform .18s ease, box-shadow .18s ease,
+    background-color .18s ease, border-color .18s ease, color .18s ease;
+
+  &.primary {
+    background: var(--vp-c-accent);
+    color: var(--vp-c-accent-text);
+    border-color: transparent;
+    box-shadow: var(--ff-glow-blue);
+
+    &:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+  }
+
+  &.secondary {
+    background: var(--ff-glass-bg);
+    color: var(--vp-c-text);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--vp-c-accent);
+      color: var(--vp-c-accent);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Homepage feature cards (.vp-features) — glassmorphism, hover lift.
+// ---------------------------------------------------------------------
+.vp-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.15rem;
+  border-top: 0;
+  margin-top: 3rem;
+  padding: 0;
+
+  @media (max-width: 959px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 719px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vp-feature {
+  max-width: none;
+  margin: 0;
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 16px;
+  background: var(--ff-glass-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--vp-c-accent);
+    box-shadow: var(--ff-glow-blue);
+  }
+
+  h2 {
+    margin-top: 0;
+    border-bottom: 0;
+    font-size: 1.18rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--vp-c-text-mute);
+  }
+}
+
+// ---------------------------------------------------------------------
+// Navbar — glassmorphism (translucent + blur).
+// ---------------------------------------------------------------------
+.vp-navbar {
+  background: var(--ff-glass-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  border-bottom: 1px solid var(--ff-glass-border);
+}
+
+// ---------------------------------------------------------------------
+// Sidebar — accent the active page, keep the rest quiet.
+// ---------------------------------------------------------------------
+.vp-sidebar {
+  background: transparent;
+
+  .sidebar-item.active {
+    color: var(--vp-c-accent);
+    font-weight: 600;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Callouts (.hint-container) — brand left border + soft radius.
+// ---------------------------------------------------------------------
+.hint-container {
+  border-radius: 10px;
+  border-left: 4px solid;
+
+  .hint-container-title {
+    font-weight: 600;
+  }
+
+  &.tip {
+    background: var(--vp-c-tip-bg);
+    border-left-color: var(--vp-c-tip-border);
+    .hint-container-title { color: var(--vp-c-tip-text); }
+  }
+
+  &.warning {
+    background: var(--vp-c-warning-bg);
+    border-left-color: var(--vp-c-warning-border);
+    .hint-container-title { color: var(--vp-c-warning-text); }
+  }
+
+  &.danger,
+  &.caution {
+    background: var(--vp-c-danger-bg);
+    border-left-color: var(--vp-c-danger-border);
+    .hint-container-title { color: var(--vp-c-danger-text); }
+  }
+
+  &.info,
+  &.note,
+  &.important {
+    background: var(--ff-c-info-bg);
+    border-left-color: var(--ff-c-info-border);
+    .hint-container-title { color: var(--ff-c-info-text); }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Code blocks — rounded, bordered.
+// ---------------------------------------------------------------------
+div[class*="language-"] {
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-border);
+}
+
+// Syntax-token a11y: the theme's highlight palette renders `comment` (#636f88,
+// 2.47:1) and `number` (#b48ead, 4.4:1) below WCAG AA on its #2e3440 code bg.
+// Lift both to ≥ 4.5:1 while keeping the Nord-ish hues.
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #9aa7c4;
+}
+.token.number,
+.token.boolean {
+  color: #d2a8cc;
+}
+
+// ---------------------------------------------------------------------
+// Tables — full width, alternating rows.
+// ---------------------------------------------------------------------
+[vp-content] table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+
+  th {
+    background: var(--vp-c-bg-alt);
+    font-weight: 600;
+  }
+
+  th,
+  td {
+    padding: 10px 14px;
+    border-color: var(--vp-c-border);
+  }
+
+  tr:nth-child(2n) td {
+    background: var(--vp-c-bg-alt);
+  }
+}
+
+// ---------------------------------------------------------------------
+// Page meta (edit link + last updated) — quiet, accent on hover.
+// ---------------------------------------------------------------------
+.vp-page-meta a {
+  color: var(--vp-c-accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Animations — gated behind prefers-reduced-motion.
+// ---------------------------------------------------------------------
+@keyframes ff-grad-flow {
+  0%,
+  100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #main-title {
+    animation: none;
+  }
+
+  .vp-hero-action-button,
+  .vp-feature {
+    transition: none;
+  }
+
+  .vp-hero-action-button:hover,
+  .vp-feature:hover {
+    transform: none;
+  }
+}
