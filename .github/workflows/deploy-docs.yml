@@ -1,0 +1,75 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Regenerate the latest schema HTML so specs/<latest>/ exists before
+      # the asset-sync step mirrors it into the published site. The fluid
+      # generators expect a venv at <repo-parent>/.venv (see schema-sync.yml).
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate schema docs (specs/)
+        run: |
+          venv_dir="$(dirname "$GITHUB_WORKSPACE")/.venv"
+          python3 -m venv "$venv_dir"
+          "$venv_dir/bin/pip" install --quiet json-schema-for-humans
+          python3 generate-docs.py
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # docs:build runs scripts/sync-public-assets.mjs first, mirroring
+      # schema/ + specs/ into docs/.vuepress/public/, then `vuepress build`.
+      - name: Build docs
+        run: npm run docs:build
+
+      - name: Add .nojekyll
+        run: touch docs/.vuepress/dist/.nojekyll
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vuepress/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

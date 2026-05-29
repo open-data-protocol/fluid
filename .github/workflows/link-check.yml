@@ -1,0 +1,86 @@
+name: Link Check
+
+# Catches broken docs links before they ship.
+#
+#   1. base-prefix-check — fast shell regex catching the bug class where an
+#      absolute body-markdown link like [x](/schema/foo) is NOT auto-prefixed
+#      with the /fluid/ base by VuePress, so it 404s in the rendered HTML.
+#   2. external — weekly cron (skipped on PRs) checking external URLs.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/link-check.yml"
+      - ".lycheeignore"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/link-check.yml"
+      - ".lycheeignore"
+  schedule:
+    - cron: "13 9 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: link-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  base-prefix-check:
+    name: Base-prefix check (catches /schema/ vs /fluid/schema/)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify all internal absolute links carry the /fluid/ base
+        run: |
+          # VuePress base is /fluid/. Sidebar/navbar links auto-prefix, but
+          # body markdown links do NOT — an absolute link like [x](/schema/foo)
+          # renders as <a href="/schema/foo"> and 404s on the live site.
+          PREFIXES='guide|concepts|schema|examples|how-to|releases|vision|contributing|deck|specs'
+
+          if grep -rIn -E "\]\(/(${PREFIXES})[^)]*\)" docs/ --include="*.md" \
+             | grep -v "(/fluid/" ; then
+            echo ""
+            echo "::error::Found internal absolute markdown links missing the /fluid/ base prefix."
+            echo "::error::These render as <a href=\"/schema/...\"> and 404 on the live site."
+            echo "::error::Fix: rewrite [text](/schema/foo) -> [text](/fluid/schema/foo) (or use a relative path)."
+            exit 1
+          fi
+          echo "✅ All internal absolute body links carry the /fluid/ base."
+
+  external:
+    name: External URLs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run lychee on external links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --max-retries 3
+            --max-concurrency 8
+            --timeout 20
+            --exclude-loopback
+            --exclude-mail
+            './docs/**/*.md'
+          fail: false
+
+      - name: Open issue if external links broke
+        if: steps.lychee.outputs.exit_code != '0'
+        uses: peter-evans/create-issue-from-file@v6
+        with:
+          title: "Link Check: broken external links found"
+          content-filepath: ./lychee/out.md
+          labels: docs, link-check
