@@ -1,0 +1,42 @@
+{
+  "name": "fluid-docs",
+  "version": "0.7.4",
+  "description": "FLUID — the open, declarative standard for Data Products, built for the agentic era.",
+  "homepage": "https://open-data-protocol.github.io/fluid/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/open-data-protocol/fluid.git"
+  },
+  "scripts": {
+    "sync:assets": "node scripts/sync-public-assets.mjs",
+    "docs:dev": "npm run sync:assets && vuepress dev docs",
+    "docs:build": "npm run sync:assets && vuepress build docs",
+    "docs:preview": "vuepress preview docs"
+  },
+  "keywords": [
+    "fluid",
+    "data-products",
+    "data-contract",
+    "data-mesh",
+    "odcs",
+    "odps",
+    "agentic",
+    "mcp",
+    "json-schema"
+  ],
+  "author": "open-data-protocol",
+  "license": "MIT",
+  "devDependencies": {
+    "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource-variable/geist-mono": "^5.2.8",
+    "@vuepress/bundler-vite": "^2.0.0-rc.30",
+    "@vuepress/client": "^2.0.0-rc.30",
+    "@vuepress/plugin-copy-code": "2.0.0-rc.130",
+    "@vuepress/plugin-markdown-chart": "2.0.0-rc.130",
+    "@vuepress/plugin-search": "2.0.0-rc.130",
+    "@vuepress/plugin-sitemap": "2.0.0-rc.130",
+    "@vuepress/theme-default": "^2.0.0-rc.130",
+    "sass-embedded": "^1.99.0",
+    "vuepress": "^2.0.0-rc.30"
+  }
+}
