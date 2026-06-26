@@ -36,7 +36,7 @@ FLUID is one YAML file that describes a data product end to end — **schema, bu
 ## The shape of a contract
 
 ```yaml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id: demo.bronze.hello_world
 name: Hello World
@@ -65,5 +65,5 @@ exposes:
 - **[Guide](/fluid/guide/)** — what FLUID is, the quickstart, and the FAQ.
 - **[Concepts](/fluid/concepts/)** — the agentic-native layer and how FLUID compares to ODCS / ODPS.
 - **[Schema Reference](/fluid/schema/anatomy)** — every top-level block, a cheatsheet, and the full specification.
-- **[What's New in 0.7.4](/fluid/releases/0.7.4)** — runtime agentPolicy enforcement at the MCP gateway.
+- **[What's New in 0.7.5](/fluid/releases/0.7.5)** — streaming Kafka → Iceberg sink + Confluent Cloud Tableflow.
 - **[See the deck](/fluid/deck/)** — the FLUID story in slides.
