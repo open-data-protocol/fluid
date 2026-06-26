@@ -84,8 +84,8 @@ export default defineUserConfig({
           { text: 'Cheatsheet', link: '/schema/cheatsheet' },
           { text: 'Full Specification', link: '/schema/specification' },
           { text: 'Versions', link: '/schema/versions' },
-          { text: 'JSON Schema 0.7.4 ↗', link: 'https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.4.json', target: '_blank' },
-          { text: 'Reference (HTML) ↗', link: 'https://open-data-protocol.github.io/fluid/specs/0.7.4/fluid-spec.html', target: '_blank' },
+          { text: 'JSON Schema 0.7.5 ↗', link: 'https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json', target: '_blank' },
+          { text: 'Reference (HTML) ↗', link: 'https://open-data-protocol.github.io/fluid/specs/0.7.5/fluid-spec.html', target: '_blank' },
         ],
       },
       { text: 'Examples', link: '/examples/' },
@@ -162,6 +162,7 @@ export default defineUserConfig({
           text: "What's New",
           children: [
             '/releases/README.md',
+            '/releases/0.7.5.md',
             '/releases/0.7.4.md',
             '/releases/0.7.3.md',
             '/releases/0.7.2.md',

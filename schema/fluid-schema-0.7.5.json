@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.2.json",
-  "title": "FLUID 0.7.2 — Semantic Truth Engine",
-  "description": "FLUID Data Product contract (v0.7.2). Semantic Truth Engine Release:\n\n🔥 NEW in v0.7.2:\n• Semantic model definitions - Optional semantics block on each expose for entities, measures, dimensions, and metrics\n• Agent-consumable business logic - Eliminates semantic hallucination by providing machine-readable metric definitions\n• Industry-aligned primitives - Compatible with dbt MetricFlow, Snowflake Semantic Views, and OSI-aligned formats\n• Completes the agentic contract - semantics (how to act correctly) + agentPolicy (whether to act) = full agentic governance\n\n✅ BACKWARD COMPATIBLE with v0.7.1:\n• All v0.7.1 contracts remain valid (no breaking changes)\n• semantics is optional on each expose - zero existing contracts affected\n• All v0.7.1 features fully preserved (agentPolicy, sovereignty, orchestration)\n\n🔥 Inherited from v0.7.1 (Provider-First Orchestration + Agentic Governance):\n\n🔥 NEW in v0.7.1:\n• Agentic governance - AI/LLM usage policies (agentPolicy) control which models can consume data and for what purposes\n• Sovereignty constraints - Top-level jurisdiction and data residency requirements for compliance enforcement\n• Orchestration philosophy - Pragmatic engine enumeration (v0.7.x) with path to capability-based abstraction (v0.8.0+)\n\n🔥 NEW in v0.7.0:\n• Provider actions as first-class tasks - Direct invocation of provider actions (aws.s3.ensure_bucket, sf.table.ensure) without wrapper operators\n• Unified task type taxonomy - Simplified type system: provider_action, fluid_*, bash, python, sensor\n• Data product references in datasets - Link trigger datasets to actual exposes[] with strong typing and auto-URI generation\n• Task output → expose mapping - Formal produces[] declaration for automatic dataset registration and lineage\n• Cross-provider workflow patterns - Native support for multi-cloud pipelines with XCom data passing\n• Build step references - Link orchestration tasks to transformation steps via buildStepRef\n• Data product dependencies - Tasks can declare dependencies on other data products with version constraints\n• Enhanced error categorization - Retryable vs non-retryable errors with intelligent handling\n• Provider-specific operators - Native support for SnowflakeOperator, BigQueryOperator, GlueOperator, etc.\n• Cost tracking enhancements - Track actual vs estimated costs with budget enforcement\n\n✅ BACKWARD COMPATIBLE with v0.5.7:\n• All v0.5.7 contracts remain valid (no breaking changes)\n• New features are opt-in via new fields\n• Existing patterns (hybrid-reference, embedded-logic, multi-stage) fully preserved\n• All data quality, observability, policy, and lineage features retained\n\n📋 Inherited from v0.5.7:\n• Multiple build patterns with conditional validation\n• Enhanced build section for multi-modal concerns\n• Comprehensive data quality specs with anomaly detection\n• Detailed observability with default SLIs\n• Fine-grained policy controls (privacy, RBAC, column-level access)\n• Field-level lineage tracking\n• Schema evolution strategies\n• Machine learning model specifications\n• Environment-specific overrides\n• Simplified tagging maintained throughout\n\n🎯 Design Philosophy:\n• Provider actions = orchestration primitives\n• Contracts drive both infrastructure and workflows\n• Strong typing and validation\n• Natural multi-cloud/multi-provider patterns\n• Minimal abstraction layers\n• Agentic governance: Data owners control AI/LLM usage boundaries\n• Sovereignty-first: Jurisdiction constraints enforced at contract level\n\n⚙️ Orchestration Philosophy (v0.7.x):\n• Pragmatic approach: Enumerate known engines (airflow, dagster, prefect) for immediate adoption\n• Trade-off: Implementation-specific vs pure abstraction - favoring real-world deployment patterns\n• Future path: v0.8.0+ will evolve toward capability-based orchestration model\n• Escape hatch: 'custom' engine allows experimentation without schema changes",
+  "$id": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "title": "FLUID 0.7.5 \u2014 Streaming Kafka\u2192Iceberg Sink & Confluent Tableflow",
+  "description": "FLUID Data Product contract (v0.7.5). Streaming Kafka\u2192Iceberg Sink & Confluent Tableflow Release.\n\n\ud83d\udd25 NEW in v0.7.5:\n\u2022 Streaming Iceberg sink \u2014 The `kafka-connect` acquisition pattern gains an opt-in Iceberg streaming sink: `iceberg_sink_enabled` (derive the sink connector config; off by default when a hand-written `sink_connector_config` is present), `streamingSink` (commit interval, dynamic routing, auto-create, schema-evolution tuning \u2014 RFC \u00a76.2), `sink_topics`, and `iceberg_catalog_overrides` (operator escape hatch merged last over the derived config).\n\u2022 Confluent Cloud Tableflow \u2014 `binding.platform: confluent` plus `binding.location` Tableflow fields (`environment_id`, `kafka_cluster_id`, `confluent_role_arn`) for the managed Kafka\u2192Iceberg emitter.\n\u2022 Backward compatible with v0.7.4 \u2014 All v0.7.4 contracts remain valid; the streaming-sink keys and the `confluent` binding are additive and optional.\n\n\ud83d\udccb Inherited from v0.7.4 (Runtime agentPolicy Enforcement at the MCP Gateway):\n\u2022 MCP output-port gateway \u2014 An `expose.mcp` block declares an expose as agent-consumable over MCP (sampling caps + classification); its presence opts the expose into `fluid mcp output-port serve`.\n\u2022 Runtime agentPolicy enforcement \u2014 When an `expose.mcp` block is present, `policy.agentPolicy.allowedModels` / `deniedModels` and `allowedUseCases` / `deniedUseCases` are enforced at the Fluid MCP gateway on every read.\n\n\ud83d\udccb Inherited from v0.7.3 (Source-Aligned Acquisition):\n\u2022 Acquisition build pattern \u2014 First-class support for source-aligned data products that ingest external systems (Salesforce, Postgres, Kafka, files) into the mesh.\n\u2022 Six ingestion engines \u2014 duckdb (zero-infra files/JDBC), airbyte (350+ SaaS connectors), meltano (600+ Singer taps), dlt (Python-native), kafka-connect (streaming), debezium (CDC).\n\u2022 Three deployment modes \u2014 embedded (in-process), bring-your-own (existing server), managed (Forge provisions via Helm/Compose/OpenTofu).\n\u2022 Capability-based negotiation \u2014 Runners declare {full_refresh, incremental_append, incremental_dedup, cdc, streaming, schema_discovery, dlp_scan, exactly_once}; contract asks validated against declarations.\n\u2022 Schema evolution semantics \u2014 schemaPolicy \u2208 {strict, discover_and_freeze, evolve_safe, evolve_all} with concrete per-change behavior.\n\u2022 Delivery guarantees \u2014 at_most_once | at_least_once | exactly_once with idempotency keys and DLQ semantics.\n\u2022 Source supply-chain security \u2014 Cosign image signature verification + SLSA provenance required in production.\n\u2022 Top-level retention block \u2014 runState, runLogs, lineage, dlq durations.\n\u2022 Extended sovereignty.dataResidency \u2014 region pinning + prohibitTransferTo for runtime enforcement.\n\n\ud83d\udccb Inherited from v0.7.2 (Semantic Layer):\n\u2022 Semantic model definitions \u2014 Optional `semantics` block on each expose for entities, measures, dimensions, and metrics.\n\u2022 Agent-consumable business logic \u2014 Eliminates semantic hallucination by providing machine-readable metric definitions.\n\u2022 Industry-aligned primitives \u2014 Compatible with dbt MetricFlow, Snowflake Semantic Views, and OSI-aligned formats.\n\n\ud83d\udccb Inherited from v0.7.1 (Provider-First Orchestration + Agentic Governance):\n\u2022 Agentic governance \u2014 AI/LLM usage policies (agentPolicy) declare which models can consume data and for what purposes (runtime enforcement added in v0.7.4 \u2014 see above).\n\u2022 Sovereignty constraints \u2014 Top-level jurisdiction and data residency requirements for compliance enforcement.\n\u2022 Orchestration philosophy \u2014 Pragmatic engine enumeration (v0.7.x) with path to capability-based abstraction (v0.8.0+).\n\u2022 Provider actions as first-class tasks \u2014 Direct invocation of provider actions (aws.s3.ensure_bucket, sf.table.ensure) without wrapper operators.\n\u2022 Unified task type taxonomy \u2014 provider_action, fluid_*, bash, python, sensor.\n\u2022 Data product references in datasets \u2014 Link trigger datasets to actual `exposes[]` with strong typing and auto-URI generation.\n\u2022 Task output \u2192 expose mapping \u2014 Formal `produces[]` declaration for automatic dataset registration and lineage.\n\u2022 Cross-provider workflow patterns \u2014 Native support for multi-cloud pipelines with XCom data passing.\n\u2022 Cost tracking \u2014 Track actual vs estimated costs with budget enforcement.\n\n\ud83c\udfaf Design Philosophy:\n\u2022 Provider actions = orchestration primitives.\n\u2022 Contracts drive both infrastructure and workflows.\n\u2022 Strong typing and validation.\n\u2022 Natural multi-cloud/multi-provider patterns.\n\u2022 Minimal abstraction layers.\n\u2022 Agentic governance: data owners control AI/LLM usage boundaries.\n\u2022 Sovereignty-first: jurisdiction constraints enforced at contract level.\n\n\u2699\ufe0f Orchestration Philosophy (v0.7.x):\n\u2022 Pragmatic approach: enumerate known engines (airflow, dagster, prefect) for immediate adoption.\n\u2022 Trade-off: implementation-specific vs pure abstraction \u2014 favouring real-world deployment patterns.\n\u2022 Future path: v0.8.0+ will evolve toward a capability-based orchestration model.\n\u2022 Escape hatch: `custom` engine allows experimentation without schema changes.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -91,13 +91,23 @@
     }
   ],
   "properties": {
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Vendor / plugin-namespaced configuration. Each plugin claims a single sub-key (e.g. customScaffold, customCatalog) and validates its own schema there via the fluid_build.extension_validators entry-point."
+    },
     "fluidVersion": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
-      "const": "0.7.2",
-      "description": "Contract schema version. Must be exactly '0.7.2' for semantic truth engine + agentic governance + provider-first orchestration with full backward compatibility to 0.7.1 and 0.5.7.",
+      "enum": [
+        "0.7.3",
+        "0.7.4",
+        "0.7.5"
+      ],
+      "description": "Contract schema version. Accepts '0.7.3' (source-aligned data products + acquisition pattern + ingestion engines) or '0.7.4' (adds the MCP output-port gateway + runtime agentPolicy enforcement). 0.7.4 is fully backward-compatible with 0.7.3 \u2014 every 0.7.3 contract validates as 0.7.4 unchanged.",
       "examples": [
-        "0.7.2"
+        "0.7.4",
+        "0.7.3"
       ]
     },
     "kind": {
@@ -140,7 +150,7 @@
       "properties": {
         "provenance": {
           "type": "object",
-          "description": "Generation envelope injected by `fluid forge` / `fluid init` — records how, when and by which tool/command the contract was generated. Machine-written (not user-authored); additive metadata that does not affect the data product's semantic contract.",
+          "description": "Generation envelope injected by `fluid forge` / `fluid init` \u2014 records how, when and by which tool/command the contract was generated. Machine-written (not user-authored); additive metadata that does not affect the data product's semantic contract.",
           "properties": {
             "schema_version": {
               "type": "integer",
@@ -174,7 +184,34 @@
         },
         "layer": {
           "type": "string",
-          "description": "Data layer label (e.g., Bronze/Silver/Gold). Free-form."
+          "description": "Data layer label (e.g., Bronze/Silver/Gold). Free-form. When set together with `productType`, the two MUST be consistent under the canonical mapping (Bronze\u2194SDP, Silver\u2194ADP, Gold\u2194CDP)."
+        },
+        "productType": {
+          "type": "string",
+          "enum": [
+            "SDP",
+            "ADP",
+            "CDP"
+          ],
+          "description": "NEW in v0.7.3: Data Mesh data-product type. SDP = Source-Aligned Data Product (raw ingestion from external systems; corresponds to Bronze). ADP = Aggregated Data Product (cross-source joined / domain-modelled; corresponds to Silver). CDP = Consumption-Aligned Data Product (analytics- or product-shaped; corresponds to Gold). Either `metadata.layer` or `metadata.productType` is sufficient \u2014 the validator infers the missing one. When both are present they MUST agree."
+        },
+        "classification": {
+          "type": "string",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ],
+          "description": "NEW in v0.7.3: Data classification label propagated to catalog + access policy enforcement."
+        },
+        "experimental": {
+          "type": "array",
+          "description": "NEW in v0.7.3: Feature gates the contract opts into (e.g., 'acquisition' while Bronze acquisition is in beta).",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         },
         "owner": {
           "type": "object",
@@ -289,13 +326,40 @@
     "orchestration": {
       "$ref": "#/$defs/orchestration",
       "description": "Top-level orchestration configuration for scheduling and workflow engines."
+    },
+    "retention": {
+      "$ref": "#/$defs/retention",
+      "description": "NEW in v0.7.3: Retention durations for run state, run logs, lineage events, and DLQ records. Honored by the retention sweeper invoked from policy-apply."
+    },
+    "governance": {
+      "$ref": "#/$defs/governance",
+      "description": "Contract-level governance: account/project-wide settings (e.g. AWS Lake Formation admins and LF-tag definitions). Per-resource grants and tag associations live under binding.governance."
     }
   },
   "$defs": {
+    "retention": {
+      "type": "object",
+      "description": "NEW in v0.7.3: Retention durations (ISO-8601). Defaults: runState=P30D, runLogs=P90D, lineage=P365D, dlq=P180D.",
+      "additionalProperties": false,
+      "properties": {
+        "runState": {
+          "$ref": "#/$defs/isoDuration"
+        },
+        "runLogs": {
+          "$ref": "#/$defs/isoDuration"
+        },
+        "lineage": {
+          "$ref": "#/$defs/isoDuration"
+        },
+        "dlq": {
+          "$ref": "#/$defs/isoDuration"
+        }
+      }
+    },
     "identifier": {
       "type": "string",
-      "pattern": "^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$",
-      "description": "Unified identifier pattern: starts/ends with alphanumeric or underscore, allows dots and hyphens in middle."
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*[A-Za-z0-9_]$|^[A-Za-z0-9_]$",
+      "description": "Unified identifier pattern: starts/ends with alphanumeric or underscore, allows dots and hyphens in middle. Both casing conventions accepted (snake_case / dotted lowercase / PascalCase / UPPER) so existing catalog ids round-trip unchanged."
     },
     "semver": {
       "type": "string",
@@ -520,11 +584,18 @@
               "properties": {
                 "updateBehavior": {
                   "type": "string",
-                  "enum": ["UPDATE_IN_DATABASE", "LOG"]
+                  "enum": [
+                    "UPDATE_IN_DATABASE",
+                    "LOG"
+                  ]
                 },
                 "deleteBehavior": {
                   "type": "string",
-                  "enum": ["LOG", "DELETE_FROM_DATABASE", "DEPRECATE_IN_DATABASE"]
+                  "enum": [
+                    "LOG",
+                    "DELETE_FROM_DATABASE",
+                    "DEPRECATE_IN_DATABASE"
+                  ]
                 }
               }
             }
@@ -536,7 +607,11 @@
           "properties": {
             "writeFormat": {
               "type": "string",
-              "enum": ["parquet", "orc", "avro"],
+              "enum": [
+                "parquet",
+                "orc",
+                "avro"
+              ],
               "description": "Underlying file format for Iceberg data files."
             },
             "snapshotRetention": {
@@ -567,6 +642,10 @@
               }
             }
           }
+        },
+        "mcp": {
+          "$ref": "#/$defs/exposeMcp",
+          "description": "NEW in v0.7.4: Declares this expose as agent-consumable over MCP, with per-expose overrides for the consumer-side output-port server (`fluid mcp output-port serve`). Its presence opts the expose into the Fluid MCP gateway, where `policy.agentPolicy.allowedModels` / `allowedUseCases` are enforced at every read."
         }
       }
     },
@@ -578,6 +657,17 @@
           "type": "string",
           "pattern": "^sha256:[0-9a-fA-F]{64}$",
           "description": "Hash of canonical schema/OpenAPI. Used by contract-tests gates."
+        },
+        "schemaPolicy": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "discover_and_freeze",
+            "evolve_safe",
+            "evolve_all"
+          ],
+          "default": "strict",
+          "description": "NEW in v0.7.3: Schema evolution policy. strict = fail on any schema change; discover_and_freeze = capture from source on first run, fail thereafter; evolve_safe = accept additive changes; evolve_all = accept all changes (cast on type narrow, route failures to DLQ)."
         },
         "schema": {
           "type": "array",
@@ -632,7 +722,11 @@
           "description": "Simplified SQL-expression data quality rules (alternate form of dq.rules for inline assertions).",
           "items": {
             "type": "object",
-            "required": ["rule", "expression", "severity"],
+            "required": [
+              "rule",
+              "expression",
+              "severity"
+            ],
             "properties": {
               "rule": {
                 "type": "string",
@@ -644,7 +738,11 @@
               },
               "severity": {
                 "type": "string",
-                "enum": ["error", "warning", "info"],
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ],
                 "description": "Severity when the rule fails."
               }
             }
@@ -685,7 +783,7 @@
           "minLength": 1
         },
         "type": {
-          "description": "Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form such as decimal(18,4) or varchar(255). The enum lists the canonical bare types; the pattern additionally permits case variants and parameter suffixes. Intentionally generous — it rejects obvious garbage (e.g. MYSTERY_TYPE) while admitting the cross-dialect superset.",
+          "description": "Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form such as decimal(18,4) or varchar(255). The enum lists the canonical bare types; the pattern additionally permits case variants and parameter suffixes. Intentionally generous \u2014 it rejects obvious garbage (e.g. MYSTERY_TYPE) while admitting the cross-dialect superset.",
           "anyOf": [
             {
               "type": "string",
@@ -1166,16 +1264,20 @@
             "snowflake",
             "databricks",
             "kafka",
+            "confluent",
             "local",
             "kubernetes",
+            "postgres",
             "other"
-          ]
+          ],
+          "description": "Target platform. NEW in v0.7.5: 'confluent' for the Confluent Cloud Tableflow managed Kafka→Iceberg emitter. NEW in v0.7.4: 'postgres' for the MCP output-port PostgreSQL driver (AWS Athena uses platform 'aws')."
         },
         "format": {
           "type": "string",
           "enum": [
             "bigquery_table",
             "snowflake_table",
+            "snowflake_view",
             "gcs_file",
             "s3_file",
             "http_api",
@@ -1187,8 +1289,15 @@
             "parquet",
             "csv",
             "json",
+            "redshift_table",
+            "redshift_serverless",
+            "redshift_external_schema",
+            "postgres_table",
+            "athena_table",
+            "glue_table",
             "other"
-          ]
+          ],
+          "description": "Binding format. NEW in v0.7.4: 'postgres_table' (PostgreSQL driver), 'athena_table' / 'glue_table' (AWS Athena driver) for the MCP output port."
         },
         "icebergConfig": {
           "type": "object",
@@ -1197,12 +1306,19 @@
           "properties": {
             "writeVersion": {
               "type": "integer",
-              "enum": [1, 2],
+              "enum": [
+                1,
+                2
+              ],
               "description": "Iceberg table format version"
             },
             "fileFormat": {
               "type": "string",
-              "enum": ["parquet", "orc", "avro"],
+              "enum": [
+                "parquet",
+                "orc",
+                "avro"
+              ],
               "description": "Underlying file format for data files"
             },
             "partitionSpec": {
@@ -1210,7 +1326,10 @@
               "description": "Partition transformation specifications",
               "items": {
                 "type": "object",
-                "required": ["sourceColumn", "transform"],
+                "required": [
+                  "sourceColumn",
+                  "transform"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -1222,7 +1341,15 @@
                   },
                   "transform": {
                     "type": "string",
-                    "enum": ["identity", "year", "month", "day", "hour", "bucket", "truncate"],
+                    "enum": [
+                      "identity",
+                      "year",
+                      "month",
+                      "day",
+                      "hour",
+                      "bucket",
+                      "truncate"
+                    ],
                     "description": "Partition transform function"
                   },
                   "numBuckets": {
@@ -1241,7 +1368,9 @@
               "description": "Sort order specifications for data files",
               "items": {
                 "type": "object",
-                "required": ["column"],
+                "required": [
+                  "column"
+                ],
                 "properties": {
                   "column": {
                     "type": "string",
@@ -1249,12 +1378,18 @@
                   },
                   "direction": {
                     "type": "string",
-                    "enum": ["asc", "desc"],
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ],
                     "description": "Sort direction"
                   },
                   "nullOrder": {
                     "type": "string",
-                    "enum": ["nulls-first", "nulls-last"],
+                    "enum": [
+                      "nulls-first",
+                      "nulls-last"
+                    ],
                     "description": "NULL value ordering"
                   }
                 }
@@ -1284,6 +1419,10 @@
           "type": "object",
           "description": "Provider-specific binding properties (e.g., cluster_by, comment for Snowflake).",
           "additionalProperties": true
+        },
+        "governance": {
+          "$ref": "#/$defs/bindingGovernance",
+          "description": "Per-resource governance: registerLocation, principal grants, tag associations, row/column filters. Account-wide governance (admins, tag definitions) lives at the contract top-level governance block."
         }
       }
     },
@@ -1348,6 +1487,18 @@
         "zone": {
           "type": "string",
           "description": "Cloud zone"
+        },
+        "environment_id": {
+          "type": "string",
+          "description": "NEW in v0.7.5: Confluent Cloud environment id (env-xxxxx) for the Tableflow emitter."
+        },
+        "kafka_cluster_id": {
+          "type": "string",
+          "description": "NEW in v0.7.5: Confluent Cloud Kafka cluster id (lkc-xxxxx) the Tableflow topic belongs to."
+        },
+        "confluent_role_arn": {
+          "type": "string",
+          "description": "NEW in v0.7.5: ARN of the pre-created AWS IAM role Confluent Tableflow assumes (byob_aws). Its trust policy is updated post-apply with the provider integration's external_id (two-phase IAM)."
         }
       }
     },
@@ -1429,6 +1580,42 @@
         "defaultSLIs": {
           "$ref": "#/$defs/defaultSLIs",
           "description": "Default SLI trio (freshness, completeness, latency) by kind."
+        },
+        "alert": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Alert dispatcher config consumed by the acquisition Alerter (DLQ overflow, schema-fingerprint changes, anomaly signals).",
+          "properties": {
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "log",
+                      "file",
+                      "webhook"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "For kind=file: NDJSON sink path (env-vars expanded)."
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "For kind=webhook: Slack-compatible incoming webhook URL. Validated against the SSRF guard at construction time."
+                  }
+                }
+              }
+            }
+          }
         },
         "tags": {
           "$ref": "#/$defs/tags",
@@ -1652,7 +1839,15 @@
           "items": {
             "type": "string",
             "pattern": "^[a-z0-9][a-z0-9-_.]*[a-z0-9]$|^[a-z0-9]$",
-            "examples": ["gpt-4", "claude-3-opus", "claude-3-sonnet", "gemini-pro", "gemini-ultra", "llama-3", "mixtral-8x7b"]
+            "examples": [
+              "gpt-4",
+              "claude-3-opus",
+              "claude-3-sonnet",
+              "gemini-pro",
+              "gemini-ultra",
+              "llama-3",
+              "mixtral-8x7b"
+            ]
           },
           "uniqueItems": true
         },
@@ -1668,7 +1863,11 @@
           "type": "integer",
           "minimum": 1,
           "description": "Maximum tokens per AI request. Prevents excessive data exposure in single queries.",
-          "examples": [4096, 8192, 16384]
+          "examples": [
+            4096,
+            8192,
+            16384
+          ]
         },
         "maxTokensPerDay": {
           "type": "integer",
@@ -1696,7 +1895,18 @@
             ]
           },
           "uniqueItems": true,
-          "examples": [["inference", "reasoning", "summarization"], ["search", "qa", "rag"]]
+          "examples": [
+            [
+              "inference",
+              "reasoning",
+              "summarization"
+            ],
+            [
+              "search",
+              "qa",
+              "rag"
+            ]
+          ]
         },
         "deniedUseCases": {
           "type": "array",
@@ -1719,7 +1929,12 @@
             ]
           },
           "uniqueItems": true,
-          "examples": [["training", "fine_tuning"]]
+          "examples": [
+            [
+              "training",
+              "fine_tuning"
+            ]
+          ]
         },
         "canReason": {
           "type": "boolean",
@@ -1787,7 +2002,11 @@
             "Global",
             "Multi-Region"
           ],
-          "examples": ["EU", "US", "Global"]
+          "examples": [
+            "EU",
+            "US",
+            "Global"
+          ]
         },
         "allowedRegions": {
           "type": "array",
@@ -1796,7 +2015,16 @@
             "type": "string"
           },
           "uniqueItems": true,
-          "examples": [["eu-west-1", "eu-central-1"], ["us-east-1", "us-west-2"]]
+          "examples": [
+            [
+              "eu-west-1",
+              "eu-central-1"
+            ],
+            [
+              "us-east-1",
+              "us-west-2"
+            ]
+          ]
         },
         "deniedRegions": {
           "type": "array",
@@ -1851,11 +2079,26 @@
             ]
           },
           "uniqueItems": true,
-          "examples": [["GDPR"], ["GDPR", "CCPA"], ["HIPAA"]]
+          "examples": [
+            [
+              "GDPR"
+            ],
+            [
+              "GDPR",
+              "CCPA"
+            ],
+            [
+              "HIPAA"
+            ]
+          ]
         },
         "enforcementMode": {
           "type": "string",
-          "enum": ["strict", "advisory", "audit"],
+          "enum": [
+            "strict",
+            "advisory",
+            "audit"
+          ],
           "default": "strict",
           "description": "How sovereignty violations are handled. strict = block deployment, advisory = warn, audit = log only."
         },
@@ -1876,17 +2119,28 @@
       "examples": [
         {
           "jurisdiction": "EU",
-          "allowedRegions": ["eu-west-1", "eu-central-1"],
+          "allowedRegions": [
+            "eu-west-1",
+            "eu-central-1"
+          ],
           "dataResidency": true,
           "crossBorderTransfer": false,
-          "regulatoryFramework": ["GDPR"],
+          "regulatoryFramework": [
+            "GDPR"
+          ],
           "enforcementMode": "strict"
         },
         {
           "jurisdiction": "US",
-          "allowedRegions": ["us-east-1", "us-west-2"],
+          "allowedRegions": [
+            "us-east-1",
+            "us-west-2"
+          ],
           "dataResidency": true,
-          "regulatoryFramework": ["CCPA", "HIPAA"],
+          "regulatoryFramework": [
+            "CCPA",
+            "HIPAA"
+          ],
           "enforcementMode": "strict"
         }
       ]
@@ -1901,7 +2155,9 @@
           "description": "List of access grants to principals (users, groups, service accounts).",
           "items": {
             "type": "object",
-            "required": ["principal"],
+            "required": [
+              "principal"
+            ],
             "additionalProperties": false,
             "properties": {
               "principal": {
@@ -1932,7 +2188,17 @@
                   ]
                 },
                 "uniqueItems": true,
-                "examples": [["read", "select"], ["write", "insert", "update"]]
+                "examples": [
+                  [
+                    "read",
+                    "select"
+                  ],
+                  [
+                    "write",
+                    "insert",
+                    "update"
+                  ]
+                ]
               },
               "resources": {
                 "type": "array",
@@ -1959,11 +2225,20 @@
           "grants": [
             {
               "principal": "group:data-analytics@company.com",
-              "permissions": ["read", "select", "query"]
+              "permissions": [
+                "read",
+                "select",
+                "query"
+              ]
             },
             {
               "principal": "serviceAccount:pipeline@project.iam.gserviceaccount.com",
-              "permissions": ["write", "insert", "update", "delete"]
+              "permissions": [
+                "write",
+                "insert",
+                "update",
+                "delete"
+              ]
             }
           ]
         }
@@ -2054,10 +2329,11 @@
           "enum": [
             "hybrid-reference",
             "embedded-logic",
-            "multi-stage"
+            "multi-stage",
+            "acquisition"
           ],
           "default": "hybrid-reference",
-          "description": "Build pattern: hybrid-reference (dbt-style), embedded-logic (raw SQL/code), or multi-stage (complex pipelines)."
+          "description": "Build pattern: hybrid-reference (dbt-style), embedded-logic (raw SQL/code), multi-stage (complex pipelines), or acquisition (source-aligned ingestion from external systems)."
         },
         "engine": {
           "type": "string",
@@ -2069,7 +2345,13 @@
                 "python",
                 "spark",
                 "glue",
-                "custom"
+                "custom",
+                "duckdb",
+                "airbyte",
+                "meltano",
+                "dlt",
+                "kafka-connect",
+                "debezium"
               ]
             },
             {
@@ -2077,7 +2359,29 @@
             }
           ],
           "default": "dbt",
-          "description": "Build engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-qualified dbt engines (dbt-<adapter>, e.g. dbt-glue, dbt-snowflake, dbt-bigquery) are also accepted and route through the dbt build runner, which derives the adapter from the suffix."
+          "description": "Build/ingestion engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-qualified dbt engines (dbt-<adapter>, e.g. dbt-glue, dbt-snowflake, dbt-bigquery) are accepted too and route through the dbt build runner, which derives the adapter from the suffix. Ingestion engines (acquisition pattern only): duckdb (zero-infra files/JDBC), airbyte (350+ SaaS), meltano (Singer 600+ taps), dlt (Python-native), kafka-connect (streaming), debezium (CDC). AWS Glue: glue (Spark ETL jobs managed by Glue)."
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "Capabilities the build asks for (acquisition pattern). Validation enforces capabilities \u2286 runner.declared_capabilities.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "full_refresh",
+              "incremental_append",
+              "incremental_dedup",
+              "incremental_merge",
+              "cdc",
+              "streaming",
+              "schema_discovery",
+              "schema_evolution",
+              "dlp_scan",
+              "at_most_once",
+              "at_least_once",
+              "exactly_once"
+            ]
+          },
+          "uniqueItems": true
         },
         "repository": {
           "type": "string"
@@ -2177,6 +2481,22 @@
             "properties": {
               "properties": {
                 "$ref": "#/$defs/multiStagePattern"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "pattern": {
+                "const": "acquisition"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "#/$defs/acquisitionPattern"
               }
             }
           }
@@ -2351,6 +2671,891 @@
         },
         "labels": {
           "$ref": "#/$defs/labels"
+        }
+      }
+    },
+    "acquisitionPattern": {
+      "type": "object",
+      "description": "NEW in v0.7.3: Source-aligned acquisition pattern. The build ingests data from an external system (no transformation). Engine \u2208 {duckdb, airbyte, meltano, dlt, kafka-connect, debezium}.",
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/acquisitionSource"
+        },
+        "sink": {
+          "$ref": "#/$defs/acquisitionSink"
+        },
+        "delivery": {
+          "$ref": "#/$defs/acquisitionDelivery"
+        },
+        "schemaEvolution": {
+          "$ref": "#/$defs/acquisitionSchemaEvolution"
+        },
+        "preLand": {
+          "type": "array",
+          "description": "Pre-land hook chain - runs on each batch before destination write.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "dlp_scan",
+              "tokenize_pii",
+              "quality_gate",
+              "emit_lineage_input"
+            ]
+          }
+        },
+        "quality": {
+          "$ref": "#/$defs/acquisitionQuality"
+        },
+        "cost": {
+          "$ref": "#/$defs/acquisitionCost"
+        },
+        "catalog": {
+          "$ref": "#/$defs/acquisitionCatalog"
+        },
+        "concurrency": {
+          "$ref": "#/$defs/acquisitionConcurrency"
+        },
+        "lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "emit": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "duckdb": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "extensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "airbyte": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "connector_image": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "normalization": {
+              "type": "boolean"
+            },
+            "image_signature": {
+              "$ref": "#/$defs/acquisitionImageSignature"
+            },
+            "deployment": {
+              "$ref": "#/$defs/acquisitionDeployment"
+            }
+          }
+        },
+        "meltano": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "tap": {
+              "type": "string"
+            },
+            "project_dir": {
+              "type": "string"
+            },
+            "deployment": {
+              "$ref": "#/$defs/acquisitionDeployment"
+            }
+          }
+        },
+        "dlt": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "source_module": {
+              "type": "string"
+            },
+            "pipeline_name": {
+              "type": "string"
+            }
+          }
+        },
+        "kafka-connect": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "connector_class": {
+              "type": "string"
+            },
+            "connector_name": {
+              "type": "string"
+            },
+            "tasks_max": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "schema_registry": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Confluent-compatible Schema Registry config. When ``url`` is set, the runner injects ``key.converter``/``value.converter`` for Avro into the emitted connector config.",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Schema Registry HTTP endpoint, e.g. http://schema-registry:8081"
+                },
+                "auth": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "secretRef": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "sink_connector_name": {
+              "type": "string"
+            },
+            "sink_connector_config": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "image_signature": {
+              "$ref": "#/$defs/acquisitionImageSignature"
+            },
+            "deployment": {
+              "$ref": "#/$defs/acquisitionDeployment"
+            },
+            "iceberg_sink_enabled": {
+              "type": "boolean",
+              "description": "Opt-in: derive the Iceberg sink connector config. Defaults OFF when a hand-written sink_connector_config is present (RFC \u00a76.2)."
+            },
+            "sink_topics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Explicit topics the derived Iceberg sink consumes (else derived from source streams)."
+            },
+            "iceberg_catalog_overrides": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Operator escape hatch: connector config keys merged LAST over the derived Iceberg sink config."
+            },
+            "streamingSink": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Optional Iceberg streaming-sink tuning (RFC \u00a76.2). All keys optional.",
+              "properties": {
+                "commitIntervalMs": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "routeField": {
+                  "type": "string"
+                },
+                "dynamicEnabled": {
+                  "type": "boolean"
+                },
+                "autoCreate": {
+                  "type": "boolean"
+                },
+                "evolveSchema": {
+                  "type": "boolean"
+                },
+                "upsertMode": {
+                  "type": "boolean"
+                },
+                "controlTopic": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "debezium": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "connector_class": {
+              "type": "string"
+            },
+            "snapshot_mode": {
+              "type": "string",
+              "enum": [
+                "initial",
+                "schema_only",
+                "never",
+                "when_needed",
+                "always"
+              ]
+            },
+            "deployment": {
+              "$ref": "#/$defs/acquisitionDeployment"
+            }
+          }
+        }
+      }
+    },
+    "acquisitionSource": {
+      "type": "object",
+      "description": "External source system specification.",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mode"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Source system kind: filesystem, postgres, mysql, sqlite, http, salesforce, stripe, github, kafka, etc. Engine-specific catalog of supported kinds."
+        },
+        "connection": {
+          "type": "object",
+          "description": "Connection details. Use ${VAR} placeholders for env values; use secretRef for credentials. Inline secrets are forbidden by validator.",
+          "additionalProperties": true,
+          "properties": {
+            "uri": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string",
+                  "description": "Allows ${ENV_VAR} placeholders that resolve to an integer at runtime."
+                }
+              ]
+            },
+            "database": {
+              "type": "string"
+            },
+            "instance_url": {
+              "type": "string"
+            },
+            "secretRef": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_+.-]*://.+",
+              "description": "Reference to a secret in the configured backend (vault://, aws://, gcp://, azure://, env://)."
+            },
+            "user": {
+              "type": "string",
+              "description": "NEW in v0.7.3: Username/principal for SQL- or REST-style sources. Required by most database drivers (Postgres/MySQL/Oracle/etc.) \u2014 without it the underlying client falls back to the OS-user identity and typically fails authentication. Goes alongside ``secretRef`` (or an inline ``password``) for the credential pair."
+            },
+            "schema": {
+              "type": "string",
+              "description": "NEW in v0.7.3: Default schema/namespace within the source database to read from. Maps to engine-specific config: dlt sql_database schema=, Meltano tap-postgres filter_schemas=[], Airbyte source-postgres schemas=[], Debezium schema.include.list, Kafka Connect JDBC schema.pattern. Use ``schemas`` (array) to scope to multiple schemas at once."
+            },
+            "schemas": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true,
+              "description": "NEW in v0.7.3: Multi-schema variant of ``schema``. When both are set, ``schemas`` wins and ``schema`` is treated as a deprecated alias. Engines that don't natively support multi-schema reads will iterate the list."
+            }
+          }
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "full_refresh",
+            "incremental_append",
+            "incremental_dedup",
+            "incremental_merge",
+            "cdc",
+            "streaming"
+          ]
+        },
+        "cursor_field": {
+          "type": "string",
+          "description": "Column used for incremental cursor (e.g., updated_at, SystemModstamp)."
+        },
+        "watermark": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "high_water_mark",
+                "log_position",
+                "lsn"
+              ]
+            },
+            "allowedLateness": {
+              "$ref": "#/$defs/isoDuration"
+            }
+          }
+        },
+        "streams": {
+          "type": "array",
+          "description": "List of streams/tables/objects to ingest.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reader": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "parquet",
+                "json",
+                "ndjson",
+                "avro",
+                "orc"
+              ]
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "acquisitionSink": {
+      "type": "object",
+      "description": "Destination format for ingested data. binding.platform on the expose remains the source of truth for where; sink.format describes how.",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "iceberg",
+            "delta",
+            "parquet",
+            "csv",
+            "json",
+            "snowflake_table",
+            "bigquery_table",
+            "redshift_table",
+            "duckdb_table"
+          ]
+        },
+        "catalog": {
+          "type": "string",
+          "enum": [
+            "rest",
+            "glue",
+            "nessie",
+            "unity",
+            "snowflake-managed",
+            "hive"
+          ]
+        },
+        "partitionBy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "acquisitionDelivery": {
+      "type": "object",
+      "description": "Delivery semantics + idempotency + DLQ configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "guarantee": {
+          "type": "string",
+          "enum": [
+            "at_most_once",
+            "at_least_once",
+            "exactly_once"
+          ],
+          "default": "at_least_once"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "description": "Template for the idempotency key. Default: {run_id}:{stream}:{record_pk}",
+          "default": "{run_id}:{stream}:{record_pk}"
+        },
+        "dlq": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "sink": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "parquet",
+                    "json",
+                    "ndjson"
+                  ]
+                },
+                "location": {
+                  "type": "string"
+                }
+              }
+            },
+            "maxRecordsBeforeAbort": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10000
+            },
+            "alertOn": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pii_classification_failed",
+                  "schema_violation",
+                  "destination_write_failed",
+                  "quality_gate_failed"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "acquisitionSchemaEvolution": {
+      "type": "object",
+      "description": "Schema evolution behavior. Stricter-wins between policy and per-change overrides.",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "discover_and_freeze",
+            "evolve_safe",
+            "evolve_all"
+          ],
+          "default": "strict"
+        },
+        "onAddedColumn": {
+          "type": "string",
+          "enum": [
+            "include",
+            "warn",
+            "fail"
+          ]
+        },
+        "onRemovedColumn": {
+          "type": "string",
+          "enum": [
+            "drop",
+            "warn",
+            "fail"
+          ]
+        },
+        "onTypeChange": {
+          "type": "string",
+          "enum": [
+            "cast",
+            "warn",
+            "fail"
+          ]
+        },
+        "sourceFingerprint": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "disabled"
+          ],
+          "default": "required"
+        }
+      }
+    },
+    "acquisitionQuality": {
+      "type": "object",
+      "description": "Pre-land quality gates + anomaly signals.",
+      "additionalProperties": false,
+      "properties": {
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "rule",
+              "severity"
+            ],
+            "properties": {
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "not_null",
+                  "unique",
+                  "regex",
+                  "range",
+                  "row_count_anomaly",
+                  "freshness"
+                ]
+              },
+              "columns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "column": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "algorithm": {
+                "type": "string",
+                "enum": [
+                  "ewma",
+                  "iqr",
+                  "exact"
+                ]
+              },
+              "sensitivity": {
+                "type": "number"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "info",
+                  "warn",
+                  "error"
+                ]
+              }
+            }
+          }
+        },
+        "onError": {
+          "type": "string",
+          "enum": [
+            "route_to_dlq",
+            "abort_run",
+            "best_effort"
+          ],
+          "default": "route_to_dlq"
+        },
+        "anomalies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "signal",
+              "severity"
+            ],
+            "properties": {
+              "signal": {
+                "type": "string",
+                "enum": [
+                  "record_count_drop",
+                  "record_count_surge",
+                  "bytes_per_record_outlier",
+                  "latency_outlier",
+                  "dlq_rate_spike",
+                  "cursor_stalled",
+                  "schema_fingerprint_changed"
+                ]
+              },
+              "algorithm": {
+                "type": "string",
+                "enum": [
+                  "ewma",
+                  "iqr",
+                  "exact"
+                ]
+              },
+              "sensitivity": {
+                "type": "number"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "info",
+                  "warn",
+                  "error"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "acquisitionCost": {
+      "type": "object",
+      "description": "Cost tracking + budget enforcement.",
+      "additionalProperties": false,
+      "properties": {
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "monthly": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rows": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "bytes": {
+                  "type": "string",
+                  "description": "Human-readable size with unit suffix (e.g., '50GB', '500MB')."
+                },
+                "computeMinutes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "onExceed": {
+              "type": "string",
+              "enum": [
+                "warn",
+                "abort"
+              ],
+              "default": "warn"
+            }
+          }
+        },
+        "chargeback": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "team": {
+              "type": "string"
+            },
+            "project": {
+              "type": "string"
+            },
+            "costCenter": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "acquisitionCatalog": {
+      "type": "object",
+      "description": "Catalog auto-registration on first apply.",
+      "additionalProperties": false,
+      "properties": {
+        "register": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "datahub",
+              "openmetadata",
+              "datamesh_manager",
+              "unity",
+              "glue",
+              "snowflake_horizon"
+            ]
+          }
+        },
+        "documentation": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual",
+            "none"
+          ],
+          "default": "auto"
+        }
+      }
+    },
+    "acquisitionConcurrency": {
+      "type": "object",
+      "description": "Single-flight concurrency control.",
+      "additionalProperties": false,
+      "properties": {
+        "lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "type": "string",
+              "enum": [
+                "product",
+                "build"
+              ],
+              "default": "product"
+            },
+            "timeout": {
+              "$ref": "#/$defs/isoDuration"
+            },
+            "onContended": {
+              "type": "string",
+              "enum": [
+                "abort",
+                "queue",
+                "replace"
+              ],
+              "default": "abort"
+            }
+          }
+        }
+      }
+    },
+    "acquisitionImageSignature": {
+      "type": "object",
+      "description": "Connector image supply-chain verification.",
+      "additionalProperties": false,
+      "properties": {
+        "verifier": {
+          "type": "string",
+          "enum": [
+            "cosign"
+          ],
+          "default": "cosign"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "slsaProvenance": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "disabled"
+          ],
+          "default": "optional"
+        }
+      }
+    },
+    "acquisitionDeployment": {
+      "type": "object",
+      "description": "Engine deployment mode and target.",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "embedded",
+            "bring-your-own",
+            "managed"
+          ],
+          "default": "embedded"
+        },
+        "server_url": {
+          "type": "string",
+          "description": "URL for bring-your-own mode."
+        },
+        "auth": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "secretRef": {
+              "type": "string"
+            }
+          }
+        },
+        "managed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target"
+          ],
+          "properties": {
+            "target": {
+              "type": "string",
+              "enum": [
+                "docker",
+                "kubernetes",
+                "terraform",
+                "opentofu"
+              ]
+            },
+            "profile": {
+              "type": "string",
+              "enum": [
+                "small",
+                "medium",
+                "large"
+              ],
+              "default": "small"
+            },
+            "chart": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "repo": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              }
+            },
+            "values_overlay": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "secrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "ref": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "network": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "egressAllowList": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -2534,7 +3739,10 @@
             "composer",
             "mwaa",
             "databricks",
-            "snowflake"
+            "snowflake",
+            "athena",
+            "glue",
+            "redshift"
           ]
         },
         "executor": {
@@ -3319,7 +4527,7 @@
         },
         "operator": {
           "type": "string",
-          "description": "DEPRECATED in v0.7.0: Use 'type' instead. Maintained for backward compatibility with v0.6.1 contracts. Maps to 'type' automatically (FluidExecuteOperator → fluid_execute, BashOperator → bash)."
+          "description": "DEPRECATED in v0.7.0: Use 'type' instead. Maintained for backward compatibility with v0.6.1 contracts. Maps to 'type' automatically (FluidExecuteOperator \u2192 fluid_execute, BashOperator \u2192 bash)."
         },
         "provider": {
           "type": "string",
@@ -3583,7 +4791,7 @@
             }
           },
           "then": {
-            "description": "Operator field is deprecated but still works. Maps: FluidExecuteOperator→fluid_execute, BashOperator→bash, etc."
+            "description": "Operator field is deprecated but still works. Maps: FluidExecuteOperator\u2192fluid_execute, BashOperator\u2192bash, etc."
           }
         },
         {
@@ -4086,6 +5294,205 @@
           ]
         }
       ]
+    },
+    "exposeMcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "NEW in v0.7.4: Per-expose overrides for the MCP output-port server \u2014 sampling caps + classification. The presence of this (non-empty) block opts the expose into the Fluid MCP gateway, where policy.agentPolicy is enforced at every read.",
+      "properties": {
+        "sampling": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxRows": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Hard cap for the `sample` MCP tool. Defends against an over-curious agent asking for petabyte-scale row counts. Default: 100."
+            }
+          }
+        },
+        "classification": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "dataClass": {
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "confidential",
+                "restricted"
+              ],
+              "description": "Surfaced on the `describe` tool so consumer agents can declare downstream handling. Advisory; the real gate is `policy.agentPolicy`."
+            }
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "description": "Account/project-wide governance settings. Today only the lakeFormation block is supported; future cloud-specific blocks may live alongside it (e.g. snowflake masking-policy registries, gcp organization-policies).",
+      "additionalProperties": false,
+      "properties": {
+        "lakeFormation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "AWS Lake Formation account-wide settings: data-lake admins and LF-tag (TBAC) definitions. Applies to the AWS account the contract's IaC apply targets.",
+          "properties": {
+            "admins": {
+              "type": "array",
+              "description": "IAM principal ARNs (roles or users) granted Lake Formation admin privileges. Emitted as aws_lakeformation_data_lake_settings.admins. Idempotent: re-applying with the same set is a no-op; principals not listed are NOT removed (LF resource semantics preserve other admins).",
+              "items": {
+                "type": "string",
+                "pattern": "^arn:aws[a-z0-9-]*:iam::"
+              },
+              "uniqueItems": true
+            },
+            "tagDefinitions": {
+              "type": "object",
+              "description": "LF-TBAC tag-key definitions. Each entry is a tag key mapped to its allowed string values. Emitted as one aws_lakeformation_lf_tag per key; values are the tag's allowed-values list. Field idiom borrowed from OpenMetadata's classification-label model \u2014 see ODCS roles + OpenMetadata data contracts spec.",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true,
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "bindingGovernance": {
+      "type": "object",
+      "description": "Per-resource (per-exposure) governance. Currently scoped to AWS Lake Formation; future cloud-specific blocks may sit alongside (e.g. gcpIamPolicy, snowflakeMaskingPolicy).",
+      "additionalProperties": false,
+      "properties": {
+        "lakeFormation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-resource LF settings: location registration, principal grants, LF-tag associations, row/column filters. Applies only to formats backed by S3 + Glue catalog (iceberg/parquet/csv/json/avro/orc/delta).",
+          "properties": {
+            "registerLocation": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, emit aws_lakeformation_resource that registers the binding's S3 path with Lake Formation. Required before LF can manage access to objects under that path."
+            },
+            "grants": {
+              "type": "array",
+              "description": "Principal-based LF grants on this exposure's database/table. Each entry maps a principal to a permission set (and optional column projection). Emitted as aws_lakeformation_permissions resources. Field idiom adapted from ODCS v3 roles[] (principal + access-type), bound to IAM ARNs since LF is cloud-specific.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "principal",
+                  "permissions"
+                ],
+                "properties": {
+                  "principal": {
+                    "type": "string",
+                    "description": "IAM principal ARN (role or user) receiving the grant.",
+                    "pattern": "^arn:aws[a-z0-9-]*:iam::"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "description": "LF permissions granted. Valid values per the hashicorp/aws aws_lakeformation_permissions resource.",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "ALL",
+                        "SELECT",
+                        "ALTER",
+                        "DROP",
+                        "DELETE",
+                        "INSERT",
+                        "DESCRIBE",
+                        "CREATE_TABLE",
+                        "CREATE_DATABASE",
+                        "DATA_LOCATION_ACCESS"
+                      ]
+                    },
+                    "uniqueItems": true,
+                    "minItems": 1
+                  },
+                  "permissionsWithGrantOption": {
+                    "type": "array",
+                    "description": "Subset of permissions the principal can re-grant. Maps to aws_lakeformation_permissions.permissions_with_grant_option.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  },
+                  "columns": {
+                    "type": "array",
+                    "description": "Optional column-level restriction. When set, the grant is emitted against aws_lakeformation_permissions.table_with_columns instead of .table, allowing the principal to read only the listed columns.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  },
+                  "excludedColumns": {
+                    "type": "array",
+                    "description": "Opposite of columns: every column EXCEPT these is granted. Maps to table_with_columns.excluded_column_names. Mutually exclusive with columns.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  }
+                }
+              }
+            },
+            "tags": {
+              "type": "object",
+              "description": "LF-tag (TBAC) associations applied to this table. Keys must reference tag definitions declared in the contract's top-level governance.lakeFormation.tagDefinitions. Emitted as aws_lakeformation_resource_lf_tags.",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "rowFilter": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Row-level (and optionally column-level) filter applied to all reads of this table via LF. Emitted as aws_lakeformation_data_cells_filter. The filter must then be granted to principals via grants[].permissions including SELECT \u2014 LF enforces both layers.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Filter name (must be unique per table)."
+                },
+                "rowExpression": {
+                  "type": "string",
+                  "description": "PartiQL-flavoured row predicate. ``ALL`` lets every row through (use when only column filtering is intended)."
+                },
+                "columnNames": {
+                  "type": "array",
+                  "description": "Columns visible through the filter. Mutually exclusive with allColumns / excludedColumnNames.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                },
+                "excludedColumnNames": {
+                  "type": "array",
+                  "description": "Columns hidden through the filter (everything else is visible).",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                },
+                "allColumns": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Convenience for the LF column-wildcard form (every column visible). When true, columnNames / excludedColumnNames must be omitted."
+                }
+              },
+              "required": [
+                "name",
+                "rowExpression"
+              ]
+            }
+          }
+        }
+      }
     }
   }
 }

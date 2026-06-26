@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORGE_RAW_BASE: https://raw.githubusercontent.com/Agenticstiger/forge-cli/main/fluid_build/schemas
-      SYNCED_VERSIONS: "0.7.2 0.7.3 0.7.4"
+      SYNCED_VERSIONS: "0.7.2 0.7.3 0.7.4 0.7.5"
     steps:
       - name: Checkout fluid
         uses: actions/checkout@v4

@@ -1,9 +1,9 @@
 # Schema Changes: 0.7.1 → 0.7.2
 
-**Total changes:** 27
-- ✅ Added: 14
-- ❌ Removed: 2
-- 📝 Modified: 11
+**Total changes:** 32
+- ✅ Added: 19
+- ❌ Removed: 3
+- 📝 Modified: 10
 
 ---
 
@@ -99,6 +99,16 @@
   description: "Provider-specific binding properties (e.g., cluster_by, comment for Snowflake)."
   additionalProperties: true
 }
+```
+
+### `$defs.build.properties.engine.anyOf`
+```json
+[{"enum": ["dbt", "sql", "python", "spark", "glue", "custom"]}, {"pattern": "^dbt-[a-z0-9]+([_-][a-z0-9]+)*$"}]
+```
+
+### `$defs.build.properties.engine.description`
+```json
+"Build engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-qualified dbt e..."
 ```
 
 ### `$defs.column.properties.type.anyOf`
@@ -236,6 +246,30 @@
       }
     }
   }
+}
+```
+
+### `$defs.hybridReferencePattern.properties.models`
+```json
+{
+  oneOf: [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
+  description: "Legacy alias for `select` (dbt's older `--models` flag). Same string-or-array shape; `select` takes ..."
+}
+```
+
+### `$defs.hybridReferencePattern.properties.select`
+```json
+{
+  oneOf: [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
+  description: "dbt node selector(s) forwarded to `dbt --select`. Accepts a single selector string or an array of se..."
+}
+```
+
+### `$defs.hybridReferencePattern.properties.target`
+```json
+{
+  type: "string"
+  description: "dbt profile target to run against. Forwarded to dbt as `--target <name>` by the build runner (allowl..."
 }
 ```
 
@@ -384,6 +418,11 @@ false
 
 ## ❌ Removed Properties
 
+### `$defs.build.properties.engine.enum`
+```json
+[...5 items...]
+```
+
 ### `$defs.column.properties.type.minLength`
 ```json
 1
@@ -418,18 +457,6 @@ false
 **After:**
 ```json
 [...14 items...]
-```
-
-### `$defs.build.properties.engine.enum`
-
-**Before:**
-```json
-[...5 items...]
-```
-
-**After:**
-```json
-[...6 items...]
 ```
 
 ### `$defs.sensitivityLevel.enum`
