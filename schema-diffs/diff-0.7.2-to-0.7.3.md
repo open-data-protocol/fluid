@@ -1,9 +1,9 @@
 # Schema Changes: 0.7.2 → 0.7.3
 
 **Total changes:** 40
-- ✅ Added: 25
+- ✅ Added: 24
 - ❌ Removed: 0
-- 📝 Modified: 15
+- 📝 Modified: 16
 
 ---
 
@@ -640,11 +640,6 @@
 }
 ```
 
-### `$defs.build.properties.engine.description`
-```json
-"Build/ingestion engine. Transformation engines: dbt, sql, python, spark, glue, custom. Ingestion eng..."
-```
-
 ### `$defs.exposeContract.properties.schemaPolicy`
 ```json
 {
@@ -832,16 +827,28 @@
 [...4 items...]
 ```
 
-### `$defs.build.properties.engine.enum`
+### `$defs.build.properties.engine.anyOf`
 
 **Before:**
 ```json
-[...6 items...]
+[{"enum": ["dbt", "sql", "python", "spark", "glue", "custom"]}, {"pattern": "^dbt-[a-z0-9]+([_-][a-z0-9]+)*$"}]
 ```
 
 **After:**
 ```json
-[...12 items...]
+[{"enum": ["dbt", "sql", "python", "spark", "glue", "custom", "duckdb", "airbyte", "meltano", "dlt", "kafka-connect", "debezium"]}, {"pattern": "^dbt-[a-z0-9]+([_-][a-z0-9]+)*$"}]
+```
+
+### `$defs.build.properties.engine.description`
+
+**Before:**
+```json
+"Build engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-qualified dbt e..."
+```
+
+**After:**
+```json
+"Build/ingestion engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-quali..."
 ```
 
 ### `$defs.build.properties.pattern.description`
