@@ -12,7 +12,7 @@
   <a href="https://open-data-protocol.github.io/fluid/schema/anatomy">🧭 Schema Anatomy</a> ·
   <a href="https://open-data-protocol.github.io/fluid/examples/">🚀 Examples</a> ·
   <a href="https://open-data-protocol.github.io/fluid/concepts/comparisons">🔄 vs ODCS / ODPS</a> ·
-  <a href="https://open-data-protocol.github.io/fluid/releases/0.7.4">✨ What's New</a>
+  <a href="https://open-data-protocol.github.io/fluid/releases/0.7.5">✨ What's New</a>
 </p>
 
 ---
@@ -23,7 +23,7 @@ FLUID is one YAML file that describes a data product end to end — **schema, bu
 
 ```mermaid
 flowchart LR
-    F["FLUID v0.7.4<br/>your .fluid.yml<br/>complete on its own"]
+    F["FLUID v0.7.5<br/>your .fluid.yml<br/>complete on its own"]
     FC["forge-cli<br/>compiler → IaC + DAGs"]
     BIT["Bitol ODPS + ODCS<br/>catalog interop"]
     F -.->|compile + deploy| FC
@@ -35,7 +35,7 @@ FLUID is **standalone** — the contract is complete on its own. Everything else
 ## Minimal valid contract
 
 ```yaml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id: demo.bronze.hello_world
 name: Hello World
@@ -61,14 +61,14 @@ exposes:
 
 ## JSON Schema
 
-- **Latest:** `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.4.json`
+- **Latest:** `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json`
 - Use it in your editor — add this line to any `.fluid.yml`:
   ```yaml
-  # yaml-language-server: $schema=https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.4.json
+  # yaml-language-server: $schema=https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json
   ```
 - All versions, diffs, and the generated HTML reference: **[Schema → Versions](https://open-data-protocol.github.io/fluid/schema/versions)**.
 
-> **Note:** 0.7.4 ("Runtime agentPolicy Enforcement at the MCP Gateway") is **additive and fully backward-compatible** with 0.7.3 — every valid 0.7.3 contract still validates. See **[What's New in 0.7.4](https://open-data-protocol.github.io/fluid/releases/0.7.4)**.
+> **Note:** 0.7.5 ("Streaming Kafka → Iceberg Sink & Confluent Tableflow") is **additive and fully backward-compatible** with 0.7.4 — every valid 0.7.4 contract still validates. See **[What's New in 0.7.5](https://open-data-protocol.github.io/fluid/releases/0.7.5)**.
 
 ## Build the docs locally
 
