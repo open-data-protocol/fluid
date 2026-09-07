@@ -1,0 +1,1487 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "lineage-ml",
+  "description": "The optional lineage block (granularity, upstream dependency entries with their fieldMappings/transformation nesting and relationship enum, and downstream consumer entries with the impact enum), the schemaEvolution block (strategy/compatibility enums and the nested changePolicy object), and the machineLearning block (framework enum and model entries with their required fields, type enum, and nested validation object) -- including every closed object's additionalProperties:false boundary.",
+  "cases": [
+    {
+      "description": "lineage, schemaEvolution and machineLearning populated to their nested edges",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "granularity": "field_level",
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "relationship": "aggregation",
+              "fieldMappings": [
+                {
+                  "sourceField": "event_ts",
+                  "targetField": "profile_updated_at",
+                  "transformation": {
+                    "type": "calculation",
+                    "expression": "MAX(event_ts)"
+                  }
+                }
+              ]
+            }
+          ],
+          "downstream": [
+            {
+              "consumer": "churn_model",
+              "impact": "high"
+            }
+          ]
+        },
+        "schemaEvolution": {
+          "strategy": "semantic_versioning",
+          "compatibility": "backward_compatible",
+          "changePolicy": {
+            "changeWindowDays": 14,
+            "approvalRequired": true,
+            "approvers": [
+              "data-governance"
+            ]
+          }
+        },
+        "machineLearning": {
+          "enabled": true,
+          "framework": "mlflow",
+          "models": [
+            {
+              "name": "churn_predictor",
+              "version": "1.2.0",
+              "type": "classification",
+              "algorithm": "xgboost",
+              "features": [
+                "tenure_days",
+                "monthly_spend"
+              ],
+              "target": "churned",
+              "validation": {
+                "metrics": [
+                  "accuracy",
+                  "auc_roc"
+                ],
+                "thresholds": {
+                  "accuracy": 0.85
+                }
+              }
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "lineage carries an unrecognized property alongside granularity",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "granularity": "table_level",
+          "retentionOverride": "90d"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage",
+          "keyword": "additionalProperties",
+          "detail": "retentionOverride"
+        }
+      ]
+    },
+    {
+      "description": "lineage granularity outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "granularity": "row_level"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/granularity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "upstream entry omits productId",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "exposeId": "events_table"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0",
+          "keyword": "required",
+          "detail": "productId"
+        }
+      ]
+    },
+    {
+      "description": "upstream entry omits exposeId",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0",
+          "keyword": "required",
+          "detail": "exposeId"
+        }
+      ]
+    },
+    {
+      "description": "upstream entry carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "sourceSystem": "kafka"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0",
+          "keyword": "additionalProperties",
+          "detail": "sourceSystem"
+        }
+      ]
+    },
+    {
+      "description": "fieldMappings entry omits sourceField",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "fieldMappings": [
+                {
+                  "targetField": "profile_updated_at"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0/fieldMappings/0",
+          "keyword": "required",
+          "detail": "sourceField"
+        }
+      ]
+    },
+    {
+      "description": "fieldMappings entry omits targetField",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "fieldMappings": [
+                {
+                  "sourceField": "event_ts"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0/fieldMappings/0",
+          "keyword": "required",
+          "detail": "targetField"
+        }
+      ]
+    },
+    {
+      "description": "fieldMappings entry carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "fieldMappings": [
+                {
+                  "sourceField": "event_ts",
+                  "targetField": "profile_updated_at",
+                  "notes": "legacy mapping, do not touch"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0/fieldMappings/0",
+          "keyword": "additionalProperties",
+          "detail": "notes"
+        }
+      ]
+    },
+    {
+      "description": "fieldMappings transformation carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "fieldMappings": [
+                {
+                  "sourceField": "event_ts",
+                  "targetField": "profile_updated_at",
+                  "transformation": {
+                    "type": "calculation",
+                    "engine": "spark"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0/fieldMappings/0/transformation",
+          "keyword": "additionalProperties",
+          "detail": "engine"
+        }
+      ]
+    },
+    {
+      "description": "fieldMappings transformation type outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "fieldMappings": [
+                {
+                  "sourceField": "event_ts",
+                  "targetField": "profile_updated_at",
+                  "transformation": {
+                    "type": "join"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0/fieldMappings/0/transformation/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "upstream relationship outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "upstream": [
+            {
+              "productId": "raw_events",
+              "exposeId": "events_table",
+              "relationship": "streaming_sync"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/upstream/0/relationship",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "downstream entry carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "downstream": [
+            {
+              "consumer": "churn_model",
+              "notifyChannel": "slack"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/downstream/0",
+          "keyword": "additionalProperties",
+          "detail": "notifyChannel"
+        }
+      ]
+    },
+    {
+      "description": "downstream impact outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "lineage": {
+          "downstream": [
+            {
+              "consumer": "churn_model",
+              "impact": "catastrophic"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/lineage/downstream/0/impact",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "schemaEvolution": {
+          "strategy": "semantic_versioning",
+          "migrationGuideUrl": "https://docs.acme.internal/schema-migrations"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/schemaEvolution",
+          "keyword": "additionalProperties",
+          "detail": "migrationGuideUrl"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution strategy outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "schemaEvolution": {
+          "strategy": "calendar_based"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/schemaEvolution/strategy",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution compatibility outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "schemaEvolution": {
+          "compatibility": "none"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/schemaEvolution/compatibility",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "changePolicy carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "schemaEvolution": {
+          "changePolicy": {
+            "changeWindowDays": 14,
+            "escalationContact": "data-governance@acme.com"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/schemaEvolution/changePolicy",
+          "keyword": "additionalProperties",
+          "detail": "escalationContact"
+        }
+      ]
+    },
+    {
+      "description": "changePolicy changeWindowDays given as a negative number",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "schemaEvolution": {
+          "changePolicy": {
+            "changeWindowDays": -5
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/schemaEvolution/changePolicy/changeWindowDays",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "machineLearning carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "enabled": true,
+          "servingEndpoint": "https://models.acme.internal/churn"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning",
+          "keyword": "additionalProperties",
+          "detail": "servingEndpoint"
+        }
+      ]
+    },
+    {
+      "description": "machineLearning framework outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "framework": "tensorflow_serving"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/framework",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "model entry omits name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "models": [
+            {
+              "version": "1.0.0",
+              "type": "classification"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/models/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "model entry omits version",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "models": [
+            {
+              "name": "churn_predictor",
+              "type": "classification"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/models/0",
+          "keyword": "required",
+          "detail": "version"
+        }
+      ]
+    },
+    {
+      "description": "model entry omits type",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "models": [
+            {
+              "name": "churn_predictor",
+              "version": "1.0.0"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/models/0",
+          "keyword": "required",
+          "detail": "type"
+        }
+      ]
+    },
+    {
+      "description": "model entry carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "models": [
+            {
+              "name": "churn_predictor",
+              "version": "1.0.0",
+              "type": "classification",
+              "trainingDataset": "customers_v3"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/models/0",
+          "keyword": "additionalProperties",
+          "detail": "trainingDataset"
+        }
+      ]
+    },
+    {
+      "description": "model type outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "models": [
+            {
+              "name": "churn_predictor",
+              "version": "1.0.0",
+              "type": "forecasting"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/models/0/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "model validation carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "machineLearning": {
+          "models": [
+            {
+              "name": "churn_predictor",
+              "version": "1.0.0",
+              "type": "classification",
+              "validation": {
+                "metrics": [
+                  "accuracy"
+                ],
+                "reviewedBy": "data-science-lead"
+              }
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/machineLearning/models/0/validation",
+          "keyword": "additionalProperties",
+          "detail": "reviewedBy"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1974 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "semantic-model",
+  "description": "The expose-level semantic model block (expose.semantics): its own closed object type, and the entities/measures/dimensions/metrics arrays -- their required members, closed property sets, and the type/agg enums, including the nested nonAdditiveDimension and typeParams sub-objects.",
+  "cases": [
+    {
+      "description": "semantic model on a table expose carries entities, measures (with a non-additive dimension), dimensions (with typeParams), and metrics",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "semantic model block carries an unrecognized top-level property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ],
+              "grain": "one row per customer"
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics",
+          "keyword": "additionalProperties",
+          "detail": "grain"
+        }
+      ]
+    },
+    {
+      "description": "entity omits its name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/entities/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "entity omits its type",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/entities/0",
+          "keyword": "required",
+          "detail": "type"
+        }
+      ]
+    },
+    {
+      "description": "entity carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id",
+                  "sensitivity": "high"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/entities/0",
+          "keyword": "additionalProperties",
+          "detail": "sensitivity"
+        }
+      ]
+    },
+    {
+      "description": "entity type value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "compound",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/entities/0/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "measure omits its name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "measure omits its aggregation function",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0",
+          "keyword": "required",
+          "detail": "agg"
+        }
+      ]
+    },
+    {
+      "description": "measure carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  },
+                  "unit": "USD"
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0",
+          "keyword": "additionalProperties",
+          "detail": "unit"
+        }
+      ]
+    },
+    {
+      "description": "measure aggregation function outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "stddev",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0/agg",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "measure's non-additive dimension carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max",
+                    "granularity": "day"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0/nonAdditiveDimension",
+          "keyword": "additionalProperties",
+          "detail": "granularity"
+        }
+      ]
+    },
+    {
+      "description": "non-additive dimension windowChoice value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "avg"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0/nonAdditiveDimension/windowChoice",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "dimension omits its name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/dimensions/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "dimension omits its type",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/dimensions/0",
+          "keyword": "required",
+          "detail": "type"
+        }
+      ]
+    },
+    {
+      "description": "dimension carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  },
+                  "sortOrder": "asc"
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/dimensions/0",
+          "keyword": "additionalProperties",
+          "detail": "sortOrder"
+        }
+      ]
+    },
+    {
+      "description": "dimension type value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "geospatial",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/dimensions/0/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "dimension typeParams carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day",
+                    "format": "ISO8601"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/dimensions/0/typeParams",
+          "keyword": "additionalProperties",
+          "detail": "format"
+        }
+      ]
+    },
+    {
+      "description": "dimension typeParams timeGranularity value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "fortnight"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/dimensions/0/typeParams/timeGranularity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "metric omits its name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/metrics/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "metric omits its type",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/metrics/0",
+          "keyword": "required",
+          "detail": "type"
+        }
+      ]
+    },
+    {
+      "description": "metric carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "simple",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'",
+                  "unit": "count"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/metrics/0",
+          "keyword": "additionalProperties",
+          "detail": "unit"
+        }
+      ]
+    },
+    {
+      "description": "metric type value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "customer_profile_model",
+              "description": "Canonical semantic model for customer lifetime-value analytics.",
+              "defaultAggTimeDimension": "signup_date",
+              "entities": [
+                {
+                  "name": "customer",
+                  "type": "primary",
+                  "expr": "customer_id"
+                }
+              ],
+              "measures": [
+                {
+                  "name": "lifetime_value",
+                  "agg": "sum",
+                  "expr": "ltv_amount",
+                  "nonAdditiveDimension": {
+                    "name": "balance_date",
+                    "windowChoice": "max"
+                  }
+                }
+              ],
+              "dimensions": [
+                {
+                  "name": "signup_date",
+                  "type": "time",
+                  "expr": "created_at",
+                  "typeParams": {
+                    "timeGranularity": "day"
+                  }
+                },
+                {
+                  "name": "region",
+                  "type": "categorical"
+                }
+              ],
+              "metrics": [
+                {
+                  "name": "active_customers",
+                  "type": "computed",
+                  "measure": "lifetime_value",
+                  "filter": "status = 'active'"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/metrics/0/type",
+          "keyword": "enum"
+        }
+      ]
+    }
+  ]
+}
