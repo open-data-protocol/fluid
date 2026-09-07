@@ -1,0 +1,594 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "envelope",
+  "description": "The shared document envelope: the six required top-level members, the closed top-level property set, and the identifier and version grammars every FLUID document is bound by. A conformant implementation reproduces every verdict below.",
+  "cases": [
+    {
+      "description": "minimal document carrying exactly the required members",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "fluidVersion absent",
+      "contract": {
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "required",
+          "detail": "fluidVersion"
+        }
+      ]
+    },
+    {
+      "description": "metadata absent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "required",
+          "detail": "metadata"
+        }
+      ]
+    },
+    {
+      "description": "metadata present but owner absent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "layer": "gold"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/metadata",
+          "keyword": "required",
+          "detail": "owner"
+        }
+      ]
+    },
+    {
+      "description": "exposes is an empty array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": []
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "description": "unknown top-level member is refused because the envelope is closed",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "owner": "customer-analytics",
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "additionalProperties",
+          "detail": "owner"
+        }
+      ]
+    },
+    {
+      "description": "kind outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataMesh",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/kind",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "MLPipeline is an accepted kind",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "MLPipeline",
+        "id": "churn_model",
+        "name": "Churn Model",
+        "metadata": {
+          "owner": {
+            "team": "ml-platform"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "churn_scores",
+            "kind": "model",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "ml",
+                "table": "churn_scores"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "score",
+                  "type": "double"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "id starting with a hyphen violates the identifier grammar",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "-customer-profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/id",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "single-character id is legal under the identifier grammar's second branch",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "x",
+        "name": "Single character id",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a fluidVersion the 0.7.5 schema does not admit",
+      "contract": {
+        "fluidVersion": "0.7.2",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/fluidVersion",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "kind absent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "required",
+          "detail": "kind"
+        }
+      ]
+    },
+    {
+      "description": "id absent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "required",
+          "detail": "id"
+        }
+      ]
+    },
+    {
+      "description": "name absent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "exposes absent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "",
+          "keyword": "required",
+          "detail": "exposes"
+        }
+      ]
+    }
+  ]
+}

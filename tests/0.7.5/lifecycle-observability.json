@@ -1,0 +1,1154 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "lifecycle-observability",
+  "description": "The lifecycle, docs, observability, defaultSLIs and exposeQoS definitions: the unified lifecycleState vocabulary, each of these objects' closed property sets, their nested enums (onBreach type/severity, alert channel kind, default SLI severity), the isoDuration and availability-percentage grammars, and the 0..1 / 0..100 numeric bounds on SLI thresholds and QoS ratios.",
+  "cases": [
+    {
+      "description": "top-level lifecycle in preview carries tags and labels for automation",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": {
+          "state": "preview",
+          "tags": ["internal-only"],
+          "labels": { "stage": "beta" }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "top-level lifecycle in deprecated state carries a full deprecation policy and retention",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": {
+          "state": "deprecated",
+          "retention": "P2Y",
+          "deprecationPolicy": {
+            "noticePeriod": "P30D",
+            "contact": "data-platform@acme.com",
+            "replacement": "customer_profiles_v2",
+            "tags": ["breaking-change"],
+            "labels": { "migration-owner": "data-platform" }
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "top-level docs links every reference surface alongside a retired lifecycle",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": { "state": "retired" },
+        "docs": {
+          "homepage": "https://internal.acme.com/data-products/customer-profiles",
+          "runbook": "https://internal.acme.com/runbooks/customer-profiles",
+          "dictionary": "https://internal.acme.com/dictionary/customer-profiles",
+          "changeLog": "https://internal.acme.com/changelog/customer-profiles",
+          "tags": ["documented"],
+          "labels": { "docs-owner": "customer-analytics" }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "an expose declares an active lifecycle, a full observability configuration, and boundary-value QoS targets",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "lifecycle": { "state": "active" },
+            "observability": {
+              "metrics": [
+                { "name": "row_count", "source": "warehouse.metrics.row_count", "sli": "row_count > 0" }
+              ],
+              "onBreach": [
+                {
+                  "type": "pagerduty",
+                  "channel": "data-platform-oncall",
+                  "target": "customer-profiles-service",
+                  "severity": "critical",
+                  "tags": ["p1"],
+                  "labels": { "escalation": "immediate" }
+                }
+              ],
+              "defaultSLIs": {
+                "enabled": false,
+                "freshness": {
+                  "enabled": true,
+                  "threshold": "PT6H",
+                  "severity": "warning",
+                  "tags": ["freshness"],
+                  "labels": { "sla": "gold" }
+                },
+                "completeness": { "enabled": true, "threshold": 1, "severity": "critical" },
+                "latency": { "enabled": true, "threshold": "PT5S", "percentile": 0, "severity": "info" },
+                "tags": ["default-sli"],
+                "labels": { "generated-by": "forge-cli" }
+              },
+              "alert": {
+                "channels": [
+                  { "kind": "webhook", "url": "https://hooks.acme.com/alerts/customer-profiles" }
+                ]
+              },
+              "tags": ["observability"],
+              "labels": { "observed-by": "data-platform" }
+            },
+            "qos": {
+              "availability": "100%",
+              "freshnessSLO": "PT15M",
+              "dataLossSLO": "0 rows",
+              "latencyP95": "PT5S",
+              "completenessTarget": 1,
+              "errorBudget": 0,
+              "tags": ["sla"],
+              "labels": { "tier": "gold" }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "lifecycle state uses a value outside the unified vocabulary",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": { "state": "sunset" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/lifecycle/state", "keyword": "enum" }]
+    },
+    {
+      "description": "lifecycle carries an owner field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": { "state": "active", "owner": "data-platform" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/lifecycle", "keyword": "additionalProperties", "detail": "owner" }]
+    },
+    {
+      "description": "lifecycle retention is expressed in prose instead of an ISO-8601 duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": { "state": "active", "retention": "6 months" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/lifecycle/retention", "keyword": "pattern" }]
+    },
+    {
+      "description": "deprecation policy carries an slaHours field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": {
+          "state": "deprecated",
+          "deprecationPolicy": { "noticePeriod": "P30D", "slaHours": 72 }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/lifecycle/deprecationPolicy", "keyword": "additionalProperties", "detail": "slaHours" }
+      ]
+    },
+    {
+      "description": "docs carries a wiki field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "docs": {
+          "homepage": "https://internal.acme.com/data-products/customer-profiles",
+          "wiki": "https://internal.acme.com/wiki/customer-profiles"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/docs", "keyword": "additionalProperties", "detail": "wiki" }]
+    },
+    {
+      "description": "expose observability carries a dashboards field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": { "dashboards": ["https://grafana.acme.com/customer-profiles"] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability", "keyword": "additionalProperties", "detail": "dashboards" }
+      ]
+    },
+    {
+      "description": "an observability metric entry omits its name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": { "metrics": [{ "source": "warehouse.metrics.row_count" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/metrics/0", "keyword": "required", "detail": "name" }
+      ]
+    },
+    {
+      "description": "an observability metric entry omits its source",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": { "metrics": [{ "name": "row_count" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/metrics/0", "keyword": "required", "detail": "source" }
+      ]
+    },
+    {
+      "description": "an onBreach notification entry omits its type",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": { "onBreach": [{ "channel": "data-platform-oncall" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/onBreach/0", "keyword": "required", "detail": "type" }
+      ]
+    },
+    {
+      "description": "an onBreach notification declares a delivery type outside the supported set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": { "onBreach": [{ "type": "carrier-pigeon" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/onBreach/0/type", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "an onBreach notification declares a severity outside the supported set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": { "onBreach": [{ "type": "slack", "severity": "catastrophic" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/onBreach/0/severity", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "an alert dispatcher channel omits its kind",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "alert": { "channels": [{ "url": "https://hooks.acme.com/alerts" }] }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/alert/channels/0",
+          "keyword": "required",
+          "detail": "kind"
+        }
+      ]
+    },
+    {
+      "description": "an alert dispatcher channel declares a kind outside the supported set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "alert": { "channels": [{ "kind": "carrier-pigeon" }] }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/alert/channels/0/kind", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "the default SLI trio carries a throughput field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "enabled": true, "throughput": { "enabled": true } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs",
+          "keyword": "additionalProperties",
+          "detail": "throughput"
+        }
+      ]
+    },
+    {
+      "description": "the default freshness SLI carries a window field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "freshness": { "enabled": true, "window": "PT6H" } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/freshness",
+          "keyword": "additionalProperties",
+          "detail": "window"
+        }
+      ]
+    },
+    {
+      "description": "the default freshness SLI declares a severity outside the supported set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "freshness": { "severity": "catastrophic" } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/freshness/severity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "the default completeness SLI threshold is negative",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "completeness": { "threshold": -0.1 } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/completeness/threshold",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "the default completeness SLI threshold exceeds a full ratio",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "completeness": { "threshold": 1.5 } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/completeness/threshold",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "the default latency SLI percentile exceeds 100",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "latency": { "percentile": 101 } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/latency/percentile",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "expose qos carries an sla field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "availability": "99.9%", "sla": "gold" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos", "keyword": "additionalProperties", "detail": "sla" }]
+    },
+    {
+      "description": "expose qos availability exceeds the percentage grammar",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "availability": "150%" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/availability", "keyword": "pattern" }]
+    },
+    {
+      "description": "expose qos completeness target exceeds a full ratio",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "completenessTarget": 1.2 }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/completenessTarget", "keyword": "maximum" }]
+    },
+    {
+      "description": "expose qos error budget is negative",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "errorBudget": -0.05 }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/errorBudget", "keyword": "minimum" }]
+    },
+    {
+      "description": "expose qos error budget exceeds a full ratio",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "errorBudget": 1.5 }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/errorBudget", "keyword": "maximum" }]
+    },
+    {
+      "description": "expose qos completeness target is negative",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "completenessTarget": -0.1 }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/completenessTarget", "keyword": "minimum" }]
+    },
+    {
+      "description": "expose qos p95 latency target is expressed in prose instead of an ISO-8601 duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "latencyP95": "5 seconds" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/latencyP95", "keyword": "pattern" }]
+    },
+    {
+      "description": "deprecation policy notice period is expressed in prose instead of an ISO-8601 duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "lifecycle": {
+          "state": "deprecated",
+          "deprecationPolicy": { "noticePeriod": "30 days" }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/lifecycle/deprecationPolicy/noticePeriod", "keyword": "pattern" }]
+    },
+    {
+      "description": "the default freshness SLI threshold is expressed in prose instead of an ISO-8601 duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "freshness": { "threshold": "6 hours" } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/freshness/threshold",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "the default latency SLI threshold is expressed in prose instead of an ISO-8601 duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "latency": { "threshold": "5 seconds" } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/latency/threshold",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "the default latency SLI percentile is negative",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": { "latency": { "percentile": -1 } }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/defaultSLIs/latency/percentile",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "an observability metric entry carries a unit field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "metrics": [
+                { "name": "row_count", "source": "warehouse.metrics.row_count", "unit": "rows" }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/metrics/0",
+          "keyword": "additionalProperties",
+          "detail": "unit"
+        }
+      ]
+    },
+    {
+      "description": "an onBreach notification entry carries a retries field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "onBreach": [{ "type": "slack", "retries": 3 }]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/onBreach/0",
+          "keyword": "additionalProperties",
+          "detail": "retries"
+        }
+      ]
+    },
+    {
+      "description": "the alert dispatcher config carries an enabled field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "alert": { "enabled": true }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/alert", "keyword": "additionalProperties", "detail": "enabled" }
+      ]
+    },
+    {
+      "description": "an alert dispatcher channel carries a retryPolicy field the closed schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "alert": {
+                "channels": [{ "kind": "webhook", "retryPolicy": "exponential" }]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/observability/alert/channels/0",
+          "keyword": "additionalProperties",
+          "detail": "retryPolicy"
+        }
+      ]
+    }
+  ]
+}

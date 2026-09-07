@@ -1,0 +1,469 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "metadata",
+  "description": "The metadata object: the required owner member, metadata's closed property set, the productType and classification enums, the closed owner object (team/email/slack/oncall), the closed businessContext object, and the experimental array's uniqueItems constraint. Format-assertion cases for owner.email and createdAt (format is an annotation, not an assertion, in Draft 2020-12) live in tests/optional/0.7.5/metadata.json.",
+  "cases": [
+    {
+      "description": "metadata populated with every member of its closed property set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "provenance": {
+            "schema_version": 1,
+            "kind": "ContractMetadata",
+            "generated_at": "2024-03-01T12:00:00Z",
+            "generated_by": { "tool": "fluid", "version": "0.7.5", "command": "fluid init" }
+          },
+          "layer": "Silver",
+          "productType": "ADP",
+          "classification": "confidential",
+          "experimental": ["acquisition"],
+          "owner": {
+            "team": "customer-analytics",
+            "email": "customer-analytics@acme.com",
+            "slack": "#customer-analytics",
+            "oncall": "customer-analytics-oncall"
+          },
+          "createdAt": "2024-03-01T12:00:00Z",
+          "businessContext": {
+            "domain": "customer",
+            "subdomain": "profiles",
+            "businessCapability": "customer-360",
+            "valueStream": "acquisition"
+          },
+          "tags": ["customer-data", "pii"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "owner present as an empty object with none of its optional members set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": {} },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "owner carries slack and oncall but omits team and email",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": { "slack": "#customer-analytics", "oncall": "pd-customer-analytics" }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "productType set to SDP with no layer present",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "ingestion" }, "productType": "SDP" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "productType set to CDP with no layer present",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "analytics" }, "productType": "CDP" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "classification set to public, the least restrictive value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "analytics" }, "classification": "public" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "classification set to restricted alongside empty experimental and tags arrays",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": { "team": "analytics" },
+          "classification": "restricted",
+          "experimental": [],
+          "tags": []
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "layer set to Bronze with no productType present",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "ingestion" }, "layer": "Bronze" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "classification set to internal",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "analytics" }, "classification": "internal" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "metadata is an empty object, never supplying owner",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {},
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata", "keyword": "required", "detail": "owner" }]
+    },
+    {
+      "description": "metadata carries an unrecognized description property alongside owner",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" }, "description": "raw customer profile records" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata", "keyword": "additionalProperties", "detail": "description" }]
+    },
+    {
+      "description": "owner carries an unrecognized phone property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics", "phone": "+1-555-0100" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata/owner", "keyword": "additionalProperties", "detail": "phone" }]
+    },
+    {
+      "description": "productType set to a lowercase value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "ingestion" }, "productType": "sdp" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata/productType", "keyword": "enum" }]
+    },
+    {
+      "description": "classification set to a value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "analytics" }, "classification": "secret" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata/classification", "keyword": "enum" }]
+    },
+    {
+      "description": "owner is a plain string rather than an object",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": "customer-analytics" },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata/owner", "keyword": "type" }]
+    },
+    {
+      "description": "metadata is a string rather than an object",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": "owned-by-customer-analytics",
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata", "keyword": "type" }]
+    },
+    {
+      "description": "businessContext carries an unrecognized region property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": { "team": "customer-analytics" },
+          "businessContext": { "domain": "customer", "region": "us-east" }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata/businessContext", "keyword": "additionalProperties", "detail": "region" }]
+    },
+    {
+      "description": "experimental repeats the same feature gate twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": { "team": "customer-analytics" },
+          "experimental": ["acquisition", "acquisition"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/metadata/experimental", "keyword": "uniqueItems" }]
+    }
+  ]
+}
