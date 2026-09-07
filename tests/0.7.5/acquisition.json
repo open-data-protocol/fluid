@@ -1,0 +1,4387 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "acquisition",
+  "description": "The acquisition build pattern: source-aligned ingestion from an external system (source, sink, delivery/DLQ semantics, schema evolution policy, pre-land quality gates and anomaly signals, cost budgets, catalog auto-registration, single-flight concurrency, lineage emission, the kafka-connect and debezium engine blocks, and the shared deployment block for engine-managed provisioning).",
+  "cases": [
+    {
+      "description": "streaming CDC acquisition reaching every sub-block: source, sink, delivery, schema evolution, quality gates and anomalies, cost budget, catalog, concurrency lock, lineage, kafka-connect (schema registry + streaming sink + managed deployment), and debezium",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "cdc",
+              "connection": {
+                "host": "db.internal",
+                "port": 5432,
+                "database": "crm",
+                "secretRef": "vault://secret/data/crm-db",
+                "schema": "public",
+                "schemas": [
+                  "public",
+                  "audit"
+                ]
+              },
+              "cursor_field": "updated_at",
+              "watermark": {
+                "strategy": "lsn",
+                "allowedLateness": "PT5M"
+              },
+              "streams": [
+                "customers"
+              ],
+              "reader": {
+                "format": "avro"
+              }
+            },
+            "sink": {
+              "format": "iceberg",
+              "catalog": "rest",
+              "partitionBy": [
+                "ingestion_date"
+              ]
+            },
+            "delivery": {
+              "guarantee": "exactly_once",
+              "dlq": {
+                "enabled": true,
+                "sink": {
+                  "format": "parquet",
+                  "location": "s3://acme-dlq/customers"
+                },
+                "maxRecordsBeforeAbort": 5000,
+                "alertOn": [
+                  "schema_violation",
+                  "destination_write_failed"
+                ]
+              }
+            },
+            "schemaEvolution": {
+              "policy": "evolve_safe",
+              "onAddedColumn": "include",
+              "onRemovedColumn": "warn",
+              "onTypeChange": "cast",
+              "sourceFingerprint": "required"
+            },
+            "preLand": [
+              "dlp_scan",
+              "quality_gate"
+            ],
+            "quality": {
+              "gates": [
+                {
+                  "rule": "not_null",
+                  "columns": [
+                    "customer_id"
+                  ],
+                  "severity": "error"
+                },
+                {
+                  "rule": "regex",
+                  "column": "email",
+                  "pattern": "^.+@.+$",
+                  "severity": "warn"
+                }
+              ],
+              "onError": "route_to_dlq",
+              "anomalies": [
+                {
+                  "signal": "record_count_drop",
+                  "algorithm": "ewma",
+                  "sensitivity": 0.5,
+                  "severity": "warn"
+                }
+              ]
+            },
+            "cost": {
+              "budget": {
+                "monthly": {
+                  "rows": 1000000,
+                  "bytes": "50GB",
+                  "computeMinutes": 600
+                },
+                "onExceed": "warn"
+              },
+              "chargeback": {
+                "team": "customer-analytics"
+              }
+            },
+            "catalog": {
+              "register": [
+                "datahub",
+                "glue"
+              ],
+              "documentation": "auto"
+            },
+            "concurrency": {
+              "lock": {
+                "scope": "product",
+                "timeout": "PT30M",
+                "onContended": "queue"
+              }
+            },
+            "lineage": {
+              "emit": true
+            },
+            "kafka-connect": {
+              "connector_class": "io.debezium.connector.postgresql.PostgresConnector",
+              "connector_name": "customers-source",
+              "tasks_max": 2,
+              "schema_registry": {
+                "url": "http://schema-registry:8081",
+                "auth": {
+                  "secretRef": "vault://secret/data/sr-auth"
+                }
+              },
+              "streamingSink": {
+                "commitIntervalMs": 60000,
+                "routeField": "table",
+                "dynamicEnabled": true
+              },
+              "deployment": {
+                "mode": "managed",
+                "managed": {
+                  "target": "kubernetes",
+                  "profile": "medium",
+                  "secrets": [
+                    {
+                      "name": "sr-auth",
+                      "ref": "vault://secret/data/sr-auth"
+                    }
+                  ],
+                  "network": {
+                    "egressAllowList": [
+                      "schema-registry.internal"
+                    ]
+                  }
+                }
+              }
+            },
+            "debezium": {
+              "connector_class": "io.debezium.connector.postgresql.PostgresConnector",
+              "snapshot_mode": "initial"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "acquisition build carrying only the required source kind and mode",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "preLand hook not in the recognized chain",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "preLand": [
+              "dlp_scan",
+              "hand_wave_at_it"
+            ]
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/preLand/1",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "kafka-connect tasks_max at zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "kafka-connect": {
+              "tasks_max": 0
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/kafka-connect/tasks_max",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "debezium snapshot_mode outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "debezium": {
+              "snapshot_mode": "full_dump"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/debezium/snapshot_mode",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "acquisitionPattern.lineage carrying an unrecognized member alongside emit",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "lineage": {
+              "emit": true,
+              "backend": "openlineage"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/lineage",
+          "keyword": "additionalProperties",
+          "detail": "backend"
+        }
+      ]
+    },
+    {
+      "description": "kafka-connect schema_registry carrying an unrecognized member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "kafka-connect": {
+              "schema_registry": {
+                "url": "http://sr:8081",
+                "compatibility": "BACKWARD"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/kafka-connect/schema_registry",
+          "keyword": "additionalProperties",
+          "detail": "compatibility"
+        }
+      ]
+    },
+    {
+      "description": "kafka-connect schema_registry.auth carrying an unrecognized member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "kafka-connect": {
+              "schema_registry": {
+                "auth": {
+                  "secretRef": "vault://secret/data/sr",
+                  "mechanism": "SASL"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/kafka-connect/schema_registry/auth",
+          "keyword": "additionalProperties",
+          "detail": "mechanism"
+        }
+      ]
+    },
+    {
+      "description": "kafka-connect streamingSink carrying an unrecognized member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "kafka-connect": {
+              "streamingSink": {
+                "commitIntervalMs": 30000,
+                "flushOnBatch": true
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/kafka-connect/streamingSink",
+          "keyword": "additionalProperties",
+          "detail": "flushOnBatch"
+        }
+      ]
+    },
+    {
+      "description": "kafka-connect streamingSink commitIntervalMs at zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "kafka-connect": {
+              "streamingSink": {
+                "commitIntervalMs": 0
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/kafka-connect/streamingSink/commitIntervalMs",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "source omits the required kind",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "mode": "full_refresh"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source",
+          "keyword": "required",
+          "detail": "kind"
+        }
+      ]
+    },
+    {
+      "description": "source omits the required mode",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source",
+          "keyword": "required",
+          "detail": "mode"
+        }
+      ]
+    },
+    {
+      "description": "source carrying an unrecognized member alongside kind and mode",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh",
+              "driverVersion": "42.7.3"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source",
+          "keyword": "additionalProperties",
+          "detail": "driverVersion"
+        }
+      ]
+    },
+    {
+      "description": "source connection secretRef with no scheme prefix",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh",
+              "connection": {
+                "secretRef": "crm-db-password"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source/connection/secretRef",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "source connection schemas repeating the same schema twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh",
+              "connection": {
+                "schemas": [
+                  "public",
+                  "public"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source/connection/schemas",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "source mode outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "batch_dump"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source/mode",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "source watermark strategy outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh",
+              "watermark": {
+                "strategy": "sequence_number"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source/watermark/strategy",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "source reader format outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh",
+              "reader": {
+                "format": "xml"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source/reader/format",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "source watermark carrying an unrecognized member alongside strategy",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh",
+              "watermark": {
+                "strategy": "lsn",
+                "checkpointInterval": "PT1M"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/source/watermark",
+          "keyword": "additionalProperties",
+          "detail": "checkpointInterval"
+        }
+      ]
+    },
+    {
+      "description": "sink carrying an unrecognized member alongside format",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "format": "iceberg",
+              "compression": "zstd"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink",
+          "keyword": "additionalProperties",
+          "detail": "compression"
+        }
+      ]
+    },
+    {
+      "description": "sink format outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "format": "avro_table"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/format",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "sink catalog outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "polaris"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalog",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "delivery guarantee outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "guarantee": "best_effort"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery/guarantee",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "delivery dlq sink format outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "dlq": {
+                "sink": {
+                  "format": "avro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery/dlq/sink/format",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "delivery dlq maxRecordsBeforeAbort below zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "dlq": {
+                "maxRecordsBeforeAbort": -1
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery/dlq/maxRecordsBeforeAbort",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "delivery dlq alertOn signal outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "dlq": {
+                "alertOn": [
+                  "disk_full"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery/dlq/alertOn/0",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "delivery carrying an unrecognized member alongside guarantee",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "guarantee": "at_least_once",
+              "retryPolicy": "exponential"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery",
+          "keyword": "additionalProperties",
+          "detail": "retryPolicy"
+        }
+      ]
+    },
+    {
+      "description": "delivery dlq carrying an unrecognized member alongside enabled",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "dlq": {
+                "enabled": true,
+                "retentionDays": 30
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery/dlq",
+          "keyword": "additionalProperties",
+          "detail": "retentionDays"
+        }
+      ]
+    },
+    {
+      "description": "delivery dlq sink carrying an unrecognized member alongside format",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "delivery": {
+              "dlq": {
+                "sink": {
+                  "format": "json",
+                  "compression": "gzip"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/delivery/dlq/sink",
+          "keyword": "additionalProperties",
+          "detail": "compression"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution policy outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "schemaEvolution": {
+              "policy": "auto"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/schemaEvolution/policy",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution onAddedColumn outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "schemaEvolution": {
+              "onAddedColumn": "ignore"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/schemaEvolution/onAddedColumn",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution onRemovedColumn outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "schemaEvolution": {
+              "onRemovedColumn": "ignore"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/schemaEvolution/onRemovedColumn",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution onTypeChange outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "schemaEvolution": {
+              "onTypeChange": "ignore"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/schemaEvolution/onTypeChange",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution sourceFingerprint outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "schemaEvolution": {
+              "sourceFingerprint": "best_effort"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/schemaEvolution/sourceFingerprint",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "schemaEvolution carrying an unrecognized member alongside policy",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "schemaEvolution": {
+              "policy": "strict",
+              "onSchemaMismatch": "fail"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/schemaEvolution",
+          "keyword": "additionalProperties",
+          "detail": "onSchemaMismatch"
+        }
+      ]
+    },
+    {
+      "description": "quality gate omits the required rule",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "gates": [
+                {
+                  "severity": "error"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/gates/0",
+          "keyword": "required",
+          "detail": "rule"
+        }
+      ]
+    },
+    {
+      "description": "quality gate omits the required severity",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "gates": [
+                {
+                  "rule": "not_null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/gates/0",
+          "keyword": "required",
+          "detail": "severity"
+        }
+      ]
+    },
+    {
+      "description": "quality gate rule outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "gates": [
+                {
+                  "rule": "checksum",
+                  "severity": "error"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/gates/0/rule",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality gate algorithm outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "gates": [
+                {
+                  "rule": "row_count_anomaly",
+                  "severity": "warn",
+                  "algorithm": "zscore"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/gates/0/algorithm",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality gate severity outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "gates": [
+                {
+                  "rule": "not_null",
+                  "severity": "critical"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/gates/0/severity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality onError outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "onError": "ignore"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/onError",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality anomaly omits the required signal",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "anomalies": [
+                {
+                  "severity": "warn"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/anomalies/0",
+          "keyword": "required",
+          "detail": "signal"
+        }
+      ]
+    },
+    {
+      "description": "quality anomaly omits the required severity",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "anomalies": [
+                {
+                  "signal": "cursor_stalled"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/anomalies/0",
+          "keyword": "required",
+          "detail": "severity"
+        }
+      ]
+    },
+    {
+      "description": "quality anomaly signal outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "anomalies": [
+                {
+                  "signal": "disk_pressure",
+                  "severity": "warn"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/anomalies/0/signal",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality anomaly algorithm outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "anomalies": [
+                {
+                  "signal": "record_count_drop",
+                  "severity": "warn",
+                  "algorithm": "zscore"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/anomalies/0/algorithm",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality anomaly severity outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "anomalies": [
+                {
+                  "signal": "record_count_drop",
+                  "severity": "critical"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/anomalies/0/severity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "quality carrying an unrecognized member alongside onError",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "onError": "route_to_dlq",
+              "notifyChannel": "#data-alerts"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality",
+          "keyword": "additionalProperties",
+          "detail": "notifyChannel"
+        }
+      ]
+    },
+    {
+      "description": "quality gate pattern given as a number instead of a regex string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "gates": [
+                {
+                  "rule": "regex",
+                  "severity": "warn",
+                  "pattern": 42
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/gates/0/pattern",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "quality anomaly carrying an unrecognized member alongside signal and severity",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "quality": {
+              "anomalies": [
+                {
+                  "signal": "record_count_drop",
+                  "severity": "warn",
+                  "runbookUrl": "https://x"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/quality/anomalies/0",
+          "keyword": "additionalProperties",
+          "detail": "runbookUrl"
+        }
+      ]
+    },
+    {
+      "description": "cost budget monthly rows below zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "cost": {
+              "budget": {
+                "monthly": {
+                  "rows": -1
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/cost/budget/monthly/rows",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "cost budget monthly computeMinutes below zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "cost": {
+              "budget": {
+                "monthly": {
+                  "computeMinutes": -1
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/cost/budget/monthly/computeMinutes",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "cost budget onExceed outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "cost": {
+              "budget": {
+                "onExceed": "pause"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/cost/budget/onExceed",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "cost carrying an unrecognized member alongside budget",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "cost": {
+              "budget": {
+                "onExceed": "warn"
+              },
+              "currency": "USD"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/cost",
+          "keyword": "additionalProperties",
+          "detail": "currency"
+        }
+      ]
+    },
+    {
+      "description": "cost budget carrying an unrecognized member alongside monthly",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "cost": {
+              "budget": {
+                "onExceed": "warn",
+                "annualCap": "600GB"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/cost/budget",
+          "keyword": "additionalProperties",
+          "detail": "annualCap"
+        }
+      ]
+    },
+    {
+      "description": "cost budget monthly carrying an unrecognized member alongside rows",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "cost": {
+              "budget": {
+                "monthly": {
+                  "rows": 1000,
+                  "gbScanned": 5
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/cost/budget/monthly",
+          "keyword": "additionalProperties",
+          "detail": "gbScanned"
+        }
+      ]
+    },
+    {
+      "description": "catalog register target outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "catalog": {
+              "register": [
+                "alation"
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/catalog/register/0",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "catalog documentation outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "catalog": {
+              "documentation": "generated"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/catalog/documentation",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "catalog carrying an unrecognized member alongside documentation",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "catalog": {
+              "documentation": "manual",
+              "owner": "data-platform"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/catalog",
+          "keyword": "additionalProperties",
+          "detail": "owner"
+        }
+      ]
+    },
+    {
+      "description": "concurrency lock scope outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "concurrency": {
+              "lock": {
+                "scope": "organization"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/concurrency/lock/scope",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "concurrency lock onContended outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "concurrency": {
+              "lock": {
+                "onContended": "retry_forever"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/concurrency/lock/onContended",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "concurrency carrying an unrecognized member alongside lock",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "concurrency": {
+              "lock": {
+                "scope": "build"
+              },
+              "maxParallelRuns": 1
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/concurrency",
+          "keyword": "additionalProperties",
+          "detail": "maxParallelRuns"
+        }
+      ]
+    },
+    {
+      "description": "concurrency lock carrying an unrecognized member alongside scope",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "concurrency": {
+              "lock": {
+                "scope": "product",
+                "leaseId": "abc123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/concurrency/lock",
+          "keyword": "additionalProperties",
+          "detail": "leaseId"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment omits the required mode",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {}
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment",
+          "keyword": "required",
+          "detail": "mode"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment mode outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "self-hosted"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/mode",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment managed block omits the required target",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "managed",
+                "managed": {}
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/managed",
+          "keyword": "required",
+          "detail": "target"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment managed target outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "managed",
+                "managed": {
+                  "target": "nomad"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/managed/target",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment managed profile outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "managed",
+                "managed": {
+                  "target": "docker",
+                  "profile": "xlarge"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/managed/profile",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment carrying an unrecognized member alongside mode",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "embedded",
+                "region": "us-east-1"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment",
+          "keyword": "additionalProperties",
+          "detail": "region"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment managed carrying an unrecognized member alongside target",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "managed",
+                "managed": {
+                  "target": "docker",
+                  "namespace": "data-platform"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/managed",
+          "keyword": "additionalProperties",
+          "detail": "namespace"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment managed secret entry carrying an unrecognized member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "managed",
+                "managed": {
+                  "target": "docker",
+                  "secrets": [
+                    {
+                      "name": "sr-auth",
+                      "ref": "vault://secret/data/sr",
+                      "rotate": true
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/managed/secrets/0",
+          "keyword": "additionalProperties",
+          "detail": "rotate"
+        }
+      ]
+    },
+    {
+      "description": "airbyte deployment managed network carrying an unrecognized member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "airbyte": {
+              "deployment": {
+                "mode": "managed",
+                "managed": {
+                  "target": "docker",
+                  "network": {
+                    "egressAllowList": [
+                      "api.stripe.com"
+                    ],
+                    "vpcId": "vpc-1"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/airbyte/deployment/managed/network",
+          "keyword": "additionalProperties",
+          "detail": "vpcId"
+        }
+      ]
+    }
+  ]
+}

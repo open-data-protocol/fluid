@@ -148,6 +148,31 @@ JSON pointers. It becomes a silent-acceptance bug the moment a schema uses
 `maxContains` — Draft 7 ignores unknown keywords, so the implementation would
 accept documents the published standard rejects, with no error anywhere.
 
+## Measuring what the corpus is worth
+
+Counting cases measures effort. `conformance/mutation_coverage.py` measures
+coverage: it deletes one schema constraint at a time and re-runs the corpus.
+
+```bash
+python3 conformance/mutation_coverage.py                      # whole corpus
+python3 conformance/mutation_coverage.py --group agentpolicy  # one group
+python3 conformance/mutation_coverage.py --min-coverage 40    # gate mode
+```
+
+A constraint is **covered** when deleting it turns some case red, **uncovered**
+when the corpus does not notice, and **redundant** when no case could ever
+notice — because a sibling `enum` already restricts the instance to a set that
+satisfies the constraint anyway. `fluidVersion` is the clearest example: it
+carries `pattern`, `type: string` and an `enum` of three version strings, so
+the pattern and the type are dead weight. Redundant constraints are excluded
+from the denominator; counting them would blame the corpus for a gap it cannot
+close, and they are findings about the *schema* instead.
+
+Today: **40.7%** (415 of 1020 falsifiable constraints), with 120 redundant.
+Most of what remains is `type` constraints, which need a wrong-typed value for
+every property in the schema. Of the constraints that carry real meaning —
+enums, required members, closed objects, bounds — 38 remain unpinned.
+
 ## Adding a version
 
 1. Publish `schema/fluid-schema-<version>.json` (authored in forge-cli, synced
