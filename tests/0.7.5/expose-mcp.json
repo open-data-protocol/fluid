@@ -1,0 +1,339 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "expose-mcp",
+  "description": "The exposeMcp gateway block (exposes[].mcp: sampling.maxRows, classification.dataClass) and the completeness/latency members of defaultSLIs (exposes[].observability.defaultSLIs): each object's closed property set and the dataClass/severity enums.",
+  "cases": [
+    {
+      "description": "expose combines an MCP gateway block with completeness and latency SLI severities",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "sampling": { "maxRows": 500 },
+              "classification": { "dataClass": "confidential" }
+            },
+            "observability": {
+              "defaultSLIs": {
+                "enabled": true,
+                "completeness": { "severity": "info" },
+                "latency": { "severity": "critical" }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "MCP classification carries the public dataClass value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "classification": { "dataClass": "public" }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "defaultSLIs completeness carries an unrecognized property alongside severity",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": {
+                "completeness": { "severity": "info", "sampleRate": 0.5 }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/defaultSLIs/completeness", "keyword": "additionalProperties", "detail": "sampleRate" }
+      ]
+    },
+    {
+      "description": "defaultSLIs completeness severity outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": {
+                "completeness": { "severity": "catastrophic" }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/defaultSLIs/completeness/severity", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "defaultSLIs latency carries an unrecognized property alongside severity",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": {
+                "latency": { "severity": "critical", "sampleRate": 0.5 }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/defaultSLIs/latency", "keyword": "additionalProperties", "detail": "sampleRate" }
+      ]
+    },
+    {
+      "description": "defaultSLIs latency severity outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "observability": {
+              "defaultSLIs": {
+                "latency": { "severity": "catastrophic" }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/observability/defaultSLIs/latency/severity", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "mcp block carries an unrecognized property alongside sampling and classification",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "sampling": { "maxRows": 500 },
+              "classification": { "dataClass": "confidential" },
+              "auditLog": true
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/mcp", "keyword": "additionalProperties", "detail": "auditLog" }
+      ]
+    },
+    {
+      "description": "mcp sampling carries an unrecognized property alongside maxRows",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "sampling": { "maxRows": 500, "maxRowsPerSecond": 50 }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/mcp/sampling", "keyword": "additionalProperties", "detail": "maxRowsPerSecond" }
+      ]
+    },
+    {
+      "description": "mcp sampling maxRows at zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "sampling": { "maxRows": 0 }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/mcp/sampling/maxRows", "keyword": "minimum" }
+      ]
+    },
+    {
+      "description": "mcp classification carries an unrecognized property alongside dataClass",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "classification": { "dataClass": "confidential", "reviewedBy": "security-team" }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/mcp/classification", "keyword": "additionalProperties", "detail": "reviewedBy" }
+      ]
+    },
+    {
+      "description": "mcp classification dataClass outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "mcp": {
+              "classification": { "dataClass": "top-secret" }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/mcp/classification/dataClass", "keyword": "enum" }
+      ]
+    }
+  ]
+}
