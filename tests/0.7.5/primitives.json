@@ -1,0 +1,746 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "primitives",
+  "description": "The shared primitive grammars referenced throughout the document: identifier, semver, semverRange, tags, labels, isoDuration, availabilityPct and lifecycleState. Each is exercised at one or more of its real usage sites (exposeId, expose.version, qos, lifecycle, consumes), not only where the envelope group already pins it down.",
+  "cases": [
+    {
+      "description": "a document exercising tags, labels, semver with prerelease and build metadata, QoS availability and freshness, lifecycle state and retention, and a consumed version constraint together",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "tags": ["customer-data", "pii"],
+        "labels": { "team": "customer-analytics", "cost-center": "engineering" },
+        "metadata": {
+          "owner": { "team": "customer-analytics" },
+          "tags": ["gold-tier"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "version": "2.1.0-beta.1+exp.sha.abc123",
+            "tags": ["real-time"],
+            "labels": { "region": "us-central1" },
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": {
+              "availability": "99.95%",
+              "freshnessSLO": "PT15M"
+            },
+            "lifecycle": {
+              "state": "active",
+              "retention": "P365D",
+              "deprecationPolicy": { "noticePeriod": "P30D" }
+            }
+          }
+        ],
+        "consumes": [
+          { "productId": "silver.hr.people", "exposeId": "people_v2", "versionConstraint": "^1.2.0" }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "top-level tags is an empty array and top-level labels is an empty object",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "tags": [],
+        "labels": {},
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "QoS availability sits at the exact 100 percent upper boundary",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "availability": "100%" }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "lifecycle retention combines date and time units in one ISO-8601 duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "lifecycle": { "retention": "P1DT12H" }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a consumed product id mixes an internal dot and hyphen in the identifier's middle",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [
+          { "productId": "silver.hr.people-v2", "exposeId": "people_v2" }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "the expose id is a single underscore character",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "_",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a consumed version constraint uses a compound range expression rather than a bare semver",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [
+          { "productId": "upstream_product", "exposeId": "upstream_expose", "versionConstraint": "^1.2.0 || ~1.4.0" }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a top-level tag contains an uppercase letter",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "tags": ["Customer-Data"],
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/tags/0", "keyword": "pattern" }]
+    },
+    {
+      "description": "the tags array repeats the same value twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "tags": ["pii", "pii"],
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/tags", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "a top-level label value is a number instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "labels": { "team": 42 },
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/labels/team", "keyword": "type" }]
+    },
+    {
+      "description": "the QoS freshness SLO omits the ISO-8601 duration's leading P",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "freshnessSLO": "15M" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/freshnessSLO", "keyword": "pattern" }]
+    },
+    {
+      "description": "the QoS availability target exceeds 100 percent",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "availability": "101%" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/availability", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose version is prefixed with a literal v",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "version": "v1.2.3",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/version", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose version's major segment carries a leading zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "version": "01.2.3",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/version", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose lifecycle state is a value outside the vocabulary",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "lifecycle": { "state": "sunset" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/lifecycle/state", "keyword": "enum" }]
+    },
+    {
+      "description": "the expose id ends with a hyphen",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles-",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/exposeId", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose id begins with a dot",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": ".profiles",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/exposeId", "keyword": "pattern" }]
+    },
+    {
+      "description": "the consumed version constraint is a number instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [
+          { "productId": "upstream_product", "exposeId": "upstream_expose", "versionConstraint": 42 }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/consumes/0/versionConstraint", "keyword": "type" }]
+    },
+    {
+      "description": "the expose id contains a space in the middle",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/exposeId", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose id is a single hyphen character",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "-",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/exposeId", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose version omits the patch segment",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "version": "1.2",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/version", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose version's prerelease segment contains an underscore",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "version": "1.2.3-beta_1",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/version", "keyword": "pattern" }]
+    },
+    {
+      "description": "a top-level tag ends with a hyphen",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "tags": ["pii-"],
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/tags/0", "keyword": "pattern" }]
+    },
+    {
+      "description": "top-level tags is a string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "tags": "pii",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/tags", "keyword": "type" }]
+    },
+    {
+      "description": "top-level labels is an array instead of an object",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "labels": ["customer-analytics"],
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/labels", "keyword": "type" }]
+    },
+    {
+      "description": "the QoS freshness SLO is the bare duration designator with no unit components",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "freshnessSLO": "P" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/freshnessSLO", "keyword": "pattern" }]
+    },
+    {
+      "description": "lifecycle retention lists a day component before the year component",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "lifecycle": { "retention": "P1D2Y" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/lifecycle/retention", "keyword": "pattern" }]
+    },
+    {
+      "description": "the QoS availability target omits the percent sign",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "qos": { "availability": "99.9" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/qos/availability", "keyword": "pattern" }]
+    },
+    {
+      "description": "the expose lifecycle state is set to the preview vocabulary value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "lifecycle": { "state": "preview" }
+          }
+        ]
+      },
+      "valid": true
+    }
+  ]
+}

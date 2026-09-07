@@ -1,0 +1,59 @@
+# Backward-compatibility waivers.
+#
+# One "<from>-><to> <pointer>" per line, sorted, '#' for comments.
+# A waiver is how a KNOWN narrowing stays visible instead of being hidden by
+# weakening the gate. Every entry must say what was checked and why it stands.
+#
+# Convention borrowed from protocolbuffers/protobuf's conformance failure_list
+# (BSD-3-Clause): a strict gate is only adoptable if history it cannot change
+# can be recorded rather than silently tolerated.
+#
+# Pre-0.7.1 pairs are not waived individually. Those schemas predate the
+# compatibility promise and, per .github/workflows/schema-sync.yml, already
+# diverge from forge-cli at the byte level; CI runs the gate from 0.7.1 only.
+
+# ---------------------------------------------------------------------------
+# 0.7.1 -> 0.7.2  --  REAL BREAK, SHIPPED. Not benign; waived only because it
+# is history that cannot be un-shipped.
+#
+# $defs/notification gained "additionalProperties": false. A contract carrying
+# any extra member on a build.execution.notifications[] entry validated under
+# 0.7.1 and is rejected by 0.7.2.
+#
+# Verified with an actual document, plus a negative control that isolates the
+# cause (the same document minus the extra member validates under both):
+#     build.execution.notifications[0].retryOnFailure
+#     0.7.1: VALID    0.7.2: REJECTED (additionalProperties)
+#
+# docs/releases/0.7.2.md says "100% backward compatible with 0.7.1" and
+# "No breaking changes". That claim is false and should be corrected to name
+# this change. This waiver exists so the gate can run green on history while
+# the release note is fixed -- not to make the problem go away.
+0.7.1->0.7.2 /$defs/notification
+
+# ---------------------------------------------------------------------------
+# 0.7.2 -> 0.7.3  --  FALSE POSITIVE. A widening, not a narrowing.
+#
+# $defs/identifier: ^[a-z0-9_]...$ -> ^[A-Za-z0-9_]...$ (uppercase admitted).
+# Regex containment is undecidable in general, so the gate reports any changed
+# pattern as breaking and asks for a decision rather than guessing.
+#
+# Verified exhaustively: 11,110 strings up to length 4 over the alphabet
+# "abz09_.-AZ" were generated; every string the 0.7.2 pattern accepts, the
+# 0.7.3 pattern also accepts. Zero counterexamples.
+0.7.2->0.7.3 /$defs/identifier
+
+# ---------------------------------------------------------------------------
+# 0.7.3 -> 0.7.4  --  INTENTIONAL, and outside what the promise covers.
+#
+# properties/fluidVersion gained an enum (0.7.3 constrained the member by
+# pattern alone, so any \d+\.\d+(\.\d+)? was accepted; 0.7.4 restricts it to
+# ["0.7.3", "0.7.4"]). This is the version gate doing its job: a document
+# declares the schema version it targets, and that member is expected to move
+# with the release. The empirical pass in check-compat.py normalises
+# fluidVersion across versions for exactly this reason.
+#
+# Re-examine if the enum ever DROPS a version that a supported release still
+# admits -- that would strand real documents rather than just old version
+# strings.
+0.7.3->0.7.4 /properties/fluidVersion

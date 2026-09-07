@@ -1,0 +1,875 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "build-consumes",
+  "description": "The build block and its four pattern variants (hybrid-reference, embedded-logic, multi-stage, acquisition) -- including each variant's own closed property set, not just its required member -- the build-level capabilities vocabulary and dependencies[].condition enum, the builds array of independent build configurations, the consumes array and consumeRef, and the inline environments overrides object. A conformant implementation reproduces every verdict below.",
+  "cases": [
+    {
+      "description": "hybrid-reference build carries every optional member: outputs, dependencies, tags, labels, an adapter-qualified engine, and pattern-specific select/materializations/vars",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "id": "stg_customers_build",
+          "description": "Staging build for customer profile enrichment.",
+          "pattern": "hybrid-reference",
+          "engine": "dbt-snowflake",
+          "outputs": ["profiles_table"],
+          "dependencies": [{ "buildId": "raw_customers_build", "condition": "success" }],
+          "tags": ["batch"],
+          "labels": { "team": "customer-analytics" },
+          "properties": {
+            "model": "stg_customers",
+            "select": ["stg_customers", "+downstream"],
+            "materializations": { "stg_customers": "incremental" },
+            "vars": { "start_date": "2024-01-01" }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "build.pattern is set to a value outside its four-member enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": { "pattern": "streaming", "engine": "dbt", "properties": { "model": "stg_customers" } }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/pattern", "keyword": "enum" }]
+    },
+    {
+      "description": "build carries a top-level member the schema does not define",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "hybrid-reference",
+          "engine": "dbt",
+          "properties": { "model": "stg_customers" },
+          "priority": 5
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build", "keyword": "additionalProperties", "detail": "priority" }]
+    },
+    {
+      "description": "build.engine matches neither the fixed enum nor the adapter-qualified dbt- pattern",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "hybrid-reference",
+          "engine": "snowflake-native",
+          "properties": { "model": "stg_customers" }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/engine", "keyword": "anyOf" }]
+    },
+    {
+      "description": "hybrid-reference build's properties omit the required model",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": { "pattern": "hybrid-reference", "engine": "dbt", "properties": {} }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "required", "detail": "model" }]
+    },
+    {
+      "description": "hybrid-reference build's properties carry an embedded-logic field (sql) that its own closed set does not admit",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "hybrid-reference",
+          "engine": "dbt",
+          "properties": { "model": "stg_customers", "sql": "SELECT 1" }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "additionalProperties", "detail": "sql" }]
+    },
+    {
+      "description": "embedded-logic build carries sql, a language choice, and free-form parameters",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "python",
+          "properties": {
+            "sql": "SELECT * FROM raw.customers",
+            "language": "pyspark",
+            "parameters": { "batch_size": 100 }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "embedded-logic build's properties omit the required sql",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": { "pattern": "embedded-logic", "engine": "sql", "properties": { "language": "sql" } }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "required", "detail": "sql" }]
+    },
+    {
+      "description": "embedded-logic build's language falls outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "sql",
+          "properties": { "sql": "SELECT 1", "language": "javascript" }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties/language", "keyword": "enum" }]
+    },
+    {
+      "description": "embedded-logic build's properties carry a hybrid-reference field (model) that its own closed set does not admit",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "sql",
+          "properties": { "sql": "SELECT 1", "model": "should_not_be_here" }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "additionalProperties", "detail": "model" }]
+    },
+    {
+      "description": "hybrid-reference build declares a dependency whose condition falls outside its three-member enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "hybrid-reference",
+          "engine": "dbt",
+          "properties": { "model": "stg_customers" },
+          "dependencies": [{ "buildId": "raw_customers_build", "condition": "sometimes" }]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/dependencies/0/condition", "keyword": "enum" }]
+    },
+    {
+      "description": "multi-stage build orchestrates two dependent stages under a bounded parallelism",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "multi-stage",
+          "engine": "spark",
+          "properties": {
+            "stages": [
+              { "name": "extract", "pattern": "embedded-logic", "outputs": ["raw_stage"] },
+              { "name": "transform", "pattern": "hybrid-reference", "dependsOn": ["extract"], "outputs": ["profiles_table"] }
+            ],
+            "orchestration": { "parallelism": 2 }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "multi-stage build's stage carries a pattern value that is valid at the build level but outside the stage's narrower two-member enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "multi-stage",
+          "engine": "spark",
+          "properties": { "stages": [{ "name": "ingest", "pattern": "acquisition" }] }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties/stages/0/pattern", "keyword": "enum" }]
+    },
+    {
+      "description": "multi-stage build's orchestration.parallelism is set below its minimum of one",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "multi-stage",
+          "engine": "spark",
+          "properties": {
+            "stages": [{ "name": "only_stage" }],
+            "orchestration": { "parallelism": 0 }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties/orchestration/parallelism", "keyword": "minimum" }]
+    },
+    {
+      "description": "multi-stage build's properties carry a top-level member outside multiStagePattern's closed set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "multi-stage",
+          "engine": "spark",
+          "properties": { "stages": [{ "name": "only_stage" }], "priority": 5 }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "additionalProperties", "detail": "priority" }]
+    },
+    {
+      "description": "acquisition build ingests from a minimal external source with no transformation",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "dlt",
+          "properties": { "source": { "kind": "postgres", "mode": "full_refresh" } }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "acquisition build's properties omit the required source",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": { "pattern": "acquisition", "engine": "dlt", "properties": {} }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "required", "detail": "source" }]
+    },
+    {
+      "description": "acquisition build's properties carry a hybrid-reference field (model) that its own closed set does not admit",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "dlt",
+          "properties": {
+            "source": { "kind": "postgres", "mode": "full_refresh" },
+            "model": "should_not_be_here"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/properties", "keyword": "additionalProperties", "detail": "model" }]
+    },
+    {
+      "description": "acquisition build declares a capability value outside the build.capabilities vocabulary",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "dlt",
+          "properties": { "source": { "kind": "postgres", "mode": "full_refresh" } },
+          "capabilities": ["full_refresh", "at_random_once"]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/capabilities/1", "keyword": "enum" }]
+    },
+    {
+      "description": "builds array declares two independent configurations for a multi-modal product, batch and streaming",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "builds": [
+          { "id": "batch-processing", "pattern": "hybrid-reference", "engine": "dbt", "properties": { "model": "stg_customers" } },
+          { "id": "streaming-ingest", "pattern": "acquisition", "engine": "kafka-connect", "properties": { "source": { "kind": "kafka", "mode": "streaming" } } }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "second entry of the builds array fails its own pattern-specific required member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "builds": [
+          { "id": "batch-processing", "pattern": "hybrid-reference", "engine": "dbt", "properties": { "model": "stg_customers" } },
+          { "id": "bad-build", "pattern": "embedded-logic", "engine": "sql", "properties": {} }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/builds/1/properties", "keyword": "required", "detail": "sql" }]
+    },
+    {
+      "description": "consumeRef declares every optional member: version constraint, full qos expectations, required policies, purpose, tags, and labels",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "versionConstraint": "^1.2",
+            "qosExpectations": {
+              "freshnessMax": "PT15M",
+              "maxStaleness": "P1D",
+              "minCompleteness": 0.95,
+              "tags": ["critical"],
+              "labels": { "tier": "gold" }
+            },
+            "requiredPolicies": ["pii-masking"],
+            "purpose": "customer 360 enrichment",
+            "tags": ["upstream-hr"],
+            "labels": { "domain": "hr" }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "consumeRef omits the required productId",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [{ "exposeId": "people_table" }]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/consumes/0", "keyword": "required", "detail": "productId" }]
+    },
+    {
+      "description": "consumeRef omits the required exposeId",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [{ "productId": "silver.hr.people_v2" }]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/consumes/0", "keyword": "required", "detail": "exposeId" }]
+    },
+    {
+      "description": "consumeRef uses the legacy 'provider' member name the schema comment says was renamed away",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [{ "productId": "silver.hr.people_v2", "exposeId": "people_table", "provider": "legacy-alias" }]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/consumes/0", "keyword": "additionalProperties", "detail": "provider" }]
+    },
+    {
+      "description": "consumeRef's qosExpectations.minCompleteness is set above its maximum of one",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [{ "productId": "x", "exposeId": "y", "qosExpectations": { "minCompleteness": 1.5 } }]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/consumes/0/qosExpectations/minCompleteness", "keyword": "maximum" }]
+    },
+    {
+      "description": "consumeRef's qosExpectations carries a member outside its own closed set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "consumes": [{ "productId": "x", "exposeId": "y", "qosExpectations": { "staleness_minutes": 30 } }]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/consumes/0/qosExpectations", "keyword": "additionalProperties", "detail": "staleness_minutes" }]
+    },
+    {
+      "description": "environments overrides declare a dev environment with metadata, an expose override, tags, and labels",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "environments": {
+          "dev": {
+            "metadata": {
+              "owner": { "team": "customer-analytics", "email": "data@acme.com" },
+              "tags": ["dev"],
+              "labels": { "cost-center": "eng" }
+            },
+            "exposes": [{ "exposeId": "profiles_table", "tags": ["sandbox"] }],
+            "tags": ["low-cost"],
+            "labels": { "tier": "dev" }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "environments.dev carries a member outside environmentConfig's closed set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "environments": { "dev": { "region": "us-east1" } }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/environments/dev", "keyword": "additionalProperties", "detail": "region" }]
+    },
+    {
+      "description": "environments.dev's expose override names an exposeId that violates the identifier grammar",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "environments": { "dev": { "exposes": [{ "exposeId": "-bad" }] } }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/environments/dev/exposes/0/exposeId", "keyword": "pattern" }]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Conformance cases that are expected to FAIL.
+#
+# One test id per line, '#' for comments, kept sorted. Get ids from:
+#     python3 conformance/run.py --list
+#
+# Two rules make this file a record rather than a mute button:
+#
+#   1. Listed cases are still EXECUTED. A case here that starts passing is an
+#      error, not a quiet success -- the fix and the removal land together, so
+#      the file never drifts from reality.
+#   2. An entry naming a test that no longer exists is also an error. A
+#      renamed case cannot leave a stale exemption behind.
+#
+# Convention from protocolbuffers/protobuf's conformance failure_list
+# (BSD-3-Clause), with the still-execute refinement from connectrpc/conformance
+# (Apache-2.0).
+#
+# What belongs here: a real, understood shortcoming that cannot be fixed in the
+# same change that discovers it. What does NOT belong here: a case that is
+# merely inconvenient, or one whose expectation nobody has checked. If a case
+# is wrong, fix the case.
+#
+# Currently empty: every published case passes against every published schema.
