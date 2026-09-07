@@ -1,0 +1,537 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "expose",
+  "description": "The expose object: its four required members, its closed property set, the full breadth of the kind enum, the mcp and iceberg member shapes, exposeId against the identifier grammar, and version against semver.",
+  "cases": [
+    {
+      "description": "version sits at the lowest permissible semver value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "raw_events",
+            "version": "0.0.0",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "raw", "table": "events" }
+            },
+            "contract": { "schema": [{ "name": "event_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "optional title, description, version, tags and labels populated on a view",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "customer_view",
+            "title": "Customer 360 View",
+            "description": "Denormalized customer view joining profile and orders.",
+            "version": "1.4.0",
+            "kind": "view",
+            "tags": ["pii", "customer-facing"],
+            "labels": { "team": "customer-analytics", "retention": "7-years" },
+            "binding": {
+              "platform": "snowflake",
+              "format": "snowflake_view",
+              "location": { "database": "ANALYTICS", "schema": "PUBLIC", "table": "customer_view" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "kind is api exposed over http with an openapiRef contract",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "customers_api",
+            "kind": "api",
+            "binding": {
+              "platform": "aws",
+              "format": "http_api",
+              "location": { "baseUrl": "https://api.acme.com/v1/customers", "gateway": "customers-gw" }
+            },
+            "contract": { "openapiRef": "https://api.acme.com/openapi.json" }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "kind is stream backed by a kafka topic binding",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "customer_events",
+            "kind": "stream",
+            "binding": {
+              "platform": "kafka",
+              "format": "kafka_topic",
+              "location": { "topic": "customer-events" }
+            },
+            "contract": { "schema": [{ "name": "event_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "kind is model with an other-platform binding and a float output column",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "churn_model",
+            "kind": "model",
+            "binding": {
+              "platform": "other",
+              "format": "other",
+              "location": { "path": "s3://ml-models/churn/v2" }
+            },
+            "contract": { "schema": [{ "name": "churn_probability", "type": "float" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "exposeId is a single character",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "x",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "second expose entry carries a dotted-hyphenated exposeId and a full prerelease-plus-build version",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          },
+          {
+            "exposeId": "sales.orders-v2",
+            "version": "2.1.0-beta.1+build.42",
+            "kind": "view",
+            "binding": {
+              "platform": "databricks",
+              "format": "delta_table",
+              "location": { "database": "analytics", "table": "orders_v2" }
+            },
+            "contract": { "schema": [{ "name": "order_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "expose carries the mcp gateway member alongside crawler configuration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "crawler": { "name": "profiles-crawler", "role": "arn:aws:iam::123456789012:role/glue-crawler" },
+            "mcp": {
+              "sampling": { "maxRows": 250 },
+              "classification": { "dataClass": "confidential" }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "exposeId absent from the first expose entry",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0", "keyword": "required", "detail": "exposeId" }]
+    },
+    {
+      "description": "kind absent from the expose entry",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0", "keyword": "required", "detail": "kind" }]
+    },
+    {
+      "description": "binding absent from the expose entry",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0", "keyword": "required", "detail": "binding" }]
+    },
+    {
+      "description": "contract absent from the expose entry",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0", "keyword": "required", "detail": "contract" }]
+    },
+    {
+      "description": "unknown member on the expose entry is refused because its property set is closed",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "owner": "customer-analytics",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0", "keyword": "additionalProperties", "detail": "owner" }]
+    },
+    {
+      "description": "kind value is outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "queue",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/kind", "keyword": "enum" }]
+    },
+    {
+      "description": "exposeId contains a space",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/exposeId", "keyword": "pattern" }]
+    },
+    {
+      "description": "exposeId is an empty string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/exposeId", "keyword": "pattern" }]
+    },
+    {
+      "description": "version omits the patch component",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "version": "1.0",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/version", "keyword": "pattern" }]
+    },
+    {
+      "description": "the seven kind values not exercised elsewhere, one per expose entry, with an iceberg block on the last",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "raw_files",
+            "kind": "file",
+            "binding": {
+              "platform": "aws",
+              "format": "s3_file",
+              "location": { "bucket": "acme-raw", "path": "landing/events/" }
+            },
+            "contract": { "schema": [{ "name": "path", "type": "string" }] }
+          },
+          {
+            "exposeId": "customer_topic",
+            "kind": "topic",
+            "binding": {
+              "platform": "gcp",
+              "format": "pubsub_topic",
+              "location": { "topic": "customer-updates" }
+            },
+            "contract": { "schema": [{ "name": "event_id", "type": "string" }] }
+          },
+          {
+            "exposeId": "customer_features",
+            "kind": "feature_store",
+            "binding": {
+              "platform": "databricks",
+              "format": "delta_table",
+              "location": { "database": "features", "table": "customer_features" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          },
+          {
+            "exposeId": "customer_embeddings",
+            "kind": "vector",
+            "binding": {
+              "platform": "other",
+              "format": "other",
+              "location": { "path": "s3://ml-vectors/customers" }
+            },
+            "contract": { "schema": [{ "name": "embedding", "type": "array" }] }
+          },
+          {
+            "exposeId": "customer_graph",
+            "kind": "graph",
+            "binding": {
+              "platform": "other",
+              "format": "other",
+              "location": { "path": "s3://graph-store/customers" }
+            },
+            "contract": { "schema": [{ "name": "node_id", "type": "string" }] }
+          },
+          {
+            "exposeId": "customer_metrics_ts",
+            "kind": "time_series",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "metrics", "table": "customer_ts" }
+            },
+            "contract": { "schema": [{ "name": "ts", "type": "timestamp" }] }
+          },
+          {
+            "exposeId": "legacy_export",
+            "kind": "other",
+            "binding": {
+              "platform": "azure",
+              "format": "other",
+              "location": { "account": "acmestorage", "path": "exports/legacy.csv" }
+            },
+            "contract": { "schema": [{ "name": "raw", "type": "string" }] },
+            "iceberg": {
+              "writeFormat": "parquet",
+              "snapshotRetention": { "maxSnapshotAgeMs": 604800000, "minSnapshotsToKeep": 5 },
+              "compaction": { "enabled": true, "targetFileSizeMb": 512 }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "iceberg.writeFormat is outside its parquet/orc/avro enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "iceberg": { "writeFormat": "iceberg-native" }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/iceberg/writeFormat", "keyword": "enum" }]
+    }
+  ]
+}

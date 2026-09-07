@@ -1,0 +1,711 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "sovereignty",
+  "description": "The top-level sovereignty block: its own object type, the jurisdiction and enforcementMode enums, the allowedRegions/deniedRegions/transferMechanisms/regulatoryFramework arrays (their array type, item type/enum, and uniqueItems), the dataResidency/crossBorderTransfer/validationRequired booleans, and the block's closed property set.",
+  "cases": [
+    {
+      "description": "EU jurisdiction with strict enforcement and no cross-border transfer",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "allowedRegions": ["eu-west-1", "eu-central-1"],
+          "deniedRegions": ["us-east-1"],
+          "dataResidency": true,
+          "crossBorderTransfer": false,
+          "regulatoryFramework": ["GDPR"],
+          "enforcementMode": "strict",
+          "validationRequired": true
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "Multi-Region jurisdiction permits cross-border transfer under every transferMechanisms value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "Multi-Region",
+          "crossBorderTransfer": true,
+          "transferMechanisms": ["SCCs", "BCRs", "Adequacy", "DPF", "Consent", "Derogation"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "CN jurisdiction with audit-only enforcement and validation not required",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "CN",
+          "enforcementMode": "audit",
+          "validationRequired": false
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "JP jurisdiction with advisory enforcement and only deniedRegions declared",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "JP",
+          "enforcementMode": "advisory",
+          "deniedRegions": ["cn-north-1"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "regulatoryFramework carries every enum value beyond GDPR",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "US",
+          "regulatoryFramework": ["CCPA", "CPRA", "HIPAA", "PIPEDA", "LGPD", "PDPA", "POPIA", "DPA", "APPI"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "sovereignty block carries its own tags and labels",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "BR",
+          "tags": ["pii", "cross-border"],
+          "labels": { "policy-owner": "legal-team" }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "jurisdiction value not in the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "DE"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/jurisdiction", "keyword": "enum" }]
+    },
+    {
+      "description": "enforcementMode value not in the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "enforcementMode": "block"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/enforcementMode", "keyword": "enum" }]
+    },
+    {
+      "description": "transferMechanisms carries a mechanism outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "crossBorderTransfer": true,
+          "transferMechanisms": ["Handshake"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/transferMechanisms/0", "keyword": "enum" }]
+    },
+    {
+      "description": "regulatoryFramework carries a framework outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "US",
+          "regulatoryFramework": ["SOX"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/regulatoryFramework/0", "keyword": "enum" }]
+    },
+    {
+      "description": "dataResidency given as a string instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "dataResidency": "true"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/dataResidency", "keyword": "type" }]
+    },
+    {
+      "description": "crossBorderTransfer given as a number instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "crossBorderTransfer": 0
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/crossBorderTransfer", "keyword": "type" }]
+    },
+    {
+      "description": "validationRequired given as a string instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "validationRequired": "yes"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/validationRequired", "keyword": "type" }]
+    },
+    {
+      "description": "allowedRegions repeats the same region twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "allowedRegions": ["eu-west-1", "eu-west-1"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/allowedRegions", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "deniedRegions repeats the same region twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "deniedRegions": ["us-east-1", "us-east-1"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/deniedRegions", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "transferMechanisms repeats the same mechanism twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "crossBorderTransfer": true,
+          "transferMechanisms": ["SCCs", "SCCs"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/transferMechanisms", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "regulatoryFramework repeats the same framework twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "US",
+          "regulatoryFramework": ["CCPA", "CCPA"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/regulatoryFramework", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "sovereignty carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "prohibitTransferTo": ["CN", "RU"]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty", "keyword": "additionalProperties", "detail": "prohibitTransferTo" }]
+    },
+    {
+      "description": "sovereignty given as an array instead of an object",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": ["EU"],
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty", "keyword": "type" }]
+    },
+    {
+      "description": "allowedRegions given as a string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "allowedRegions": "eu-west-1"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/allowedRegions", "keyword": "type" }]
+    },
+    {
+      "description": "allowedRegions item given as a number instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "allowedRegions": [123]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/allowedRegions/0", "keyword": "type" }]
+    },
+    {
+      "description": "deniedRegions given as a string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "deniedRegions": "us-east-1"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/deniedRegions", "keyword": "type" }]
+    },
+    {
+      "description": "deniedRegions item given as a boolean instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "deniedRegions": [true]
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/deniedRegions/0", "keyword": "type" }]
+    },
+    {
+      "description": "transferMechanisms given as a string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "EU",
+          "crossBorderTransfer": true,
+          "transferMechanisms": "SCCs"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/transferMechanisms", "keyword": "type" }]
+    },
+    {
+      "description": "regulatoryFramework given as a string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "sovereignty": {
+          "jurisdiction": "US",
+          "regulatoryFramework": "GDPR"
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/sovereignty/regulatoryFramework", "keyword": "type" }]
+    }
+  ]
+}

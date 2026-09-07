@@ -1,0 +1,122 @@
+# The gate that makes FLUID a standard rather than a schema with a docs site.
+#
+# Three jobs, deliberately separate so a red build says WHICH promise broke:
+#
+#   meta         proves the other two gates can fail. Runs first: a green
+#                conformance run means nothing if the runner cannot go red.
+#   conformance  runs the vector corpus against the published schemas, and
+#                again against the reference implementation (forge-cli) so
+#                the corpus and the engine cannot drift apart unnoticed.
+#   compat       enforces the backward-compatibility promise the README and
+#                every release note make.
+
+name: conformance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "schema/**"
+      - "tests/**"
+      - "conformance/**"
+      - "scripts/check-compat.py"
+      - "scripts/compat-waivers.txt"
+      - ".github/workflows/conformance.yml"
+  pull_request:
+    paths:
+      - "schema/**"
+      - "tests/**"
+      - "conformance/**"
+      - "scripts/check-compat.py"
+      - "scripts/compat-waivers.txt"
+      - ".github/workflows/conformance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  meta:
+    name: gates can fail
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The [format] extra is REQUIRED, not optional polish: without it,
+      # jsonschema silently registers no checker for date-time (it needs
+      # rfc3339-validator), so tests/optional/ format assertions pass
+      # vacuously in one environment and fail in another. Pinning the extra
+      # is what makes a local run and a CI run mean the same thing.
+      - run: pip install "jsonschema[format]>=4.22"
+      - name: prove the conformance runner and compat gate can go red
+        run: python3 tests/meta_test.py
+
+  conformance:
+    name: corpus
+    runs-on: ubuntu-latest
+    needs: meta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The [format] extra is REQUIRED, not optional polish: without it,
+      # jsonschema silently registers no checker for date-time (it needs
+      # rfc3339-validator), so tests/optional/ format assertions pass
+      # vacuously in one environment and fail in another. Pinning the extra
+      # is what makes a local run and a CI run mean the same thing.
+      - run: pip install "jsonschema[format]>=4.22"
+
+      - name: run the corpus against the published schemas
+        run: python3 conformance/run.py --junit conformance-report.xml
+
+      # The corpus defines conformance; forge-cli is implementation #1 under
+      # test, never the referee. Installing latest-stable here is deliberate:
+      # it is how the Command Center installs it, so a divergence between the
+      # standard and the engine surfaces on this repo's PRs rather than in a
+      # customer's container.
+      - name: install the reference implementation
+        run: pip install data-product-forge
+        continue-on-error: true
+        id: install_forge
+
+      - name: check the reference implementation against the corpus
+        if: steps.install_forge.outcome == 'success'
+        run: python3 conformance/check_reference.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: conformance-report
+          path: conformance-report.xml
+
+  compat:
+    name: backward compatibility
+    runs-on: ubuntu-latest
+    needs: meta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The [format] extra is REQUIRED, not optional polish: without it,
+      # jsonschema silently registers no checker for date-time (it needs
+      # rfc3339-validator), so tests/optional/ format assertions pass
+      # vacuously in one environment and fail in another. Pinning the extra
+      # is what makes a local run and a CI run mean the same thing.
+      - run: pip install "jsonschema[format]>=4.22"
+
+      # Pre-0.7.1 schemas predate the compatibility promise and already
+      # diverge from forge-cli at the byte level (see schema-sync.yml), so the
+      # gate runs over the range where the promise was actually made.
+      - name: every release keeps its backward-compatibility promise
+        run: |
+          set -euo pipefail
+          for pair in "0.7.1 0.7.2" "0.7.2 0.7.3" "0.7.3 0.7.4" "0.7.4 0.7.5"; do
+            set -- $pair
+            echo "::group::$1 -> $2"
+            python3 scripts/check-compat.py --from "$1" --to "$2"
+            echo "::endgroup::"
+          done

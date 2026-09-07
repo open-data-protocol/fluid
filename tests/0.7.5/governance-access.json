@@ -1,0 +1,673 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "governance-access",
+  "description": "The optional accessPolicy, governance, and retention blocks: the accessPolicy grants array (required principal, permissions enum, uniqueItems), the governance lakeFormation block (ARN-pattern admins, tag-definition value arrays), and the retention block's ISO-8601 duration fields -- plus each block's closed property set.",
+  "cases": [
+    {
+      "description": "accessPolicy grant carrying only the required principal",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": "user:analyst@company.com" }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "accessPolicy grant exercising the full permissions enum range plus resources and conditions",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            {
+              "principal": "group:data-analytics@company.com",
+              "permissions": ["read", "select", "query", "write", "insert", "update", "delete", "create", "admin", "manage"],
+              "resources": ["$.exposes[?(@.exposeId=='profiles_table')]"],
+              "conditions": { "ipRange": "10.0.0.0/8" }
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "accessPolicy grant missing its principal",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "permissions": ["read"] }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy/grants/0", "keyword": "required", "detail": "principal" }]
+    },
+    {
+      "description": "accessPolicy grant permission value outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": "user:analyst@company.com", "permissions": ["superuser"] }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy/grants/0/permissions/0", "keyword": "enum" }]
+    },
+    {
+      "description": "accessPolicy grant permissions array with a repeated value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": "user:analyst@company.com", "permissions": ["read", "read"] }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy/grants/0/permissions", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "accessPolicy grant principal given as a number instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": 12345 }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy/grants/0/principal", "keyword": "type" }]
+    },
+    {
+      "description": "accessPolicy grant permissions given as a bare string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": "user:analyst@company.com", "permissions": "read" }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy/grants/0/permissions", "keyword": "type" }]
+    },
+    {
+      "description": "accessPolicy carrying an unrecognized member alongside grants",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": "user:analyst@company.com" }
+          ],
+          "policies": []
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy", "keyword": "additionalProperties", "detail": "policies" }]
+    },
+    {
+      "description": "accessPolicy grant carrying an unrecognized member alongside principal",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "accessPolicy": {
+          "grants": [
+            { "principal": "user:analyst@company.com", "role": "viewer" }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/accessPolicy/grants/0", "keyword": "additionalProperties", "detail": "role" }]
+    },
+    {
+      "description": "governance lakeFormation block with admins and tag definitions",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "admins": ["arn:aws:iam::123456789012:role/DataLakeAdmin"],
+            "tagDefinitions": { "confidentiality": ["public", "internal", "restricted"] }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "governance carrying an unrecognized member instead of lakeFormation",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "snowflake": {}
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance", "keyword": "additionalProperties", "detail": "snowflake" }]
+    },
+    {
+      "description": "lakeFormation block carrying an unrecognized member alongside admins",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "admins": ["arn:aws:iam::123456789012:role/DataLakeAdmin"],
+            "auditors": []
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation", "keyword": "additionalProperties", "detail": "auditors" }]
+    },
+    {
+      "description": "lakeFormation admin entry that is not an IAM ARN",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "admins": ["not-an-arn"]
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation/admins/0", "keyword": "pattern" }]
+    },
+    {
+      "description": "lakeFormation admins given as a bare string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "admins": "arn:aws:iam::123456789012:role/DataLakeAdmin"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation/admins", "keyword": "type" }]
+    },
+    {
+      "description": "lakeFormation admins array with a repeated ARN",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "admins": [
+              "arn:aws:iam::123456789012:role/DataLakeAdmin",
+              "arn:aws:iam::123456789012:role/DataLakeAdmin"
+            ]
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation/admins", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "lakeFormation tag definition with no allowed values",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "tagDefinitions": { "confidentiality": [] }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation/tagDefinitions/confidentiality", "keyword": "minItems" }]
+    },
+    {
+      "description": "lakeFormation tag definition value given as a string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "tagDefinitions": { "confidentiality": "public" }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation/tagDefinitions/confidentiality", "keyword": "type" }]
+    },
+    {
+      "description": "lakeFormation tag definition with a repeated allowed value",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "governance": {
+          "lakeFormation": {
+            "tagDefinitions": { "confidentiality": ["public", "public"] }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/governance/lakeFormation/tagDefinitions/confidentiality", "keyword": "uniqueItems" }]
+    },
+    {
+      "description": "retention block setting all four durations",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "retention": {
+          "runState": "P30D",
+          "runLogs": "P90D",
+          "lineage": "P365D",
+          "dlq": "P180D"
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "retention block setting only runLogs with an hours-and-minutes duration",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "retention": {
+          "runLogs": "PT12H30M"
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "retention duration given as a number instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "retention": {
+          "runState": 30
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/retention/runState", "keyword": "type" }]
+    },
+    {
+      "description": "retention duration missing the leading ISO-8601 designator",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "retention": {
+          "runState": "30D"
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/retention/runState", "keyword": "pattern" }]
+    },
+    {
+      "description": "retention block carrying an unrecognized member",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "retention": {
+          "runState": "P30D",
+          "sweepInterval": "P1D"
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/retention", "keyword": "additionalProperties", "detail": "sweepInterval" }]
+    }
+  ]
+}

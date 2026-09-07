@@ -1,0 +1,715 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "agentpolicy",
+  "description": "agentPolicy, the AI/LLM usage-governance block reachable at exposes[].policy.agentPolicy: its eleven governance members, their types and bounds, and the closed property set that keeps 'reporting yes, training no' policies from silently drifting.",
+  "cases": [
+    {
+      "description": "agentPolicy sets a full model, usage, and retention governance profile",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "agentPolicy": {
+                "allowedModels": ["gpt-4", "claude-3-opus", "claude-3-sonnet"],
+                "deniedModels": ["gpt-3.5-turbo-finetuned-marketing"],
+                "maxTokensPerRequest": 8192,
+                "maxTokensPerDay": 500000,
+                "allowedUseCases": ["inference", "reasoning", "summarization"],
+                "deniedUseCases": ["training", "fine_tuning"],
+                "canReason": true,
+                "canStore": false,
+                "retentionPolicy": { "maxRetentionDays": 30, "requireDeletion": true },
+                "auditRequired": true,
+                "purposeLimitation": "Customer service chatbot only, not for marketing or profiling."
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "agentPolicy present as an empty object with every member left to its default",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": {} }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "allowedModels is an empty array, denying all AI access",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedModels": [] } }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "maxTokensPerRequest at its minimum boundary of one",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "maxTokensPerRequest": 1 } }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "retentionPolicy.maxRetentionDays set to zero, permitting no retention",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "retentionPolicy": { "maxRetentionDays": 0 } } }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "deniedModels carries an identifier with uppercase letters and spaces",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "deniedModels": ["GPT-4 Legacy (deprecated)"] } }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "allowedModels carries a single-character model identifier",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedModels": ["x"] } }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "agentPolicy carries the shared tags and labels members alongside its governance fields",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "agentPolicy": {
+                "tags": ["pii", "real-time"],
+                "labels": { "team": "customer-analytics" }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "maxTokensPerRequest of zero",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "maxTokensPerRequest": 0 } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/maxTokensPerRequest", "keyword": "minimum" }
+      ]
+    },
+    {
+      "description": "maxTokensPerDay is a negative number",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "maxTokensPerDay": -1000 } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/maxTokensPerDay", "keyword": "minimum" }
+      ]
+    },
+    {
+      "description": "maxTokensPerRequest given as a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "maxTokensPerRequest": true } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/maxTokensPerRequest", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "allowedModels given as a bare string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedModels": "gpt-4" } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/allowedModels", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "allowedUseCases contains a use case outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedUseCases": ["marketing"] } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/allowedUseCases/0", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "deniedUseCases contains a use case outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "deniedUseCases": ["deletion"] } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/deniedUseCases/0", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "allowedModels contains an uppercase model identifier",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedModels": ["GPT-4"] } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/allowedModels/0", "keyword": "pattern" }
+      ]
+    },
+    {
+      "description": "allowedModels contains a duplicate model identifier",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedModels": ["gpt-4", "gpt-4"] } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/allowedModels", "keyword": "uniqueItems" }
+      ]
+    },
+    {
+      "description": "retentionPolicy.maxRetentionDays is negative",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "retentionPolicy": { "maxRetentionDays": -1 } } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/agentPolicy/retentionPolicy/maxRetentionDays",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "agentPolicy carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "requiresHumanReview": true } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/agentPolicy",
+          "keyword": "additionalProperties",
+          "detail": "requiresHumanReview"
+        }
+      ]
+    },
+    {
+      "description": "auditRequired given as an integer instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "auditRequired": 1 } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/auditRequired", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "deniedModels given as a bare string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "deniedModels": "gpt-3.5-turbo" } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/deniedModels", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "allowedModels holds a non-string element",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "allowedModels": [42] } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/allowedModels/0", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "deniedModels holds a non-string element",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "deniedModels": [42] } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/deniedModels/0", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "maxTokensPerDay given as a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "maxTokensPerDay": true } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/maxTokensPerDay", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "canReason given as a string instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "canReason": "yes" } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/canReason", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "canStore given as a string instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "canStore": "no" } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/agentPolicy/canStore", "keyword": "type" }
+      ]
+    },
+    {
+      "description": "retentionPolicy.requireDeletion given as a string instead of a boolean",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": { "agentPolicy": { "retentionPolicy": { "requireDeletion": "yes" } } }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/agentPolicy/retentionPolicy/requireDeletion",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}
