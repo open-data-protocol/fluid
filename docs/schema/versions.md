@@ -1,10 +1,11 @@
 # Schema Versions
 
-Every published version of the FLUID JSON Schema. Point your validator at a version's JSON Schema; read its generated HTML reference for the field-by-field detail. The latest version is **0.7.4**.
+Every published version of the FLUID JSON Schema. Point your validator at a version's JSON Schema; read its generated HTML reference for the field-by-field detail. The latest version is **0.7.5**.
 
 | Version | JSON Schema | HTML Reference |
 |---|---|---|
-| **0.7.4** **(latest)** | [`fluid-schema-0.7.4.json`](/fluid/schema/fluid-schema-0.7.4.json) | [`0.7.4/fluid-spec.html`](/fluid/specs/0.7.4/fluid-spec.html) |
+| **0.7.5** **(latest)** | [`fluid-schema-0.7.5.json`](/fluid/schema/fluid-schema-0.7.5.json) | [`0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html) |
+| 0.7.4 | [`fluid-schema-0.7.4.json`](/fluid/schema/fluid-schema-0.7.4.json) | [`0.7.4/fluid-spec.html`](/fluid/specs/0.7.4/fluid-spec.html) |
 | 0.7.3 | [`fluid-schema-0.7.3.json`](/fluid/schema/fluid-schema-0.7.3.json) | [`0.7.3/fluid-spec.html`](/fluid/specs/0.7.3/fluid-spec.html) |
 | 0.7.2 | [`fluid-schema-0.7.2.json`](/fluid/schema/fluid-schema-0.7.2.json) | [`0.7.2/fluid-spec.html`](/fluid/specs/0.7.2/fluid-spec.html) |
 | 0.7.1 | [`fluid-schema-0.7.1.json`](/fluid/schema/fluid-schema-0.7.1.json) | [`0.7.1/fluid-spec.html`](/fluid/specs/0.7.1/fluid-spec.html) |
