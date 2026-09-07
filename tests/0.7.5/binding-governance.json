@@ -1,0 +1,1028 @@
+{
+  "corpusVersion": "0.7.5",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "group": "binding-governance",
+  "description": "Per-resource bindingGovernance mounted at exposes[].binding.governance: the closed governance and lakeFormation property sets, the grants[] items object (required principal/permissions, the ARN pattern on principal, the LF permission enum, minItems/uniqueItems on permissions, uniqueItems on permissionsWithGrantOption/columns/excludedColumns, and the closed per-grant property set), and the rowFilter object (required name/rowExpression, uniqueItems on columnNames/excludedColumnNames, and its closed property set).",
+  "cases": [
+    {
+      "description": "bindingGovernance.lakeFormation with a column allow-list grant, a column deny-list grant, LF tags, and a row- and column-filtered rowFilter",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "registerLocation": true,
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    },
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/compliance-auditor",
+                      "permissions": ["SELECT"],
+                      "excludedColumns": ["ssn", "date_of_birth"]
+                    }
+                  ],
+                  "tags": {
+                    "pii-classification": "restricted"
+                  },
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "rowExpression": "region = 'us-east-1'",
+                    "columnNames": ["customer_id", "region"]
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "governance carries a future cloud-specific block not yet defined in the schema",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "registerLocation": true,
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    },
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/compliance-auditor",
+                      "permissions": ["SELECT"],
+                      "excludedColumns": ["ssn", "date_of_birth"]
+                    }
+                  ],
+                  "tags": {
+                    "pii-classification": "restricted"
+                  },
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "rowExpression": "region = 'us-east-1'",
+                    "columnNames": ["customer_id", "region"]
+                  }
+                },
+                "snowflakeMaskingPolicy": {
+                  "enabled": true
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance",
+          "keyword": "additionalProperties",
+          "detail": "snowflakeMaskingPolicy"
+        }
+      ]
+    },
+    {
+      "description": "lakeFormation carries a retention setting outside its documented property set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "registerLocation": true,
+                  "retentionPolicy": "90d",
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    },
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/compliance-auditor",
+                      "permissions": ["SELECT"],
+                      "excludedColumns": ["ssn", "date_of_birth"]
+                    }
+                  ],
+                  "tags": {
+                    "pii-classification": "restricted"
+                  },
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "rowExpression": "region = 'us-east-1'",
+                    "columnNames": ["customer_id", "region"]
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation",
+          "keyword": "additionalProperties",
+          "detail": "retentionPolicy"
+        }
+      ]
+    },
+    {
+      "description": "a grant omits the required principal",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0",
+          "keyword": "required",
+          "detail": "principal"
+        }
+      ]
+    },
+    {
+      "description": "a grant omits the required permissions",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0",
+          "keyword": "required",
+          "detail": "permissions"
+        }
+      ]
+    },
+    {
+      "description": "a grant carries a grant-option-expiry property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"],
+                      "grantOptionExpiry": "2027-01-01"
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0",
+          "keyword": "additionalProperties",
+          "detail": "grantOptionExpiry"
+        }
+      ]
+    },
+    {
+      "description": "a grant's principal is a bare role name instead of an IAM ARN",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "analytics-reader-role",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/principal",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a grant's permissions array is empty",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": [],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/permissions",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "description": "a grant repeats the same permission twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "SELECT"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/permissions",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "a grant's permissions list includes a value outside the LF permission enum",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "MODIFY"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/permissions/1",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a grant's permissionsWithGrantOption repeats the same permission twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT", "SELECT"],
+                      "columns": ["customer_id", "email", "region"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/permissionsWithGrantOption",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "a grant's columns list repeats the same column twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/analytics-reader",
+                      "permissions": ["SELECT", "DESCRIBE"],
+                      "permissionsWithGrantOption": ["SELECT"],
+                      "columns": ["customer_id", "customer_id"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/columns",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "a grant's excludedColumns list repeats the same column twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "grants": [
+                    {
+                      "principal": "arn:aws:iam::123456789012:role/compliance-auditor",
+                      "permissions": ["SELECT"],
+                      "excludedColumns": ["ssn", "ssn"]
+                    }
+                  ]
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/grants/0/excludedColumns",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "the rowFilter omits the required name",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "rowFilter": {
+                    "rowExpression": "region = 'us-east-1'",
+                    "columnNames": ["customer_id", "region"]
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/rowFilter",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "the rowFilter omits the required rowExpression",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "columnNames": ["customer_id", "region"]
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/rowFilter",
+          "keyword": "required",
+          "detail": "rowExpression"
+        }
+      ]
+    },
+    {
+      "description": "the rowFilter carries a priority property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "rowExpression": "region = 'us-east-1'",
+                    "columnNames": ["customer_id", "region"],
+                    "priority": 1
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/rowFilter",
+          "keyword": "additionalProperties",
+          "detail": "priority"
+        }
+      ]
+    },
+    {
+      "description": "the rowFilter's columnNames repeats the same column twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "rowExpression": "region = 'us-east-1'",
+                    "columnNames": ["customer_id", "customer_id"]
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/rowFilter/columnNames",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "the rowFilter's excludedColumnNames repeats the same column twice",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "governance": {
+                "lakeFormation": {
+                  "rowFilter": {
+                    "name": "region_filter",
+                    "rowExpression": "region = 'us-east-1'",
+                    "excludedColumnNames": ["ssn", "ssn"]
+                  }
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/governance/lakeFormation/rowFilter/excludedColumnNames",
+          "keyword": "uniqueItems"
+        }
+      ]
+    }
+  ]
+}
