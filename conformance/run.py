@@ -163,15 +163,21 @@ def _build_validators(schema: Dict[str, Any]) -> Dict[bool, Any]:
 
     In JSON Schema 2020-12 `format` is an ANNOTATION by default, not an
     assertion: a conformant validator may accept "not-an-email" for
-    {"format": "email"}. FLUID has never said which it wants, and its own
-    reference implementation does not assert formats.
+    {"format": "email"}. FLUID now says the same -- a validator MUST NOT reject
+    a document solely because a string fails the format named for it -- under
+    "Validation semantics" in the specification. Its reference implementation
+    does not assert formats either.
 
-    So the core corpus is checked WITHOUT format assertion -- the weaker,
-    universally-agreed reading -- and cases that depend on formats being
-    assertive live in tests/optional/, exactly where JSON-Schema-Test-Suite
-    puts its own format tests. That way the core corpus stays runnable by any
-    conformant validator, and format behaviour is asserted where an
-    implementation opts into it, rather than being silently assumed.
+    So the core corpus is checked WITHOUT format assertion, which is both the
+    specified reading and the universally-agreed one, and cases that depend on
+    formats being assertive live in tests/optional/, exactly where
+    JSON-Schema-Test-Suite puts its own format tests. That keeps the core
+    corpus runnable by any conformant validator while still serving the
+    implementations that opt into asserting formats.
+
+    This split predates the specification stating a position and is unchanged
+    by it: what changed is that the core tier's behaviour is now required
+    rather than merely the safer of two available readings.
     """
     try:
         from jsonschema import Draft202012Validator, FormatChecker

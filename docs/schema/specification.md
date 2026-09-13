@@ -1,7 +1,7 @@
 # Fluid Protocol Specification
 
 ::: tip Latest schema version
-The latest published JSON Schema is **0.7.4**. This page is the narrative protocol specification; for the version-specific, field-by-field reference see the [**Cheatsheet**](/fluid/schema/cheatsheet), the [**Anatomy**](/fluid/schema/anatomy), and the [**Versions**](/fluid/schema/versions) index (raw JSON Schema + generated HTML per version).
+The latest published JSON Schema is **0.7.5**. This page is the narrative protocol specification; for the version-specific, field-by-field reference see the [**Cheatsheet**](/fluid/schema/cheatsheet), the [**Anatomy**](/fluid/schema/anatomy), and the [**Versions**](/fluid/schema/versions) index (raw JSON Schema + generated HTML per version).
 :::
 
 This document provides the complete, official specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
@@ -81,6 +81,32 @@ The root `fluid.yml` acts as a "table of contents," referencing detailed configu
 ## Preamble
 
 This document provides the complete, official specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
+
+---
+
+## Validation semantics
+
+A FLUID document is validated against the published JSON Schema whose version matches its `fluidVersion`. Every published schema declares `"$schema": "https://json-schema.org/draft/2020-12/schema"`, so JSON Schema Draft 2020-12 defines the meaning of every keyword except where this section says otherwise.
+
+### `format` is an annotation, never an assertion
+
+A validator **MUST NOT** reject a FLUID document solely because a string does not match the `format` named for it. A validator **MAY** surface the mismatch as a warning, and a governance or linting layer built on FLUID **MAY** treat it as an error of its own; neither affects whether the document is a valid FLUID document.
+
+The consequence is worth stating plainly rather than leaving for a reader to discover: **a document that validates is not thereby guaranteed to carry a well-formed `metadata.owner.email`.** Three formats appear across the published schemas — `uri`, `date-time` and `email` — and all three are descriptive.
+
+This is the Draft 2020-12 default, and FLUID keeps it for two reasons of its own.
+
+The first is that conformance must not depend on which validator you run. `format` vocabularies are optional in Draft 2020-12 and implementations differ widely in which formats they recognise and what they pull in to check them. Were FLUID to make `format` assertive, the same document could be conformant in one language and non-conformant in another, which would defeat the purpose of publishing a conformance corpus at all.
+
+The second is that the choice is not symmetric. Declaring `format` assertive would invalidate documents that are valid today — a narrowing, which [GOVERNANCE.md](https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md) forbids between versions and `scripts/check-compat.py` enforces on every pull request. Annotation-only is therefore the only reading available to a pre-1.0 specification that has already published twelve schema versions. A future version may add assertive checking behind a new, opt-in keyword; it may not retroactively sharpen this one.
+
+Implementations that do want to assert formats are served by the conformance corpus rather than left to guess: the cases that depend on assertion live in [`tests/optional/`](https://github.com/open-data-protocol/fluid/tree/main/tests/optional), separated from the core tier for exactly this reason, and `conformance/run.py` runs them under a format-asserting validator.
+
+### FLUID's own `format` field is unrelated
+
+FLUID defines a **field** named `format` in several places — `exposes[].binding.format` (`bigquery_table`, `snowflake_table`, `gcs_file`, …) and the `format` keys in the acquisition blocks. These are ordinary FLUID fields constrained by `enum`, and `enum` **is** assertive: a `binding.format` outside the enumerated set makes the document invalid.
+
+The collision of names is unfortunate and is called out here because it is easy to read "`format` is an annotation" as applying to them. It does not. The sentence above is about the JSON Schema *keyword*; this paragraph is about a FLUID *field* that happens to share its spelling.
 
 ---
 
