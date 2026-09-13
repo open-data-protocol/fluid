@@ -25,10 +25,17 @@
 #     build.execution.notifications[0].retryOnFailure
 #     0.7.1: VALID    0.7.2: REJECTED (additionalProperties)
 #
-# docs/releases/0.7.2.md says "100% backward compatible with 0.7.1" and
-# "No breaking changes". That claim is false and should be corrected to name
-# this change. This waiver exists so the gate can run green on history while
-# the release note is fixed -- not to make the problem go away.
+# docs/releases/0.7.2.md USED TO say "100% backward compatible with 0.7.1" and
+# "No breaking changes". Both were false. The note was corrected in #46 and now
+# opens by naming the break: "One breaking change, corrected here after the
+# fact". The instruction this paragraph used to carry is therefore done, and
+# leaving it standing would send the next reader to fix something already fixed.
+#
+# The waiver itself stays, permanently. 0.7.2 is published and its history
+# cannot be rewritten, so the gate has to be told this break is known rather
+# than new. What a waiver must never become is a way to stop the gate
+# complaining about a break nobody dealt with -- this one was dealt with by
+# correcting the release note, not by adding this line.
 0.7.1->0.7.2 /$defs/notification
 
 # ---------------------------------------------------------------------------
