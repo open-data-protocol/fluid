@@ -22,14 +22,21 @@ on:
       - "scripts/check-compat.py"
       - "scripts/compat-waivers.txt"
       - ".github/workflows/conformance.yml"
+  # NO `paths:` filter here, and that is the point. A path-filtered check
+  # cannot be a REQUIRED check: on a pull request that does not match, the
+  # context never reports at all, and branch protection waits for a report
+  # that will never come. The pull request hangs, permanently, with nothing
+  # to click.
+  #
+  # That is not hypothetical for this repo. PR #47 (a docs PR) only received
+  # these three checks because it happened to also touch conformance/run.py,
+  # and PR #48 — LICENSE and CONTRIBUTING.md — reported no checks at all.
+  #
+  # The push trigger above keeps its filter: nothing waits on a push, so
+  # skipping the corpus for a README typo on main costs nothing and saves a
+  # runner. On pull requests the corpus is ~40s, which is cheaper than one
+  # person wondering why their PR will not merge.
   pull_request:
-    paths:
-      - "schema/**"
-      - "tests/**"
-      - "conformance/**"
-      - "scripts/check-compat.py"
-      - "scripts/compat-waivers.txt"
-      - ".github/workflows/conformance.yml"
   workflow_dispatch:
 
 permissions:
