@@ -72,6 +72,27 @@ jobs:
       - name: run the corpus against the published schemas
         run: python3 conformance/run.py --junit conformance-report.xml
 
+      # What the corpus is WORTH, not just whether it is green.
+      #
+      # `run.py` answers "do the cases pass" — a corpus of zero cases answers
+      # that perfectly. `mutation_coverage.py` answers the harder question:
+      # delete a constraint from the schema and see whether any case notices.
+      # It has been in this repo, runnable, and wired into nothing, so the
+      # figure it produces could fall to zero between releases in silence.
+      #
+      # The floor is the CURRENT number rounded down (40.7% -> 40), not a
+      # target. That is the convention mutation-testing gates converge on
+      # (Stryker, mutmut): set the break threshold where you actually are, so
+      # it catches a regression on day one — an aspirational threshold goes red
+      # immediately and gets deleted by day three, which is worse than no gate.
+      #
+      # Deliberately NOT a ratchet. Ratchets exist to absorb run-to-run noise
+      # and there is none here: the run is deterministic — mutate the schema,
+      # replay the corpus, count. Raising the floor is a deliberate edit to
+      # this line, made when a corpus wave earns it.
+      - name: the corpus still kills the mutations it used to
+        run: python3 conformance/mutation_coverage.py --min-coverage 40
+
       # The corpus defines conformance; forge-cli is implementation #1 under
       # test, never the referee. Installing latest-stable here is deliberate:
       # it is how the Command Center installs it, so a divergence between the
