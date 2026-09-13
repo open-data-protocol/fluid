@@ -112,3 +112,20 @@ explicitly.
 There is no contributor licence agreement. A CLA on a specification would signal
 reserved relicensing rights, which is not the intent — see
 [GOVERNANCE.md](GOVERNANCE.md).
+
+### Who "The FLUID Authors" are
+
+The [LICENSE](LICENSE) is held by **The FLUID Authors** — everyone whose work
+has been merged into this repository, as recorded in its commit history. There
+is no list to be added to and no paperwork to file: contribute, and you are one
+of them.
+
+This is the ordinary form for a specification with no CLA (compare "The Go
+Authors", "The Kubernetes Authors"), and it is the only form consistent with
+what [GOVERNANCE.md](GOVERNANCE.md) already promises. Naming a single company
+there would assert ownership over work contributed by people who never signed
+anything away, and the no-CLA position exists precisely so that cannot happen.
+
+The line previously read `fluid-steward`, the maintainers' shared account. That
+was accurate about who pushed the first commit and increasingly inaccurate about
+who owns the result.
