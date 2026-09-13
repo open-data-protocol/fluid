@@ -30,7 +30,7 @@ The core/optional split follows
 [JSON-Schema-Test-Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite).
 The core tier asserts only what every conformant JSON Schema 2020-12 validator
 must do. The optional tier asserts behaviour the specification permits but does
-not require — today, `format` assertion (see "Known ambiguities" below).
+not require — today, `format` assertion (see "Format assertion" below).
 
 ## File format
 
@@ -124,22 +124,40 @@ The file is how a strict gate stays adoptable on the day it lands: a real
 shortcoming is recorded in the repository instead of being hidden by weakening
 the corpus.
 
-## Known ambiguities the corpus has surfaced
+## Questions the corpus has surfaced
 
 Recorded here because a conformance suite's job is to turn disagreements into
-written questions rather than silent divergence.
+written questions rather than silent divergence. One is now answered by the
+specification; the other is still open.
 
-**Is `format` assertive in FLUID?** The specification does not say. In JSON
-Schema 2020-12, `format` is an annotation by default — a conformant validator
-may accept `"not-an-email"` for `{"format": "email"}`. The reference
-implementation does not assert formats. Until FLUID states a position, the core
-tier does not assert them either, and the cases that depend on assertion live
-in `optional/`. A FLUID document is therefore **not** guaranteed to have a
-well-formed `metadata.owner.email` merely because it validates.
+### Format assertion
 
-**The reference implementation validates a 2020-12 schema with a Draft 7
-validator.** `fluid_build/schema_manager.py` constructs a
-`jsonschema.Draft7Validator` while every published schema declares
+*Is `format` assertive in FLUID?*
+
+**Answered — it is not.** The specification now states that `format` is an
+annotation, and that a validator MUST NOT reject a document solely because a
+string fails to match the format named for it, under [Validation
+semantics](https://open-data-protocol.github.io/fluid/schema/specification#validation-semantics).
+
+This corpus had already assumed that reading, because it is the Draft 2020-12
+default and the weaker of the two; the difference is that the core tier now
+runs without format assertion because the specification says so, rather than
+because the question was open. The cases that depend on assertion stay in
+`optional/` for implementations that opt in. A FLUID document is still **not**
+guaranteed to have a well-formed `metadata.owner.email` merely because it
+validates — that is now a stated property rather than an accident.
+
+Recorded here rather than deleted: a question this corpus surfaced and the
+specification then settled is the outcome the section exists to produce, and
+removing the trail would hide that the answer was ever in doubt.
+
+### Draft 7 validator on a 2020-12 schema
+
+*Does the reference implementation validate 2020-12 schemas correctly?*
+
+**Still open.** It validates a 2020-12 schema with a Draft 7 validator:
+`fluid_build/schema_manager.py` constructs a `jsonschema.Draft7Validator`
+while every published schema declares
 `"$schema": "https://json-schema.org/draft/2020-12/schema"`. Today this is
 latent rather than active: the schemas use only `$defs` from the 2020-12-only
 keyword set, and `#/$defs/...` references resolve under Draft 7 as ordinary
