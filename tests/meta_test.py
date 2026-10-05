@@ -19,11 +19,14 @@ broken gate fails.
 from __future__ import annotations
 
 import copy
+import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.request
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
@@ -379,12 +382,213 @@ def drift_gate_is_load_bearing() -> None:
     shutil.rmtree(root, ignore_errors=True)
 
 
+# --------------------------------------------------------------------------
+# the drift check is pinned: it fails closed on a malformed pin, never sends the
+# token across a redirect, and a newer upstream release is advisory only
+# --------------------------------------------------------------------------
+
+
+def _load_drift_module():
+    spec = importlib.util.spec_from_file_location(
+        "check_schema_drift", REPO / "scripts" / "check-schema-drift.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def drift_pin_is_load_bearing() -> None:
+    print("\nschema drift pin:")
+    root = sandbox()
+    versions = root / "scripts" / "schema-versions.json"
+    pristine = versions.read_text()
+
+    # Both of these are refused before any network access: a pin that is
+    # missing or malformed must not fall back to "whatever is latest".
+    for name, mutate in (
+        ("a pin with no commit", lambda d: d["upstream"].pop("commit")),
+        ("a pin with no ref", lambda d: d["upstream"].pop("ref")),
+        ("a pin whose commit is not a full SHA", lambda d: d["upstream"].update(commit="93e78d4")),
+        ("a pin whose ref is not a release tag", lambda d: d["upstream"].update(ref="main")),
+        ("a pin whose ref could inject into a URL", lambda d: d["upstream"].update(ref="v0.18.1/../../x")),
+    ):
+        record = json.loads(pristine)
+        mutate(record)
+        versions.write_text(json.dumps(record, indent=2))
+        r = run(root, "scripts/check-schema-drift.py")
+        check(f"refuses {name}", r.returncode == 2, f"exit={r.returncode} {r.stderr[-200:]}")
+    versions.write_text(pristine)
+
+    for bad in ("main", "v1.2.3; echo pwned", "v1.2.3\n", "$(id)", "v1.2.3/../x"):
+        r = run(root, "scripts/check-schema-drift.py", "--ref", bad)
+        check(f"refuses --ref {bad!r}", r.returncode == 2, f"exit={r.returncode}")
+    shutil.rmtree(root, ignore_errors=True)
+
+    mod = _load_drift_module()
+    check(
+        "accepts a plain release tag, with and without the v",
+        mod.validate_ref("v0.18.1", "t") == "v0.18.1" and mod.validate_ref("0.18.1", "t") == "0.18.1",
+    )
+    github = mod.GitHubRelease(
+        "Agenticstiger/forge-cli", "fluid_build/schemas", "fluid_build/schema_manager.py",
+        "v0.18.1", "93e78d4386c70b9e040283f9c5d98a89f901c986",
+    )
+    check(
+        "a pinned run fetches by the commit, not the movable tag",
+        "/93e78d4386c70b9e040283f9c5d98a89f901c986/" in github.url("0.7.5") and "v0.18.1" not in github.url("0.7.5"),
+        github.url("0.7.5"),
+    )
+
+    # the token goes to api.github.com only, and never rides a redirect
+    seen: List[urllib.request.Request] = []
+
+    class _Response:
+        def __enter__(self): return self
+        def __exit__(self, *exc): return False
+        def read(self): return b"{}"
+
+    real_urlopen, real_token = urllib.request.urlopen, os.environ.get("GITHUB_TOKEN")
+    urllib.request.urlopen = lambda req, timeout=None: seen.append(req) or _Response()
+    os.environ["GITHUB_TOKEN"] = "meta-test-token"
+    try:
+        mod._get("https://api.github.com/repos/x/y/releases/latest")
+        mod._get("https://raw.githubusercontent.com/x/y/z/file")
+    finally:
+        urllib.request.urlopen = real_urlopen
+        if real_token is None:
+            os.environ.pop("GITHUB_TOKEN", None)
+        else:
+            os.environ["GITHUB_TOKEN"] = real_token
+    api, raw = seen
+    check(
+        "the token is sent unredirected: not among the headers a redirect copies",
+        "Authorization" not in api.headers and api.unredirected_hdrs.get("Authorization") == "Bearer meta-test-token",
+        f"headers={dict(api.headers)} unredirected={dict(api.unredirected_hdrs)}",
+    )
+    check(
+        "the token is not sent to any other host",
+        "Authorization" not in raw.headers and "Authorization" not in raw.unredirected_hdrs,
+    )
+
+    # --latest is advisory: exit 1 with the notice when a newer release exists,
+    # exit 0 when the pin is the latest; the default (pinned) run never asks.
+    root = sandbox()
+    release, manager = _fake_release(root)
+    record = json.loads((root / "scripts" / "schema-versions.json").read_text())
+    pinned = record["upstream"]["ref"]
+    mod.GitHubRelease = lambda *a, **k: mod.LocalDir(release, manager)
+    try:
+        mod.latest_release_tag = lambda repository: "v99.0.0"
+        import contextlib, io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            code = mod.run_latest(record)
+        check(
+            "--latest reports a newer release and exits 1",
+            code == 1 and "a newer forge-cli release exists" in out.getvalue(),
+            f"exit={code}",
+        )
+        mod.latest_release_tag = lambda repository: pinned
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = mod.run_latest(record)
+        check("--latest exits 0 when the pinned release is the latest", code == 0, f"exit={code}")
+    finally:
+        shutil.rmtree(release, ignore_errors=True)
+        shutil.rmtree(root, ignore_errors=True)
+
+
+# --------------------------------------------------------------------------
+# generate-docs.py --check accounts for every file under schema/ and specs/
+# --------------------------------------------------------------------------
+
+
+def unaccounted_files_gate_is_load_bearing() -> None:
+    print("\nfile inventory (generate-docs.py --check-files, the offline half of --check):")
+    # specs/ is ~25 MB, so one copy is mutated and restored rather than one per case.
+    root = Path(tempfile.mkdtemp(prefix="fluid-meta-specs-"))
+    try:
+        for sub in ("schema", "scripts", "specs"):
+            shutil.copytree(REPO / sub, root / sub, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copy(REPO / "generate-docs.py", root / "generate-docs.py")
+
+        def gate() -> subprocess.CompletedProcess:
+            return run(root, "generate-docs.py", "--check-files")
+
+        r = gate()
+        check("a tree with every file accounted for passes", r.returncode == 0, f"exit={r.returncode} {r.stderr[-300:]}")
+
+        # 1. a file beside the generated outputs of a synced version
+        extra = root / "specs" / "0.7.6" / "extra.html"
+        extra.write_text("<p>not generated</p>")
+        r = gate()
+        check(
+            "rejects an extra file beside a synced version's generated pages",
+            r.returncode == 1 and "specs/0.7.6/extra.html" in r.stderr,
+            f"exit={r.returncode}",
+        )
+        extra.unlink()
+
+        # 2. one byte appended to a frozen, non-synced page
+        frozen_page = root / "specs" / "0.7.1" / "fluid-spec.html"
+        original = frozen_page.read_bytes()
+        frozen_page.write_bytes(original + b" ")
+        r = gate()
+        check(
+            "rejects a one-byte change to a frozen page (specs/0.7.1)",
+            r.returncode == 1 and "specs/0.7.1/fluid-spec.html" in r.stderr,
+            f"exit={r.returncode}",
+        )
+        frozen_page.write_bytes(original)
+
+        # 3. a frozen schema edited
+        frozen_schema = root / "schema" / "fluid-schema-0.7.1.json"
+        original = frozen_schema.read_bytes()
+        frozen_schema.write_bytes(original + b"\n")
+        r = gate()
+        check("rejects a one-byte change to a frozen schema (0.7.1)", r.returncode == 1, f"exit={r.returncode}")
+        frozen_schema.write_bytes(original)
+
+        # 4. a frozen file deleted
+        gone = root / "schema" / "fluid-schema-0.5.7.json"
+        saved = gone.read_bytes()
+        gone.unlink()
+        r = gate()
+        check("rejects a frozen file that has been deleted", r.returncode == 1, f"exit={r.returncode}")
+        gone.write_bytes(saved)
+
+        # 5. a schema that is neither synced nor frozen
+        stray = root / "schema" / "fluid-schema-0.7.7.json"
+        shutil.copy(root / "schema" / "fluid-schema-0.7.6.json", stray)
+        r = gate()
+        check(
+            "rejects a schema that is neither synced nor frozen",
+            r.returncode == 1 and "fluid-schema-0.7.7.json" in r.stderr,
+            f"exit={r.returncode}",
+        )
+        stray.unlink()
+
+        # 6. the hash-locked requirements and the pins people edit must agree
+        pins = root / "scripts" / "requirements-docs.txt"
+        saved = pins.read_text()
+        pins.write_text(saved.replace("Jinja2==3.1.6", "Jinja2==3.1.5"))
+        r = gate()
+        check("rejects a pin the lock file does not match", r.returncode == 1 and "Jinja2" in r.stderr, f"exit={r.returncode}")
+        pins.write_text(saved)
+
+        r = gate()
+        check("and passes again once everything is restored", r.returncode == 0, f"exit={r.returncode} {r.stderr[-300:]}")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 if __name__ == "__main__":
     sandbox_root = sandbox()
     try:
         conformance_gate_is_load_bearing()
         compat_gate_is_load_bearing()
         drift_gate_is_load_bearing()
+        drift_pin_is_load_bearing()
+        unaccounted_files_gate_is_load_bearing()
     finally:
         shutil.rmtree(sandbox_root, ignore_errors=True)
 

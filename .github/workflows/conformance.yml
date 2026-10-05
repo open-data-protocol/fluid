@@ -1,6 +1,6 @@
 # The gate that makes FLUID a standard rather than a schema with a docs site.
 #
-# Six jobs, deliberately separate so a red build says WHICH promise broke:
+# Seven jobs, deliberately separate so a red build says WHICH promise broke:
 #
 #   meta         proves the gates below can fail. Runs first: a green
 #                conformance run means nothing if the runner cannot go red.
@@ -9,14 +9,21 @@
 #                the corpus and the engine cannot drift apart unnoticed.
 #   compat       enforces the backward-compatibility promise the README and
 #                every release note make.
-#   drift        the vendored schemas are byte-identical to the ones the
-#                reference implementation's latest release ships. This used
-#                to live in schema-sync.yml, which compared against forge-cli
-#                `main`, failed every scheduled run from 22 June to 31 August
-#                2026, and was then disabled by GitHub for inactivity, so
-#                later pull requests merged with no drift check at all.
+#   drift        the vendored schemas are byte-identical to the ones in the
+#                forge-cli release PINNED in scripts/schema-versions.json
+#                (upstream.ref and upstream.commit). Pinned, so a new upstream
+#                release cannot turn an unrelated pull request red; moving
+#                the pin is a reviewed change. This used to live in
+#                schema-sync.yml, which compared against forge-cli `main`,
+#                failed every scheduled run from 22 June to 31 August 2026,
+#                and was then disabled by GitHub for inactivity, so later
+#                pull requests merged with no drift check at all.
+#   drift-latest ADVISORY. Warns when forge-cli has published a release after
+#                the pinned one. It cannot fail the run: its step is
+#                continue-on-error, and it is not a required check.
 #   generated    specs/ (the HTML reference) and schema-diffs/ are what the
-#                generators produce from schema/ today.
+#                generators produce from schema/ today, and every other file
+#                under schema/ and specs/ is frozen and unchanged.
 #   docs-links   internal absolute links in docs/ carry the /fluid/ base.
 #                Moved here from link-check.yml for the same reason as drift.
 #
@@ -171,15 +178,39 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # Resolves forge-cli's latest release at run time and compares every
-      # version listed in scripts/schema-versions.json byte for byte, plus the
-      # release's preview set and the latest stable version. A release, not
-      # `main`: main carries unreleased schema edits nobody can install yet.
-      # The token only lifts the API rate limit; forge-cli is public.
-      - name: vendored schemas equal the latest forge-cli release
+      # Compares every version listed in scripts/schema-versions.json byte for
+      # byte with the forge-cli commit recorded there (upstream.commit, the
+      # release upstream.ref), plus that release's preview set and its latest
+      # stable version. A pinned release, so the result depends only on this
+      # repository's contents: a new forge-cli release changes nothing here
+      # until someone edits the pin in a pull request. Not `main`: main carries
+      # unreleased schema edits nobody can install yet.
+      # The token only lifts the API rate limit; forge-cli is public. It is
+      # sent to api.github.com only.
+      - name: vendored schemas equal the pinned forge-cli release
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/check-schema-drift.py
+
+  drift-latest:
+    name: newer forge-cli release (advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Asks the one question the `drift` job deliberately does not: has
+      # forge-cli released since the pin? It prints what moving would involve
+      # and annotates the run with a warning. continue-on-error makes the job
+      # green whatever the script exits with (1 = a newer release exists,
+      # 2 = GitHub could not be reached), so this can never block a merge,
+      # and it is not, and should not become, a required check.
+      - name: has forge-cli released after the pinned release
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check-schema-drift.py --latest
 
   generated:
     name: generated files are current
@@ -191,9 +222,11 @@ jobs:
         with:
           python-version: "3.12"
       # The renderer is pinned exactly: the HTML is committed, so its version
-      # is part of the build's input (see scripts/requirements-docs.txt).
-      - run: pip install -r scripts/requirements-docs.txt
-      - name: specs/<version>/ matches a fresh render of every synced schema
+      # is part of the build's input (see scripts/requirements-docs.txt). It is
+      # installed from the hash-locked file, so a package replaced on PyPI
+      # after the lock was made is refused rather than run.
+      - run: pip install --require-hashes -r scripts/requirements-docs.lock
+      - name: specs/<version>/ matches a fresh render of every synced schema, and no other file has moved
         run: python3 generate-docs.py --check
       - name: schema-diffs/ matches a fresh generation
         run: python3 generate-schema-diffs.py --check

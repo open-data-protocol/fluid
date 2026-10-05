@@ -7,8 +7,24 @@
 # added sections the earlier release had not rendered. generate-docs.py
 # refuses to run with any other installed version of these packages.
 #
-# Move a pin deliberately: bump it here, run `python3 generate-docs.py`, and
-# commit the regenerated specs/ in the same pull request.
+# THIS FILE IS THE INPUT. Install from scripts/requirements-docs.lock, which
+# holds these pins plus every transitive dependency, each with its hashes:
+#
+#   pip install --require-hashes -r scripts/requirements-docs.lock
+#
+# so that a package replaced on PyPI after the fact is refused rather than run.
+# generate-docs.py --check fails if the two files disagree.
+#
+# Move a pin deliberately: bump it here, recompile the lock (from the repository
+# root, with the Python version CI uses, 3.12, because the lock is resolved for
+# the interpreter that runs pip-compile):
+#
+#   pip install pip-tools
+#   pip-compile --generate-hashes --strip-extras \
+#       --output-file=scripts/requirements-docs.lock scripts/requirements-docs.txt
+#
+# then run `python3 generate-docs.py`, and commit the regenerated specs/ in the
+# same pull request.
 json-schema-for-humans==1.5.1
 Jinja2==3.1.6
 MarkupSafe==3.0.3

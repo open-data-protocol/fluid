@@ -3,12 +3,16 @@
     "The one record of which vendored schema versions are kept in sync with the reference implementation, and of their status.",
     "Read by generate-docs.py (which versions to render, and which one is the latest STABLE) and by scripts/check-schema-drift.py (which versions must equal the reference implementation's latest release, byte for byte).",
     "latestStable is deliberately separate from the highest version number: a preview has the higher number and is never 'latest'.",
-    "check-schema-drift.py fails when this file disagrees with the release it compares against (a new bundled version, a preview promoted to stable), so editing it is part of every re-vendor, not a separate chore."
+    "check-schema-drift.py fails when this file disagrees with the release it compares against (a new bundled version, a preview promoted to stable), so editing it is part of every re-vendor, not a separate chore.",
+    "upstream.ref and upstream.commit are the forge-cli release the synced schemas were vendored from, and the one check-schema-drift.py compares them with. It fetches by the commit, so the result does not change when forge-cli publishes or moves a tag. Moving to a newer release is a change to these two fields, reviewed in a pull request. commit is the peeled commit of the tag (git ls-remote <repo> refs/tags/<tag>^{}), not the annotated tag object.",
+    "frozen maps every file under schema/ and specs/ that is NOT generated from a synced schema to its sha256: the versions before 0.7.2, which are not synced, and the HTML pages that earlier renderer releases produced for them. generate-docs.py --check verifies the hashes offline and fails on any file under schema/ or specs/ that is neither synced output nor listed here, so these cannot be edited, and nothing can be added beside them, unnoticed. Changing an entry is a deliberate edit to this file."
   ],
   "upstream": {
     "repository": "Agenticstiger/forge-cli",
     "schemaDir": "fluid_build/schemas",
-    "previewSource": "fluid_build/schema_manager.py"
+    "previewSource": "fluid_build/schema_manager.py",
+    "ref": "v0.18.1",
+    "commit": "93e78d4386c70b9e040283f9c5d98a89f901c986"
   },
   "latestStable": "0.7.5",
   "preview": ["0.7.6"],
@@ -16,5 +20,31 @@
   "notSynced": {
     "0.7.1": "The reference implementation bundles a different document under the same $id (it adds orchestration, icebergConfig, binding.properties and more). Re-vendoring it would change which documents the published 0.7.1 accepts, so it is a decision for the maintainers rather than a sync, and the published copy is left as it is.",
     "0.0.1-0.5.7": "Predate the compatibility promise; the reference implementation no longer bundles them."
+  },
+  "frozen": {
+    "schema/fluid-schema-0.0.1.json": "7415076c34e6faf3b523cc512d0afa270d1402dfe05377933eab82331db0b7f6",
+    "schema/fluid-schema-0.1.0.json": "6c9fccfd10f6f9c285a04d292f75f6a0c0f7ca419e5991b7509af31182bf6348",
+    "schema/fluid-schema-0.1.1.json": "5e1b5109b665c4e7f5d0501d9ac314ccc02379f391ad81dcf902f3d28a1de556",
+    "schema/fluid-schema-0.2.0.json": "3b48623e0e50db833ee55fdefe85b2b03791a84d88aad0d1985ba4c33cfe3c75",
+    "schema/fluid-schema-0.3.0.json": "b385967b11c9a63e18ea67a159a8785e2131c96d1c463ee1a7c6601cc3a49ec6",
+    "schema/fluid-schema-0.4.0.json": "5e762a15432a1a2d0d96a3a5740ce7fd75ba8d616b5c4d88e8e825d8b9cbc9d8",
+    "schema/fluid-schema-0.5.7.json": "2f6f775ff87692548f89567c38b831e2c9f7344e0a6deb7eb6cdc290712b2d46",
+    "schema/fluid-schema-0.7.1.json": "b9ed5f201a9462f3267e1ea2b51a4e51066540b965149849aacce2f0e20d9df5",
+    "specs/0.2.0/fluid-schema-0.2.0.json": "3b48623e0e50db833ee55fdefe85b2b03791a84d88aad0d1985ba4c33cfe3c75",
+    "specs/0.2.0/fluid-spec.html": "7f4a551399471ca1b457467b75b59546465d43fea54e4408de32c87f82d3d0a9",
+    "specs/0.2.0/schema_doc.css": "2768fd01a875d1f58273e76fef9b421986824d2ab02251853840bca777b625c0",
+    "specs/0.2.0/schema_doc.min.js": "165a29291d7d66653e46fd1ac5868f63e18f9d67c06ea9ebcb95d4830a528e68",
+    "specs/0.3.0/fluid-spec.html": "beb79323e1add68b06dfeefe4e47cd55488d76695ae53b4af8f04e71c14eb681",
+    "specs/0.3.0/schema_doc.css": "2768fd01a875d1f58273e76fef9b421986824d2ab02251853840bca777b625c0",
+    "specs/0.3.0/schema_doc.min.js": "165a29291d7d66653e46fd1ac5868f63e18f9d67c06ea9ebcb95d4830a528e68",
+    "specs/0.4.0/fluid-spec.html": "a2cbbed1f6a98c262e4e2714fe15dc459659ae72d63ef08d2bef222699ea12e4",
+    "specs/0.4.0/schema_doc.css": "2768fd01a875d1f58273e76fef9b421986824d2ab02251853840bca777b625c0",
+    "specs/0.4.0/schema_doc.min.js": "165a29291d7d66653e46fd1ac5868f63e18f9d67c06ea9ebcb95d4830a528e68",
+    "specs/0.5.7/fluid-spec.html": "696b60b249a3445d553f561c3e8e74639c3295c0de979709c40946b79f6592db",
+    "specs/0.5.7/schema_doc.css": "2768fd01a875d1f58273e76fef9b421986824d2ab02251853840bca777b625c0",
+    "specs/0.5.7/schema_doc.min.js": "165a29291d7d66653e46fd1ac5868f63e18f9d67c06ea9ebcb95d4830a528e68",
+    "specs/0.7.1/fluid-spec.html": "5ca45312c66eb6cdceb624dafaca88ced2d042b1f6b111b5f31bd81062884476",
+    "specs/0.7.1/schema_doc.css": "2768fd01a875d1f58273e76fef9b421986824d2ab02251853840bca777b625c0",
+    "specs/0.7.1/schema_doc.min.js": "165a29291d7d66653e46fd1ac5868f63e18f9d67c06ea9ebcb95d4830a528e68"
   }
 }

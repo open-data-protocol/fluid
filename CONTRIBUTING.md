@@ -15,16 +15,33 @@ Nothing copies them here automatically. They are **checked by** the `drift`
 job in [`.github/workflows/conformance.yml`](.github/workflows/conformance.yml),
 which runs on every pull request and fails when:
 
-- a synced schema differs, by even one byte, from the copy in forge-cli's
-  latest release;
+- a synced schema differs, by even one byte, from the copy in the forge-cli
+  release **pinned** in [`scripts/schema-versions.json`](scripts/schema-versions.json)
+  (`upstream.ref`, and `upstream.commit`, which is what the check fetches);
 - that release bundles a schema version that is not published here;
 - that release's preview versions, or its latest stable version, differ from
-  [`scripts/schema-versions.json`](scripts/schema-versions.json).
+  `scripts/schema-versions.json`.
 
-**So a pull request that edits a file under `schema/` by hand will be
-rejected**, not because the change is wrong but because the published schema
-must be the one the reference implementation ships. Propose schema changes
-upstream in forge-cli.
+**So a pull request that edits a file under `schema/` by hand fails the `drift`
+job**, not because the change is wrong but because the published schema must be
+the one the reference implementation ships. The job fails that pull request's
+checks; whether a failing check also blocks the merge is a branch-protection
+setting, not something this file promises. Propose schema changes upstream in
+forge-cli.
+
+The comparison is with the pinned release, not with whatever forge-cli
+released last, so a new forge-cli release does not turn unrelated pull requests
+red. Moving to one is a change to the pin, made in a pull request where a
+reviewer sees which upstream commit is being trusted (see below). A separate,
+advisory job, `drift-latest`, warns when forge-cli has released after the
+pinned release; it cannot fail a run.
+
+Two more files are guarded, by the `generated` job. The versions before 0.7.2
+are not synced, so nothing regenerates them; instead `scripts/schema-versions.json`
+records a sha256 for each of their schemas and HTML pages (`frozen`), and
+`python3 generate-docs.py --check` fails when one changes, or when a file
+appears under `schema/` or `specs/` that is neither generated for a synced
+version nor listed there.
 
 [`scripts/schema-versions.json`](scripts/schema-versions.json) is the record of
 which versions are synced, which one is the latest **stable** version, and
@@ -38,34 +55,50 @@ sync.
 
 ### Re-vendoring a schema
 
-When the drift check fails, or forge-cli releases a new schema version:
+When the drift check fails, or forge-cli releases a new schema version
+(`python3 scripts/check-schema-drift.py --latest` says whether it has):
 
-1. Copy each changed schema from the release, byte for byte. Use a release
-   tag, never `main`:
+1. Choose the release, a tag and never `main`, and find its commit:
 
    ```bash
    TAG=v0.18.1   # the forge-cli release you are vendoring from
+   git ls-remote https://github.com/Agenticstiger/forge-cli "refs/tags/$TAG" "refs/tags/$TAG^{}"
+   ```
+
+   Take the commit from the **last** line printed. For an annotated tag that is
+   the `^{}` line; the line before it is the tag object, not a commit.
+   `python3 scripts/check-schema-drift.py --ref $TAG` shows what the tag would
+   change before you edit anything.
+
+2. Record it: set `upstream.ref` and `upstream.commit` in
+   [`scripts/schema-versions.json`](scripts/schema-versions.json). For a new
+   version, or a version whose status changed (a preview promoted to stable),
+   update `synced`, `preview` and `latestStable` in the same file, and for a new
+   version follow "Adding a version" in [tests/README.md](tests/README.md).
+3. Copy each changed schema from that commit, byte for byte:
+
+   ```bash
+   COMMIT=...   # the commit from step 1, which is also upstream.commit
    for v in 0.7.5 0.7.6; do
-     curl -fsSL "https://raw.githubusercontent.com/Agenticstiger/forge-cli/$TAG/fluid_build/schemas/fluid-schema-$v.json" \
+     curl -fsSL "https://raw.githubusercontent.com/Agenticstiger/forge-cli/$COMMIT/fluid_build/schemas/fluid-schema-$v.json" \
        -o "schema/fluid-schema-$v.json"
    done
    ```
 
-2. For a new version, or a version whose status changed (a preview promoted
-   to stable), update `scripts/schema-versions.json`, and for a new version
-   follow "Adding a version" in [tests/README.md](tests/README.md).
-3. Regenerate what is derived from the schemas, with the pinned renderer:
+4. Regenerate what is derived from the schemas, with the locked renderer:
 
    ```bash
-   pip install -r scripts/requirements-docs.txt
+   pip install --require-hashes -r scripts/requirements-docs.lock
    python3 generate-docs.py            # specs/<version>/ for every synced version
    python3 generate-schema-diffs.py    # schema-diffs/
    ```
 
-4. Run the gates below, plus `python3 scripts/check-schema-drift.py --ref $TAG`.
-   A re-vendored schema can add constraints the corpus does not pin yet, which
-   lowers mutation coverage; add the cases in the same pull request.
-5. Name the release you vendored from in the pull request.
+5. Run the gates below. `python3 scripts/check-schema-drift.py` now compares
+   with the commit you recorded in step 2, so it passes only if step 3 copied
+   exactly what that commit holds. A re-vendored schema can add constraints the
+   corpus does not pin yet, which lowers mutation coverage; add the cases in
+   the same pull request.
+6. Name the release and the commit you vendored from in the pull request.
 
 ## Setup
 
@@ -76,7 +109,16 @@ python3 conformance/run.py                          # the corpus must be green
 python3 conformance/mutation_coverage.py --min-coverage 40   # and still worth something
 python3 tests/meta_test.py                          # the gates must be able to fail
 python3 scripts/check-compat.py                     # no release may break its promise
-python3 scripts/check-schema-drift.py               # schema/ equals the latest forge-cli release
+python3 scripts/check-schema-drift.py               # schema/ equals the pinned forge-cli release (needs network)
+```
+
+The generated files have their own gates and their own, hash-locked
+requirements:
+
+```bash
+pip install --require-hashes -r scripts/requirements-docs.lock
+python3 generate-docs.py --check                    # specs/ is current; every other file in schema/ and specs/ is frozen
+python3 generate-schema-diffs.py --check            # schema-diffs/ is current
 ```
 
 The `[format]` extra is not optional. Without it `jsonschema` registers no

@@ -5,10 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Nothing is granted by default. Each job asks for exactly what it uses.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -17,6 +16,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # configure-pages reads the Pages settings, which needs pages: read. The
+    # build job renders and uploads an artifact; it publishes nothing, so it
+    # has no write permission and no OIDC token.
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,7 +41,7 @@ jobs:
 
       - name: Generate schema docs (specs/)
         run: |
-          pip install -r scripts/requirements-docs.txt
+          pip install --require-hashes -r scripts/requirements-docs.lock
           python3 generate-docs.py
 
       - name: Setup Node.js
@@ -65,6 +70,11 @@ jobs:
           path: docs/.vuepress/dist
 
   deploy:
+    # The only job that publishes. It does not check out or build anything, so
+    # it needs neither contents nor pages: read.
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

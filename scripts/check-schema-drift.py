@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Check that the vendored schemas equal the reference implementation's latest release.
+"""Check that the vendored schemas equal the reference implementation's release.
 
-    python3 scripts/check-schema-drift.py                  # latest forge-cli release
-    python3 scripts/check-schema-drift.py --ref v0.18.1    # a named tag
+    python3 scripts/check-schema-drift.py                  # the PINNED release
+    python3 scripts/check-schema-drift.py --latest         # advisory: is there a newer one?
+    python3 scripts/check-schema-drift.py --ref v0.18.1    # an arbitrary tag (re-vendoring)
     python3 scripts/check-schema-drift.py --source-dir DIR # offline: a directory
                                                            # holding fluid-schema-*.json
                                                            # (and, optionally,
@@ -15,7 +16,18 @@ compares against a RELEASE, not forge-cli's main branch: a release is what
 schema edits that would turn this check red before anyone could validate a
 contract against them.
 
-What it checks, against scripts/schema-versions.json:
+WHICH release is recorded in scripts/schema-versions.json ("upstream.ref" and
+"upstream.commit"), not looked up at run time. The default run is therefore
+deterministic: it compares the working tree with that one commit and nothing
+upstream can change the result. It fetches by the commit, which cannot move,
+and only reports (as a warning) if the tag now points somewhere else. A new
+forge-cli release does not turn a pull request red; moving to it is a change
+to those two fields, in a pull request, where a reviewer sees which upstream
+commit is being trusted. `--latest` is the separate, advisory question "has
+forge-cli released since?"; it exits 1 when it has, and CI runs it as a
+non-blocking job.
+
+What the default run checks, against scripts/schema-versions.json:
 
   1. every version listed in "synced" is byte-identical to the release's copy;
   2. the release bundles no version, at or above the oldest synced one, that
@@ -24,11 +36,12 @@ What it checks, against scripts/schema-versions.json:
      "preview", and "latestStable" is the release's highest non-preview
      version -- so a promotion to stable is not missed.
 
-Exit 0 when everything matches; 1 on drift; 2 when the release cannot be
-read. The output says how to re-vendor.
+Exit 0 when everything matches; 1 on drift (with --latest: when a newer
+release exists); 2 when the release cannot be read or the pin is malformed. The
+output says how to re-vendor.
 
-The latest release is resolved at run time from the GitHub API; set
-GITHUB_TOKEN to avoid the unauthenticated rate limit.
+Set GITHUB_TOKEN to avoid the unauthenticated API rate limit; it is sent only
+to api.github.com and is never forwarded across a redirect.
 """
 
 from __future__ import annotations
@@ -41,13 +54,21 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 REPO = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = REPO / "schema"
 VERSIONS_FILE = REPO / "scripts" / "schema-versions.json"
 SCHEMA_RE = re.compile(r"^fluid-schema-(\d+\.\d+\.\d+)\.json$")
 PREVIEW_RE = re.compile(r"PREVIEW_VERSIONS\b[^=\n]*=\s*frozenset\(\s*\{([^}]*)\}\s*\)")
+
+# A release tag, and nothing else. A ref is interpolated into URLs and into the
+# re-vendor hint this script prints (which people paste into a shell), so a
+# value read from the network or from a file is checked before it is used.
+REF_RE = re.compile(r"v?\d+\.\d+\.\d+([.+-][0-9A-Za-z.]+)?")
+COMMIT_RE = re.compile(r"[0-9a-f]{40}")
+REPOSITORY_RE = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+REPO_PATH_RE = re.compile(r"[A-Za-z0-9_.][A-Za-z0-9_./-]*")
 
 
 class SourceError(RuntimeError):
@@ -58,42 +79,111 @@ def vkey(v: str):
     return tuple(int(p) for p in v.split("."))
 
 
+def validate_ref(ref: object, what: str) -> str:
+    """Return `ref` if it is a release tag; otherwise fail closed."""
+    if not isinstance(ref, str) or not REF_RE.fullmatch(ref):
+        raise SourceError(f"{what} is not a release tag (expected something like v1.2.3): {ref!r}")
+    return ref
+
+
+def validate_commit(commit: object, what: str) -> str:
+    if not isinstance(commit, str) or not COMMIT_RE.fullmatch(commit):
+        raise SourceError(f"{what} is not a full 40-character lowercase commit SHA: {commit!r}")
+    return commit
+
+
+def validate_repo_fields(repository: object, schema_dir: object, preview_source: object) -> None:
+    if not isinstance(repository, str) or not REPOSITORY_RE.fullmatch(repository):
+        raise SourceError(f"upstream.repository is not an owner/name pair: {repository!r}")
+    for name, value in (("upstream.schemaDir", schema_dir), ("upstream.previewSource", preview_source)):
+        if not isinstance(value, str) or not REPO_PATH_RE.fullmatch(value) or ".." in value.split("/"):
+            raise SourceError(f"{name} is not a plain repository path: {value!r}")
+
+
 # --------------------------------------------------------------------------
 # sources
 # --------------------------------------------------------------------------
 
 
-def _get(url: str) -> bytes:
-    headers = {"User-Agent": "fluid-schema-drift-check"}
+def _get(url: str, accept: Optional[str] = None) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "fluid-schema-drift-check"})
+    if accept:
+        req.add_header("Accept", accept)
     token = os.environ.get("GITHUB_TOKEN")
     if token and url.startswith("https://api.github.com/"):
-        headers["Authorization"] = f"Bearer {token}"
+        # Unredirected: urllib copies ordinary request headers onto a redirected
+        # request, so a redirect away from api.github.com would carry the token
+        # with it. Unredirected headers are sent to the original host only.
+        req.add_unredirected_header("Authorization", f"Bearer {token}")
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as r:
+        with urllib.request.urlopen(req, timeout=30) as r:
             return r.read()
     except (urllib.error.URLError, TimeoutError) as exc:
         raise SourceError(f"could not fetch {url}: {exc}") from exc
 
 
+def latest_release_tag(repository: str) -> str:
+    data = json.loads(_get(f"https://api.github.com/repos/{repository}/releases/latest"))
+    tag = data.get("tag_name")
+    if not tag:
+        raise SourceError(f"{repository} reports no latest release")
+    return validate_ref(tag, f"{repository}'s latest release tag")
+
+
 class GitHubRelease:
-    def __init__(self, repository: str, schema_dir: str, preview_source: str, ref: Optional[str]):
+    """A forge-cli release, read from GitHub.
+
+    With `commit`, every file is fetched by that commit rather than by the tag,
+    so the content compared is immutable; `ref` is then only the human-readable
+    name for it.
+    """
+
+    def __init__(
+        self,
+        repository: str,
+        schema_dir: str,
+        preview_source: str,
+        ref: str,
+        commit: Optional[str] = None,
+    ):
+        validate_repo_fields(repository, schema_dir, preview_source)
         self.repository = repository
         self.schema_dir = schema_dir
         self.preview_source = preview_source
-        if ref is None:
-            data = json.loads(_get(f"https://api.github.com/repos/{repository}/releases/latest"))
-            ref = data.get("tag_name")
-            if not ref:
-                raise SourceError(f"{repository} reports no latest release")
-        self.ref = ref
-        self.label = f"{repository}@{ref}"
+        self.ref = validate_ref(ref, "the release ref")
+        self.commit = validate_commit(commit, "the pinned commit") if commit else None
+        self.fetch_ref = self.commit or self.ref
+        self.label = f"{repository}@{self.ref}" + (f" (commit {self.commit[:12]})" if self.commit else "")
+
+    def tag_warning(self) -> Optional[str]:
+        """A warning when the tag no longer points at the pinned commit.
+
+        Not a failure: the content compared is fetched by commit, so a moved
+        tag changes nothing this script decides. It does mean the recorded tag
+        name no longer describes the recorded commit, which a person should look at.
+        """
+        if not self.commit:
+            return None
+        try:
+            now = _get(
+                f"https://api.github.com/repos/{self.repository}/commits/{self.ref}",
+                accept="application/vnd.github.sha",
+            ).decode("ascii", "replace").strip()
+        except SourceError as exc:
+            return f"could not confirm that tag {self.ref} still points at {self.commit}: {exc}"
+        if now != self.commit:
+            return (
+                f"tag {self.ref} now points at {now[:12]}, but {VERSIONS_FILE.name} pins {self.commit[:12]}; "
+                "the comparison used the pinned commit, but the tag has been moved or the pin is wrong"
+            )
+        return None
 
     def _raw(self, path: str) -> bytes:
-        return _get(f"https://raw.githubusercontent.com/{self.repository}/{self.ref}/{path}")
+        return _get(f"https://raw.githubusercontent.com/{self.repository}/{self.fetch_ref}/{path}")
 
     def versions(self) -> List[str]:
         listing = json.loads(
-            _get(f"https://api.github.com/repos/{self.repository}/contents/{self.schema_dir}?ref={self.ref}")
+            _get(f"https://api.github.com/repos/{self.repository}/contents/{self.schema_dir}?ref={self.fetch_ref}")
         )
         names = [entry["name"] for entry in listing if entry.get("type") == "file"]
         return sorted((m.group(1) for n in names if (m := SCHEMA_RE.match(n))), key=vkey)
@@ -105,7 +195,7 @@ class GitHubRelease:
         return self._raw(self.preview_source).decode("utf-8")
 
     def url(self, version: str) -> str:
-        return f"https://raw.githubusercontent.com/{self.repository}/{self.ref}/{self.schema_dir}/fluid-schema-{version}.json"
+        return f"https://raw.githubusercontent.com/{self.repository}/{self.fetch_ref}/{self.schema_dir}/fluid-schema-{version}.json"
 
 
 class LocalDir:
@@ -208,25 +298,116 @@ def check(source, record: Dict) -> List[str]:
     return problems
 
 
+# --------------------------------------------------------------------------
+# modes
+# --------------------------------------------------------------------------
+
+
+def warn(message: str) -> None:
+    """A warning on stderr, and an annotation on the run page under GitHub Actions."""
+    print(f"check-schema-drift: warning: {message}", file=sys.stderr)
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        print(f"::warning title=forge-cli release::{message}")
+
+
+def read_upstream(record: Dict) -> Tuple[str, str, str, str, str]:
+    """The pinned upstream, validated. Anything missing or malformed fails closed."""
+    up = record.get("upstream")
+    if not isinstance(up, dict):
+        raise SourceError(f"{VERSIONS_FILE.name} has no \"upstream\" object")
+    for key in ("repository", "schemaDir", "previewSource", "ref", "commit"):
+        if key not in up:
+            raise SourceError(
+                f"{VERSIONS_FILE.name}: upstream.{key} is missing. The drift check compares against a "
+                "pinned release (upstream.ref and upstream.commit); it does not guess one."
+            )
+    validate_repo_fields(up["repository"], up["schemaDir"], up["previewSource"])
+    validate_ref(up["ref"], "upstream.ref")
+    validate_commit(up["commit"], "upstream.commit")
+    return up["repository"], up["schemaDir"], up["previewSource"], up["ref"], up["commit"]
+
+
+def newer_than(candidate: str, pinned: str) -> Optional[bool]:
+    """True/False when both tags order numerically; None when they do not."""
+    def numeric(tag: str):
+        m = re.match(r"v?(\d+)\.(\d+)\.(\d+)", tag)
+        return tuple(int(p) for p in m.groups()) if m else None
+
+    a, b = numeric(candidate), numeric(pinned)
+    return None if a is None or b is None else a > b
+
+
+def run_latest(record: Dict) -> int:
+    """Advisory: has forge-cli published a release after the pinned one?"""
+    repository, schema_dir, preview_source, pinned_ref, _ = read_upstream(record)
+    latest = latest_release_tag(repository)
+    if latest == pinned_ref:
+        print(f"check-schema-drift: {repository}'s latest release, {latest}, is the pinned one.")
+        return 0
+
+    ordering = newer_than(latest, pinned_ref)
+    if ordering is False:
+        print(
+            f"check-schema-drift: {repository}'s latest release is {latest}, which is older than the "
+            f"pinned {pinned_ref}. Nothing to do."
+        )
+        return 0
+
+    print(f"check-schema-drift: a newer forge-cli release exists: {latest} (this repository vendors {pinned_ref}).")
+    print("What moving to it would involve, from a byte comparison with its schemas:")
+    problems = check(GitHubRelease(repository, schema_dir, preview_source, latest), record)
+    if problems:
+        for p in problems:
+            print(f"  - {p}")
+    else:
+        print(f"  nothing: the vendored schemas already equal {latest}'s; only the pin in {VERSIONS_FILE.name} would move.")
+    warn(
+        f"forge-cli {latest} is released; this repository vendors {pinned_ref}. "
+        f"To move: set upstream.ref and upstream.commit in scripts/{VERSIONS_FILE.name}, re-vendor, and "
+        "regenerate (see CONTRIBUTING.md). This does not fail pull requests."
+    )
+    return 1
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--ref", help="forge-cli tag to compare against (default: its latest release)")
-    ap.add_argument("--source-dir", type=Path, help="compare against this directory instead of GitHub")
+    which = ap.add_mutually_exclusive_group()
+    which.add_argument(
+        "--latest",
+        action="store_true",
+        help="advisory: report whether forge-cli has released after the pinned release (exit 1 if so)",
+    )
+    which.add_argument("--ref", help="compare against this forge-cli tag instead of the pinned release")
+    which.add_argument("--source-dir", type=Path, help="compare against this directory instead of GitHub")
     ap.add_argument(
         "--schema-manager",
         type=Path,
         help="with --source-dir: the schema_manager.py whose PREVIEW_VERSIONS to compare",
     )
     args = ap.parse_args(argv)
+    if args.schema_manager and not args.source_dir:
+        ap.error("--schema-manager is only meaningful with --source-dir")
 
     record = json.loads(VERSIONS_FILE.read_text())
-    up = record["upstream"]
     try:
+        if args.latest:
+            return run_latest(record)
+
+        warnings: List[str] = []
         if args.source_dir:
             source = LocalDir(args.source_dir, args.schema_manager)
+        elif args.ref:
+            repository, schema_dir, preview_source, _, _ = read_upstream(record)
+            source = GitHubRelease(repository, schema_dir, preview_source, validate_ref(args.ref, "--ref"))
         else:
-            source = GitHubRelease(up["repository"], up["schemaDir"], up["previewSource"], args.ref)
+            repository, schema_dir, preview_source, ref, commit = read_upstream(record)
+            source = GitHubRelease(repository, schema_dir, preview_source, ref, commit)
+            tag_note = source.tag_warning()
+            if tag_note:
+                warnings.append(tag_note)
         problems = check(source, record)
+        for w in warnings:
+            warn(w)
     except SourceError as exc:
         print(f"check-schema-drift: {exc}", file=sys.stderr)
         return 2

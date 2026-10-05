@@ -78,8 +78,9 @@ Each vendored schema version is stable, preview or earlier, as recorded in
   compatibility rule above covers them from 0.7.1 on.
 
 `scripts/check-schema-drift.py` fails when this record disagrees with the
-reference implementation's latest release, so promoting a preview is a change to
-that file made in the same pull request as the re-vendor.
+reference implementation release it pins (`upstream.ref` and `upstream.commit` in
+the same file), so promoting a preview is a change to that file made in the same
+pull request as the re-vendor.
 
 ## Trademarks
 
