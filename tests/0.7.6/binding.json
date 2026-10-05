@@ -1,13 +1,13 @@
 {
-  "corpusVersion": "0.7.5",
-  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json",
+  "corpusVersion": "0.7.6",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "binding",
   "description": "The binding object embedded in every expose: its required platform/format/location members, the platform and format enums, the closed bindingLocation property set (including the v0.7.5 Confluent Tableflow, Iceberg catalog-profile, Redshift Serverless and Kinesis fields), icebergConfig's own structure -- writeVersion/fileFormat enums, its closed property set, and the partitionSpec/sortOrder arrays' per-entry required fields and enums -- and the v0.7.5 vector output port: platform pgvector, format pgvector_table, and vectorConfig's closed property set, required dimensions and its inclusive 1..16000 bounds, its vectorType/indexType/distanceMetric enums, and the closed hnsw/ivfflat parameter objects with their minimums. Also documents that the schema does not cross-validate platform against format or location fields against platform.",
   "cases": [
     {
       "description": "binding carrying only the three required members",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -43,7 +43,7 @@
     {
       "description": "bindingLocation combines the general-purpose addressing properties in one object",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -92,7 +92,7 @@
     {
       "description": "Confluent Tableflow location fields accompany a confluent platform binding",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -131,7 +131,7 @@
     {
       "description": "platform and format name binding to unrelated cloud ecosystems",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -168,7 +168,7 @@
     {
       "description": "icebergConfig specifies partitioning, sort order, and table properties in full",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -233,7 +233,7 @@
     {
       "description": "icebergConfig at writeVersion 1 carries only a file format",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -274,7 +274,7 @@
     {
       "description": "platform is absent from the binding",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -316,7 +316,7 @@
     {
       "description": "format is absent from the binding",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -358,7 +358,7 @@
     {
       "description": "location is absent from the binding",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -398,7 +398,7 @@
     {
       "description": "platform names a cloud provider outside the enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -440,7 +440,7 @@
     {
       "description": "format names a file type outside the enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -482,7 +482,7 @@
     {
       "description": "bindingLocation carries an undocumented addressing property",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -526,7 +526,7 @@
     {
       "description": "binding carries a property outside its closed set",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -570,7 +570,7 @@
     {
       "description": "icebergConfig.writeVersion is outside the {1,2} enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -617,7 +617,7 @@
     {
       "description": "icebergConfig.fileFormat names a format outside its enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -664,7 +664,7 @@
     {
       "description": "icebergConfig carries a property outside its closed set",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -713,7 +713,7 @@
     {
       "description": "a partitionSpec entry omits the required transform",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -766,7 +766,7 @@
     {
       "description": "bindingLocation.baseUrl is a number instead of a string",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -808,7 +808,7 @@
     {
       "description": "a partitionSpec entry omits the required sourceColumn",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -861,7 +861,7 @@
     {
       "description": "a partitionSpec entry names a transform outside its enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -914,7 +914,7 @@
     {
       "description": "a sortOrder entry omits the required column",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -967,7 +967,7 @@
     {
       "description": "pgvector platform with a pgvector_table format and only the required vectorConfig member",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1008,7 +1008,7 @@
     {
       "description": "vectorConfig specifies every member, with an HNSW index",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1059,7 +1059,7 @@
     {
       "description": "vectorConfig selects an IVFFlat index with the smallest admitted list count",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1105,7 +1105,7 @@
     {
       "description": "vectorConfig.dimensions at its inclusive lower bound of 1",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1148,7 +1148,7 @@
     {
       "description": "vectorConfig.dimensions at its inclusive upper bound of 16000",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1191,7 +1191,7 @@
     {
       "description": "vectorConfig omits the required dimensions",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1239,7 +1239,7 @@
     {
       "description": "vectorConfig carries a property outside its closed set",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1288,7 +1288,7 @@
     {
       "description": "vectorConfig.dimensions is zero, below the minimum of 1",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1335,7 +1335,7 @@
     {
       "description": "vectorConfig.dimensions is 16001, above the maximum of 16000",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1382,7 +1382,7 @@
     {
       "description": "vectorConfig.dimensions is a string instead of an integer",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1429,7 +1429,7 @@
     {
       "description": "vectorConfig is a bare dimension count instead of an object",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1474,7 +1474,7 @@
     {
       "description": "vectorConfig.vectorType names a column type outside its enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1522,7 +1522,7 @@
     {
       "description": "vectorConfig.indexType names an index method outside its enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1570,7 +1570,7 @@
     {
       "description": "vectorConfig.distanceMetric names a metric outside its enum",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1618,7 +1618,7 @@
     {
       "description": "vectorConfig.hnsw carries a query-time parameter outside its closed set",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1670,7 +1670,7 @@
     {
       "description": "vectorConfig.hnsw.m is zero, below the minimum of 1",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1720,7 +1720,7 @@
     {
       "description": "vectorConfig.hnsw.efConstruction is zero, below the minimum of 1",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1770,7 +1770,7 @@
     {
       "description": "vectorConfig.hnsw.m is a fraction instead of an integer",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1820,7 +1820,7 @@
     {
       "description": "vectorConfig.ivfflat carries a query-time parameter outside its closed set",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1872,7 +1872,7 @@
     {
       "description": "vectorConfig.ivfflat.lists is zero, below the minimum of 1",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1922,7 +1922,7 @@
     {
       "description": "Iceberg catalog-profile location fields accompany an iceberg binding",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -1966,7 +1966,7 @@
     {
       "description": "Redshift Serverless and Kinesis location fields accompany an aws binding",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -2008,7 +2008,7 @@
     {
       "description": "bindingLocation.partitionBy is a single string instead of an array",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",
@@ -2052,7 +2052,7 @@
     {
       "description": "a bindingLocation.partitionBy entry is a number instead of a column name",
       "contract": {
-        "fluidVersion": "0.7.5",
+        "fluidVersion": "0.7.6",
         "kind": "DataProduct",
         "id": "customer_profiles",
         "name": "Customer Profiles",

@@ -1,0 +1,20 @@
+{
+  "$comment": [
+    "The one record of which vendored schema versions are kept in sync with the reference implementation, and of their status.",
+    "Read by generate-docs.py (which versions to render, and which one is the latest STABLE) and by scripts/check-schema-drift.py (which versions must equal the reference implementation's latest release, byte for byte).",
+    "latestStable is deliberately separate from the highest version number: a preview has the higher number and is never 'latest'.",
+    "check-schema-drift.py fails when this file disagrees with the release it compares against (a new bundled version, a preview promoted to stable), so editing it is part of every re-vendor, not a separate chore."
+  ],
+  "upstream": {
+    "repository": "Agenticstiger/forge-cli",
+    "schemaDir": "fluid_build/schemas",
+    "previewSource": "fluid_build/schema_manager.py"
+  },
+  "latestStable": "0.7.5",
+  "preview": ["0.7.6"],
+  "synced": ["0.7.2", "0.7.3", "0.7.4", "0.7.5", "0.7.6"],
+  "notSynced": {
+    "0.7.1": "The reference implementation bundles a different document under the same $id (it adds orchestration, icebergConfig, binding.properties and more). Re-vendoring it would change which documents the published 0.7.1 accepts, so it is a decision for the maintainers rather than a sync, and the published copy is left as it is.",
+    "0.0.1-0.5.7": "Predate the compatibility promise; the reference implementation no longer bundles them."
+  }
+}

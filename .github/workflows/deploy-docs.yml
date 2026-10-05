@@ -23,9 +23,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Regenerate the latest schema HTML so specs/<latest>/ exists before
-      # the asset-sync step mirrors it into the published site. The fluid
-      # generators expect a venv at <repo-parent>/.venv (see schema-sync.yml).
+      # Render the HTML reference for every synced schema version (the list
+      # and the latest stable version live in scripts/schema-versions.json)
+      # with the exactly-pinned renderer, so specs/ is complete before the
+      # asset-sync step mirrors it into the published site. On a current
+      # main this reproduces the committed files byte for byte; the
+      # conformance workflow's `generated` job checks that on every PR.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -33,9 +36,7 @@ jobs:
 
       - name: Generate schema docs (specs/)
         run: |
-          venv_dir="$(dirname "$GITHUB_WORKSPACE")/.venv"
-          python3 -m venv "$venv_dir"
-          "$venv_dir/bin/pip" install --quiet json-schema-for-humans
+          pip install -r scripts/requirements-docs.txt
           python3 generate-docs.py
 
       - name: Setup Node.js

@@ -22,7 +22,8 @@ Until now nothing checked it. This script does, two independent ways:
            pass exists alongside it.
 
 Usage:
-    python3 scripts/check-compat.py                     # every adjacent pair
+    python3 scripts/check-compat.py                     # every adjacent pair from 0.7.1 on
+    python3 scripts/check-compat.py --all-history       # ... and the pre-promise pairs too
     python3 scripts/check-compat.py --from 0.7.4 --to 0.7.5
     python3 scripts/check-compat.py --format json
 
@@ -52,6 +53,12 @@ TESTS_DIR = REPO / "tests"
 WAIVERS = Path(__file__).resolve().parent / "compat-waivers.txt"
 
 VERSION_RE = re.compile(r"^fluid-schema-(\d+\.\d+\.\d+)\.json$")
+
+# The first version the compatibility promise covers. Earlier schemas predate
+# it, and 0.4.0 -> 0.5.7 is a large, deliberate break (accessPolicy, governance,
+# operations, security and slo removed), so a default run starting at 0.0.1
+# would exit 1 on history no one can change. --all-history still reports it.
+PROMISE_FLOOR = "0.7.1"
 
 # Keywords whose numeric value narrowing the instance set is breaking.
 LOWER_BOUNDS = ("minimum", "exclusiveMinimum", "minItems", "minLength", "minProperties")
@@ -400,12 +407,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument(
         "--show-additive", action="store_true", help="also list additive changes"
     )
+    ap.add_argument(
+        "--all-history",
+        action="store_true",
+        help=f"also compare the pairs before {PROMISE_FLOOR}, which predate the promise",
+    )
     args = ap.parse_args(argv)
 
     if bool(args.old) != bool(args.new):
         ap.error("--from and --to must be given together")
 
     versions = published_versions()
+    if not args.all_history:
+        floor = tuple(int(p) for p in PROMISE_FLOOR.split("."))
+        versions = [v for v in versions if tuple(int(p) for p in v.split(".")) >= floor]
     pairs = [(args.old, args.new)] if args.old else adjacent_pairs(versions)
     if not pairs:
         print("check-compat: fewer than two published schemas; nothing to compare")

@@ -249,6 +249,22 @@ def compat_gate_is_load_bearing() -> None:
         f"exit={baseline.returncode}",
     )
 
+    # the default run covers every pair the promise covers, and passes
+    default = run(sandbox_root, "scripts/check-compat.py")
+    check(
+        "the default run (every promised pair) passes as shipped",
+        default.returncode == 0,
+        f"exit={default.returncode} {default.stdout[-300:]}",
+    )
+    # ... while the pre-promise history it skips is a real break, so the floor is
+    # what makes the default pass, not a gate that cannot fail
+    history = run(sandbox_root, "scripts/check-compat.py", "--all-history")
+    check(
+        "--all-history still reports the pre-promise break",
+        history.returncode == 1,
+        f"exit={history.returncode}",
+    )
+
     for name, mutate in NARROWINGS:
         root = sandbox()
         target = root / "schema" / "fluid-schema-0.7.5.json"
@@ -296,11 +312,79 @@ def compat_gate_is_load_bearing() -> None:
     shutil.rmtree(root, ignore_errors=True)
 
 
+# --------------------------------------------------------------------------
+# the schema drift check must fail when the vendored copy and the reference
+# release disagree
+# --------------------------------------------------------------------------
+
+
+def _fake_release(root: Path) -> Tuple[Path, Path]:
+    """A local stand-in for a forge-cli release that matches schema/ exactly."""
+    record = json.loads((root / "scripts" / "schema-versions.json").read_text())
+    release = Path(tempfile.mkdtemp(prefix="fluid-meta-release-"))
+    for version in record["synced"]:
+        name = f"fluid-schema-{version}.json"
+        shutil.copy(root / "schema" / name, release / name)
+    preview = ", ".join(f'"{v}"' for v in record.get("preview", []))
+    manager = release / "schema_manager.py"
+    manager.write_text(
+        "class FluidSchemaManager:\n"
+        f"    PREVIEW_VERSIONS: FrozenSet[str] = frozenset({{{preview}}})\n"
+    )
+    return release, manager
+
+
+def drift_gate_is_load_bearing() -> None:
+    print("\nschema drift check:")
+    record = json.loads((REPO / "scripts" / "schema-versions.json").read_text())
+    newest = max(record["synced"], key=lambda v: tuple(int(p) for p in v.split(".")))
+
+    def drift(root: Path, release: Path, manager: Path) -> subprocess.CompletedProcess:
+        return run(
+            root, "scripts/check-schema-drift.py",
+            "--source-dir", str(release), "--schema-manager", str(manager),
+        )
+
+    root = sandbox()
+    release, manager = _fake_release(root)
+    r = drift(root, release, manager)
+    check("an identical release passes", r.returncode == 0, f"exit={r.returncode} {r.stderr[-300:]}")
+
+    # 1. a byte of difference, even one that leaves the JSON equal
+    target = release / f"fluid-schema-{newest}.json"
+    target.write_bytes(target.read_bytes() + b"\n")
+    r = drift(root, release, manager)
+    check("catches a byte-level difference in a synced schema", r.returncode == 1, f"exit={r.returncode}")
+    shutil.rmtree(release, ignore_errors=True)
+
+    # 2. the release bundles a version this repo does not publish
+    release, manager = _fake_release(root)
+    major, minor, patch = newest.split(".")
+    shutil.copy(release / f"fluid-schema-{newest}.json", release / f"fluid-schema-{major}.{minor}.{int(patch) + 1}.json")
+    r = drift(root, release, manager)
+    check("catches a bundled version that is not vendored here", r.returncode == 1, f"exit={r.returncode}")
+    shutil.rmtree(release, ignore_errors=True)
+
+    # 3. the release promoted its preview to stable
+    release, manager = _fake_release(root)
+    manager.write_text("PREVIEW_VERSIONS: FrozenSet[str] = frozenset({})\n")
+    r = drift(root, release, manager)
+    check("catches a preview promoted to stable upstream", r.returncode == 1, f"exit={r.returncode}")
+
+    # 4. a schema manager it cannot read is an error, not a pass
+    manager.write_text("PREVIEW = set()\n")
+    r = drift(root, release, manager)
+    check("refuses a release whose preview set it cannot read", r.returncode == 2, f"exit={r.returncode}")
+    shutil.rmtree(release, ignore_errors=True)
+    shutil.rmtree(root, ignore_errors=True)
+
+
 if __name__ == "__main__":
     sandbox_root = sandbox()
     try:
         conformance_gate_is_load_bearing()
         compat_gate_is_load_bearing()
+        drift_gate_is_load_bearing()
     finally:
         shutil.rmtree(sandbox_root, ignore_errors=True)
 

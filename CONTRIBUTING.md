@@ -7,35 +7,76 @@ request — it is the rule that most often surprises people.
 
 `schema/fluid-schema-*.json` is **vendored**. The FLUID JSON Schemas are
 authored in [`forge-cli`](https://github.com/Agenticstiger/forge-cli), the
-reference implementation, and land here through
-[`.github/workflows/schema-sync.yml`](.github/workflows/schema-sync.yml), which
-fails the build if the two ever drift. This repository is the public
-distribution point.
+reference implementation, and copied here byte for byte. This repository is
+the public distribution point: the schemas from 0.5.7 on declare an `$id`
+under this site, and the site serves the copy in `schema/`.
 
-**So a pull request that edits a file under `schema/` will be rejected**, not
-because the change is wrong but because it will be silently reverted by the next
-sync. Propose schema changes upstream in forge-cli. The sync currently covers
-0.7.2 and later; earlier versions diverge historically and are excluded on
-purpose.
+Nothing copies them here automatically. They are **checked by** the `drift`
+job in [`.github/workflows/conformance.yml`](.github/workflows/conformance.yml),
+which runs on every pull request and fails when:
 
-What you *can* change here:
+- a synced schema differs, by even one byte, from the copy in forge-cli's
+  latest release;
+- that release bundles a schema version that is not published here;
+- that release's preview versions, or its latest stable version, differ from
+  [`scripts/schema-versions.json`](scripts/schema-versions.json).
 
-| Area | Notes |
-|---|---|
-| `tests/**` | The conformance corpus. This is where "FLUID-conformant" is defined — see [tests/README.md](tests/README.md). |
-| `conformance/**` | The runner, the reference check, the coverage tool. |
-| `scripts/check-compat.py`, `scripts/compat-waivers.txt` | The backward-compatibility gate. |
-| `docs/**` | The documentation site. |
-| `examples/**` | Example contracts. |
+**So a pull request that edits a file under `schema/` by hand will be
+rejected**, not because the change is wrong but because the published schema
+must be the one the reference implementation ships. Propose schema changes
+upstream in forge-cli.
+
+[`scripts/schema-versions.json`](scripts/schema-versions.json) is the record of
+which versions are synced, which one is the latest **stable** version, and
+which are **previews**: a contract uses a preview only by naming it in
+`fluidVersion`, and a preview can still change before it becomes stable.
+`python3 generate-docs.py --print-latest-stable` prints the stable version.
+Versions before 0.7.2 are not synced. The 0.7.1 published here differs from
+the document forge-cli bundles under the same `$id`, and re-vendoring it would
+change which documents it accepts — a decision for the maintainers, not a
+sync.
+
+### Re-vendoring a schema
+
+When the drift check fails, or forge-cli releases a new schema version:
+
+1. Copy each changed schema from the release, byte for byte. Use a release
+   tag, never `main`:
+
+   ```bash
+   TAG=v0.18.1   # the forge-cli release you are vendoring from
+   for v in 0.7.5 0.7.6; do
+     curl -fsSL "https://raw.githubusercontent.com/Agenticstiger/forge-cli/$TAG/fluid_build/schemas/fluid-schema-$v.json" \
+       -o "schema/fluid-schema-$v.json"
+   done
+   ```
+
+2. For a new version, or a version whose status changed (a preview promoted
+   to stable), update `scripts/schema-versions.json`, and for a new version
+   follow "Adding a version" in [tests/README.md](tests/README.md).
+3. Regenerate what is derived from the schemas, with the pinned renderer:
+
+   ```bash
+   pip install -r scripts/requirements-docs.txt
+   python3 generate-docs.py            # specs/<version>/ for every synced version
+   python3 generate-schema-diffs.py    # schema-diffs/
+   ```
+
+4. Run the gates below, plus `python3 scripts/check-schema-drift.py --ref $TAG`.
+   A re-vendored schema can add constraints the corpus does not pin yet, which
+   lowers mutation coverage; add the cases in the same pull request.
+5. Name the release you vendored from in the pull request.
 
 ## Setup
 
 ```bash
 pip install "jsonschema[format]>=4.22"
 
-python3 conformance/run.py          # the corpus must be green
-python3 tests/meta_test.py          # the gates must be able to fail
-python3 scripts/check-compat.py     # no release may break its promise
+python3 conformance/run.py                          # the corpus must be green
+python3 conformance/mutation_coverage.py --min-coverage 40   # and still worth something
+python3 tests/meta_test.py                          # the gates must be able to fail
+python3 scripts/check-compat.py                     # no release may break its promise
+python3 scripts/check-schema-drift.py               # schema/ equals the latest forge-cli release
 ```
 
 The `[format]` extra is not optional. Without it `jsonschema` registers no

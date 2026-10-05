@@ -1,0 +1,648 @@
+{
+  "corpusVersion": "0.7.6",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
+  "group": "binding-security",
+  "description": "Binding encryption and principal mapping (0.7.6 preview): encryption's closed property set; kms as 'product', 'none', an AWS alias or key/alias ARN, or a Cloud KMS crypto-key name; the platform-conditional refusals (a gcp binding refuses AWS key forms, an aws binding refuses Cloud KMS names); principals' non-empty keys, one-identity-or-unique-list values, and the platform-conditional identity forms (IAM members on gcp, IAM ARNs on aws). Also documents that platforms other than gcp and aws carry no principal-form constraint.",
+  "cases": [
+    {
+      "description": "a gcp binding uses a Cloud KMS key and maps logical principals to IAM members",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "encryption": {
+                "kms": "projects/acme-prod/locations/europe-west1/keyRings/fluid/cryptoKeys/customers"
+              },
+              "principals": {
+                "analysts": "group:analysts@acme.example",
+                "stewards": [
+                  "user:steward@acme.example",
+                  "serviceAccount:etl@acme-prod.iam.gserviceaccount.com"
+                ],
+                "outsiders": []
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "an aws binding uses a KMS key ARN and maps logical principals to IAM ARNs",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "encryption": {
+                "kms": "arn:aws:kms:eu-west-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+              },
+              "principals": {
+                "analysts": "arn:aws:iam::123456789012:role/analytics-reader"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "an aws binding names its key by alias",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "encryption": {
+                "kms": "alias/fluid/customers"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "kms 'product' and 'none' are accepted on any platform",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "encryption": {
+                "kms": "none"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a platform other than gcp or aws maps principals to any non-empty identity",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "snowflake",
+              "format": "snowflake_table",
+              "location": {
+                "database": "ANALYTICS",
+                "schema": "PUBLIC",
+                "table": "PROFILES"
+              },
+              "principals": {
+                "analysts": "ANALYST_ROLE"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "encryption carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "encryption": {
+                "kms": "product",
+                "algorithm": "AES256"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/encryption",
+          "keyword": "additionalProperties",
+          "detail": "algorithm"
+        }
+      ]
+    },
+    {
+      "description": "kms is neither a keyword nor a recognised key name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "encryption": {
+                "kms": "customer-managed"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/encryption/kms",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "a gcp binding names an AWS KMS alias",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "encryption": {
+                "kms": "alias/fluid/customers"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/encryption/kms",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an aws binding names a Cloud KMS crypto key",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "encryption": {
+                "kms": "projects/acme-prod/locations/europe-west1/keyRings/fluid/cryptoKeys/customers"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/encryption/kms",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a gcp principal maps to an identity that is not an IAM member",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "principals": {
+                "analysts": "analysts@acme.example"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/principals/analysts",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "an aws principal maps to an identity that is not an IAM ARN",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "principals": {
+                "analysts": "group:analysts@acme.example"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/principals/analysts",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "a principal maps to a list that repeats an identity",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "principals": {
+                "analysts": [
+                  "group:analysts@acme.example",
+                  "group:analysts@acme.example"
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/principals/analysts",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "a principal maps to an empty identity string",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "snowflake",
+              "format": "snowflake_table",
+              "location": {
+                "database": "ANALYTICS",
+                "schema": "PUBLIC",
+                "table": "PROFILES"
+              },
+              "principals": {
+                "analysts": ""
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/principals/analysts",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "principals is a list instead of a map",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "principals": [
+                "group:analysts@acme.example"
+              ]
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/principals",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@
 // byte-for-byte.
 //
 // The canonical copies stay at the repo root (untouched by the Python
-// generators and the schema-sync CI). These public/ mirrors are
+// generators and the schema drift check). These public/ mirrors are
 // git-ignored and rebuilt on every `npm run docs:dev` / `docs:build`
 // via the npm "sync:assets" prebuild step.
 // =====================================================================

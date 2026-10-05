@@ -9,8 +9,9 @@
 # can be recorded rather than silently tolerated.
 #
 # Pre-0.7.1 pairs are not waived individually. Those schemas predate the
-# compatibility promise and, per .github/workflows/schema-sync.yml, already
-# diverge from forge-cli at the byte level; CI runs the gate from 0.7.1 only.
+# compatibility promise and are not synced with forge-cli (see
+# scripts/schema-versions.json); check-compat.py starts at 0.7.1 by default
+# (PROMISE_FLOOR) and reports the earlier pairs only with --all-history.
 
 # ---------------------------------------------------------------------------
 # 0.7.1 -> 0.7.2  --  REAL BREAK, SHIPPED. Not benign; waived only because it

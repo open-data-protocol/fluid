@@ -1,0 +1,440 @@
+{
+  "corpusVersion": "0.7.6",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
+  "group": "packaging",
+  "description": "Declarative packaging modes (0.7.6 preview): the top-level packaging block and its per-binding override, the isolated/shared mode enum, the non-empty pool and poolManifest strings, the closed containers map and its per-kind mode enum, and packaging's own closed property set.",
+  "cases": [
+    {
+      "description": "top-level packaging declares a shared pool with a per-kind containers override",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "shared",
+          "pool": "analytics-shared",
+          "poolManifest": "pools/analytics-shared.yaml",
+          "containers": {
+            "bucket": "shared",
+            "database": "shared",
+            "dataset": "isolated",
+            "schema": "isolated",
+            "warehouse": "isolated",
+            "cluster": "shared"
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a binding overrides the product-level packaging mode",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "packaging": {
+                "mode": "isolated"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "packaging.mode names a mode outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "dedicated"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/packaging/mode",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "packaging.pool is an empty string",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "shared",
+          "pool": ""
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/packaging/pool",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "description": "packaging.poolManifest is an empty string",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "shared",
+          "poolManifest": ""
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/packaging/poolManifest",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "description": "packaging carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "shared",
+          "tenant": "finance"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/packaging",
+          "keyword": "additionalProperties",
+          "detail": "tenant"
+        }
+      ]
+    },
+    {
+      "description": "packaging.containers names a container kind outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "shared",
+          "containers": {
+            "topic": "shared"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/packaging/containers",
+          "keyword": "additionalProperties",
+          "detail": "topic"
+        }
+      ]
+    },
+    {
+      "description": "a packaging.containers entry names a mode outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "packaging": {
+          "mode": "shared",
+          "containers": {
+            "bucket": "pooled"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/packaging/containers/bucket",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a binding-level packaging override names a mode outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              },
+              "packaging": {
+                "mode": "dedicated"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/packaging/mode",
+          "keyword": "enum"
+        }
+      ]
+    }
+  ]
+}

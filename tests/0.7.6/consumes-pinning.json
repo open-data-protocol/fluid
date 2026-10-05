@@ -1,0 +1,306 @@
+{
+  "corpusVersion": "0.7.6",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
+  "group": "consumes-pinning",
+  "description": "Cross-mesh upstream pinning on consumes[] (0.7.6 preview): upstreamWorkspace requires upstreamDigest (dependentRequired, the first JSON Schema 2020-12-only assertion keyword a FLUID schema uses -- a Draft 7 validator ignores it and accepts the invalid case below), the sha256:<64 lowercase hex> digest pattern, and the non-empty workspace id.",
+  "cases": [
+    {
+      "description": "a cross-mesh upstream names its workspace and the digest it was composed against",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "upstreamWorkspace": "finance-mesh",
+            "upstreamDigest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a digest without a workspace is admitted: the dependency runs one way only",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "upstreamDigest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "upstreamWorkspace is set without the upstreamDigest it requires",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "upstreamWorkspace": "finance-mesh"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumes/0",
+          "keyword": "dependentRequired"
+        }
+      ]
+    },
+    {
+      "description": "upstreamDigest uses uppercase hex",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "upstreamWorkspace": "finance-mesh",
+            "upstreamDigest": "sha256:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumes/0/upstreamDigest",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "upstreamDigest names an algorithm other than sha256",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "upstreamWorkspace": "finance-mesh",
+            "upstreamDigest": "sha512:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumes/0/upstreamDigest",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "upstreamWorkspace is an empty string",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumes": [
+          {
+            "productId": "silver.hr.people_v2",
+            "exposeId": "people_table",
+            "upstreamWorkspace": "",
+            "upstreamDigest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumes/0/upstreamWorkspace",
+          "keyword": "minLength"
+        }
+      ]
+    }
+  ]
+}

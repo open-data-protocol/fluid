@@ -11,8 +11,10 @@ Creates markdown files showing:
 - Value changes in a clear, readable format
 """
 
+import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -20,6 +22,7 @@ from typing import Any, Dict, List, Tuple
 SCRIPT_DIR = Path(__file__).resolve().parent
 SCHEMA_DIR = SCRIPT_DIR / "schema"
 DIFFS_DIR = SCRIPT_DIR / "schema-diffs"
+VERSIONS_FILE = SCRIPT_DIR / "scripts" / "schema-versions.json"
 
 
 def log(msg: str):
@@ -228,33 +231,34 @@ def generate_diff_markdown(old_version: str, new_version: str,
     return "\n".join(md)
 
 
-def generate_diff(old_version: str, old_path: Path, 
-                 new_version: str, new_path: Path):
-    """Generate a diff file between two schema versions"""
-    
+def generate_diff(old_version: str, old_path: Path,
+                 new_version: str, new_path: Path) -> Tuple[Path, str]:
+    """Render the diff file between two schema versions (not yet written)."""
+
     # Load schemas
     with open(old_path, 'r', encoding='utf-8') as f:
         old_schema = json.load(f)
-    
+
     with open(new_path, 'r', encoding='utf-8') as f:
         new_schema = json.load(f)
-    
-    # Write to file (preserving any hand-written HUMAN-NOTE block)
-    output_file = DIFFS_DIR / f"diff-{old_version}-to-{new_version}.md"
-    output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # Generate markdown
+    # Preserve any hand-written HUMAN-NOTE block already in the file
+    output_file = DIFFS_DIR / f"diff-{old_version}-to-{new_version}.md"
     preserved_note = extract_preserved_note(output_file)
     markdown = generate_diff_markdown(old_version, new_version, old_schema, new_schema, preserved_note)
-    
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(markdown)
-    
-    log(f"✅ Generated: {output_file.name}")
+    return output_file, markdown
 
 
-def generate_index(versions: List[Tuple[str, Path]]):
-    """Generate an index file listing all diffs"""
+def preview_versions() -> set:
+    """Versions scripts/schema-versions.json marks as preview."""
+    if not VERSIONS_FILE.is_file():
+        return set()
+    return set(json.loads(VERSIONS_FILE.read_text()).get("preview", []))
+
+
+def generate_index(versions: List[Tuple[str, Path]]) -> Tuple[Path, str]:
+    """Render the index file listing all diffs (not yet written)."""
+    preview = preview_versions()
     md = [
         "# FLUID Schema Version History",
         "",
@@ -263,50 +267,66 @@ def generate_index(versions: List[Tuple[str, Path]]):
         "## Version Progression",
         ""
     ]
-    
+
     for i in range(len(versions) - 1):
         old_ver = versions[i][0]
         new_ver = versions[i + 1][0]
-        md.append(f"- [{old_ver} → {new_ver}](diff-{old_ver}-to-{new_ver}.md)")
-    
+        note = f" ({new_ver} is a preview and may still change)" if new_ver in preview else ""
+        md.append(f"- [{old_ver} → {new_ver}](diff-{old_ver}-to-{new_ver}.md){note}")
+
     md.append("")
     md.append("---")
     md.append("")
     md.append(f"**Versions tracked:** {len(versions)}")
     md.append(f"**Diff files generated:** {len(versions) - 1}")
     md.append("")
-    
-    index_file = DIFFS_DIR / "README.md"
-    with open(index_file, 'w', encoding='utf-8') as f:
-        f.write("\n".join(md))
-    
-    log(f"✅ Generated index: {index_file.name}")
+
+    return DIFFS_DIR / "README.md", "\n".join(md)
 
 
-def main():
+def main(argv=None) -> int:
     """Main entry point"""
+    ap = argparse.ArgumentParser(description="Generate schema-diffs/ from schema/.")
+    ap.add_argument("--check", action="store_true",
+                    help="fail if schema-diffs/ differs from a fresh generation")
+    args = ap.parse_args(argv)
+
     log("Starting schema diff generation...")
-    
+
     # Find all schema versions
     versions = find_schema_files()
-    
+
     if len(versions) < 2:
         log("❌ Need at least 2 schema versions to generate diffs")
-        return
-    
-    # Generate diffs for consecutive versions
+        return 1
+
+    outputs: List[Tuple[Path, str]] = []
     for i in range(len(versions) - 1):
         old_ver, old_path = versions[i]
         new_ver, new_path = versions[i + 1]
-        
         log(f"Comparing {old_ver} -> {new_ver}")
-        generate_diff(old_ver, old_path, new_ver, new_path)
-    
-    # Generate index
-    generate_index(versions)
-    
+        outputs.append(generate_diff(old_ver, old_path, new_ver, new_path))
+    outputs.append(generate_index(versions))
+
+    if args.check:
+        stale = [p for p, text in outputs
+                 if not p.is_file() or p.read_text(encoding="utf-8") != text]
+        if stale:
+            log("❌ schema-diffs/ is out of date with schema/:")
+            for p in stale:
+                log(f"  {p.relative_to(SCRIPT_DIR)}")
+            log("Run `python3 generate-schema-diffs.py` and commit the result.")
+            return 1
+        log(f"✅ schema-diffs/ is current ({len(outputs) - 1} diff files)")
+        return 0
+
+    DIFFS_DIR.mkdir(parents=True, exist_ok=True)
+    for path, text in outputs:
+        path.write_text(text, encoding="utf-8")
+        log(f"✅ Generated: {path.name}")
     log(f"✅ Complete! Generated {len(versions) - 1} diff files in {DIFFS_DIR}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -15,8 +15,9 @@ This directory contains human-readable diffs between consecutive versions of the
 - [0.7.2 → 0.7.3](diff-0.7.2-to-0.7.3.md)
 - [0.7.3 → 0.7.4](diff-0.7.3-to-0.7.4.md)
 - [0.7.4 → 0.7.5](diff-0.7.4-to-0.7.5.md)
+- [0.7.5 → 0.7.6](diff-0.7.5-to-0.7.6.md) (0.7.6 is a preview and may still change)
 
 ---
 
-**Versions tracked:** 12
-**Diff files generated:** 11
+**Versions tracked:** 13
+**Diff files generated:** 12
