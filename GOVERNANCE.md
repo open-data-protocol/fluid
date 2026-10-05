@@ -64,6 +64,23 @@ One historical break is on record (0.7.1 → 0.7.2, `notification` became a clos
 object). It was found by the gate after the fact, and the release note that
 claimed otherwise has been corrected rather than quietly left standing.
 
+### Version status
+
+Each vendored schema version is stable, preview or earlier, as recorded in
+[`scripts/schema-versions.json`](scripts/schema-versions.json):
+
+- **Stable.** The latest stable version is the one the reference implementation
+  treats as current. It is recorded separately from the highest version number.
+- **Preview.** A preview can change before it becomes stable. A contract uses it
+  only by naming it in `fluidVersion`. Whenever the reference implementation
+  changes a preview, the copy here is re-vendored to match.
+- **Earlier.** Versions below the latest stable stay published so their `$id`
+  keeps resolving. The compatibility rule above covers them from 0.7.1 on.
+
+`scripts/check-schema-drift.py` fails when this record disagrees with the
+reference implementation's latest release, so promoting a preview is a change to
+that file made in the same pull request as the re-vendor.
+
 ## Trademarks
 
 "FLUID" as a name for this specification is reserved by the maintainers. The

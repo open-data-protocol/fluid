@@ -185,6 +185,32 @@ against data-product-forge 0.18.1 agrees with the corpus on it.
 
 Recorded here rather than deleted, for the same reason as the question above.
 
+## Known ambiguities
+
+Behaviours of the published schemas that the corpus has not pinned because the
+standard does not say what they should be. They are recorded, not decided: a
+change here would alter which documents validate, which is a normative
+decision. Both were observed with `jsonschema` 4.26 (Draft 2020-12).
+
+### Airflow task rules apply to every task that has `params`
+
+In 0.7.1 through 0.7.6, each `allOf` rule in `$defs/airflowTask` (fluid_execute,
+bash, python) has an `if` of the form `anyOf: [{properties: {type: {const: ...}}},
+{properties: {operator: {pattern: ...}}}]`. A `properties` subschema is true
+when its member is absent, so a task that omits `operator` (or `type`) matches
+every rule's `if`, and its `params` must then satisfy all three `then` clauses.
+Observed: `{taskId, type: "bash", params: {bash_command}}` is rejected (it lacks
+`contract_path`), while the same task with `operator: "BashOperator"` added, or
+without `params`, is accepted. Whether that is intended is not specified.
+
+### An inline regex flag in `$defs/column`
+
+From 0.7.2 on, the second `anyOf` branch of `$defs/column/properties/type`
+begins with `(?i)`. ECMA-262, the regular-expression dialect JSON Schema names
+for `pattern`, has no inline flags, so whether an implementation treats the
+pattern as case-insensitive, rejects it, or matches it literally is
+implementation-defined. 0.7.1 does not use the flag.
+
 ## Measuring what the corpus is worth
 
 Counting cases measures effort. `conformance/mutation_coverage.py` measures
