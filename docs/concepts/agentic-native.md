@@ -18,7 +18,7 @@ Each spec was evaluated against the **canonical example file its maintainers pub
 | Bitol ODCS v3.1 | [`full-example.odcs.yaml`](https://github.com/bitol-io/open-data-contract-standard/blob/main/docs/examples/all/full-example.odcs.yaml) (seller/payments contract) |
 | Bitol ODPS v1.0 | [`customer-data-product.odps.yaml`](https://github.com/bitol-io/open-data-product-standard/blob/main/docs/examples/customer-data-product.odps.yaml) |
 | ODPS v4 | [`urbanpulse_final.yml`](https://github.com/Open-Data-Product-Initiative/v4.0/blob/main/source/examples/Refs/urbanpulse_final.yml) (UrbanPulse Events) |
-| FLUID v0.7.3 | [Example 10 (Customers CDC)](/fluid/examples/#10-source-aligned-acquisition) |
+| FLUID v0.7.3 | [Example 10 (Customers CDC)](/fluid/examples/#_10-source-aligned-acquisition) |
 
 ## The four agent failure modes
 

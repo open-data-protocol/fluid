@@ -1,7 +1,9 @@
-# FLUID by Example — Eleven Steps from "Hello World" to Production
+# FLUID by Example — From "Hello World" to Production
 
-> All examples target **`fluidVersion: "0.7.4"`** (the [latest schema](/fluid/schema/fluid-schema-0.7.4.json)).
+> Examples 1–13 target **`fluidVersion: "0.7.5"`**, the [latest stable schema](/fluid/schema/fluid-schema-0.7.5.json). Example 14 uses the **0.7.6 preview**.
 > Each example **adds one block** to the previous one. Read in order to learn the schema by accretion.
+> Every complete contract on this page validates against the JSON Schema of the version it declares (Draft 2020-12) and with the reference implementation's `fluid validate`; examples that show only the new block validate when merged into the example before them.
+> File names such as `01-minimal.fluid.yml` are illustrative: FLUID does not prescribe a file name, and the reference implementation scaffolds `contract.fluid.yaml`.
 > For the schema's mental model first, see [**Anatomy**](/fluid/schema/anatomy).
 > For a one-row-per-field lookup, see [**Cheatsheet**](/fluid/schema/cheatsheet).
 
@@ -22,17 +24,20 @@
 | 9 | [Define business semantics](#_9-define-business-semantics) | `exposes[].semantics` |
 | 10 | [Source-aligned acquisition](#_10-source-aligned-acquisition) | `build.pattern: acquisition` |
 | 11 | [Agent-consumable output port (MCP)](#_11-agent-consumable-output-port-mcp) | `exposes[].mcp` (⭐ 0.7.4) |
+| 12 | [Stream Kafka into Iceberg](#_12-stream-kafka-into-iceberg) | `kafka-connect` Iceberg streaming sink + Iceberg catalog location (⭐ 0.7.5) |
+| 13 | [Vector output port (pgvector)](#_13-vector-output-port-pgvector) | `platform: pgvector` + `vectorConfig` (⭐ 0.7.5) |
+| 14 | [Preview: packaging and consumers](#_14-preview-packaging-and-declared-consumers-0-7-6) | `packaging`, `consumers` (🧪 0.7.6 preview) |
 
 ---
 
 ## 1. Minimal valid contract
 
-> **Goal:** get a `.fluid.yml` that validates against v0.7.4 with the fewest possible lines.
+> **Goal:** get a contract that validates against 0.7.5 with the fewest possible lines.
 > **New in this step:** the six required top-level keys (`fluidVersion`, `kind`, `id`, `name`, `metadata`, `exposes`) and the four required fields inside each expose (`exposeId`, `kind`, `contract`, `binding`).
 
 ```yaml
 # 01-minimal.fluid.yml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id:   demo.bronze.hello_world
 name: "Hello World"
@@ -63,7 +68,7 @@ That's it. Everything else in this guide is opt-in.
 
 ```yaml
 # 02-with-schema.fluid.yml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id:   demo.bronze.payments
 name: "Raw Payments"
@@ -94,6 +99,7 @@ Why bother: every consumer (humans, BI tools, AI agents) now has a machine-reada
 > **Goal:** assert that certain quality conditions must hold for the data to be considered valid.
 > **New in this step:** `exposes[].contract.dq.rules[]`.
 
+<!-- fluid-check: merge-into=prev -->
 ```yaml
 # 03-with-dq.fluid.yml
 # ... (everything from example 2, plus:)
@@ -135,6 +141,7 @@ DQ rules run as part of every build. `severity: error` fails the pipeline; `warn
 > **Goal:** describe how the data actually gets produced.
 > **New in this step:** the `build` block with `pattern: embedded-logic`.
 
+<!-- fluid-check: merge-into=prev -->
 ```yaml
 # 04-with-build.fluid.yml
 # ... (everything from example 3, plus:)
@@ -171,7 +178,7 @@ build:
 
 ```yaml
 # 05-customer-ltv.fluid.yml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id:   analytics.silver.customer_ltv
 name: "Customer Lifetime Value"
@@ -198,7 +205,7 @@ exposes:
     binding:
       platform: gcp
       format:   bigquery_table
-      location: { project: company-data, dataset: silver_analytics, table: customer_ltv }
+      location: { project: company-data, dataset: silver_analytics, table: customer_ltv, region: europe-west1 }
 
 build:
   pattern: hybrid-reference
@@ -217,6 +224,7 @@ Now the orchestrator can auto-build the DAG: `demo.bronze.payments` → `analyti
 > **Goal:** declare exactly who can read this product. The platform generates cloud IAM bindings from this block.
 > **New in this step:** root-level `accessPolicy`.
 
+<!-- fluid-check: merge-into=prev -->
 ```yaml
 # 06-with-access.fluid.yml
 # ... (everything from example 5, plus:)
@@ -243,6 +251,7 @@ The `resources` field uses JSONPath to target subsets of `exposes` — useful wh
 > **New in this step:** `agentPolicy` under `exposes[].policy.agentPolicy`.
 > ⚠️ **Important shape note:** `agentPolicy` is **per-expose**, not top-level — it lives inside `exposes[].policy.agentPolicy`. (Some prior release notes show it at the root; the schema has never accepted it there.)
 
+<!-- fluid-check: merge-into=prev -->
 ```yaml
 # 07-with-agent-policy.fluid.yml
 # ... (everything from example 6, plus inside the relevant expose:)
@@ -285,6 +294,7 @@ This block is enforced by FLUID-aware AI gateways. An LLM request that doesn't m
 > **Goal:** enforce data residency — apply-time blocks any `binding` that would land data outside the allowed region.
 > **New in this step:** root-level `sovereignty`.
 
+<!-- fluid-check: merge-into=prev -->
 ```yaml
 # 08-with-sovereignty.fluid.yml
 # ... (everything from example 7, plus:)
@@ -310,7 +320,7 @@ With `enforcementMode: strict` and `validationRequired: true`, contract-apply di
 
 ```yaml
 # 09-with-semantics.fluid.yml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id:   analytics.gold.orders_revenue
 name: "Orders Revenue Semantic Model"
@@ -380,7 +390,7 @@ The shape mirrors **dbt MetricFlow** and **Snowflake Semantic Views** — portab
 
 ```yaml
 # 10-acquisition.fluid.yml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id:   crm.bronze.customers_cdc
 name: "Customers CDC from Production Postgres"
@@ -422,7 +432,7 @@ exposes:
     binding:
       platform: aws
       format:   iceberg
-      location: { bucket: acme-bronze, path: "crm/customers/" }
+      location: { bucket: acme-bronze, path: "crm/customers/", region: eu-west-1 }
       icebergConfig:                                 # NB: icebergConfig.partitionSpec uses OBJECT form;
         writeVersion: 2                              #     acquisitionSink.partitionBy below uses STRING form
         fileFormat:   parquet
@@ -439,7 +449,7 @@ build:
       mode: cdc
       cursor_field: updated_at
       connection:
-        secretRef: "vault://pg-prod-readonly"      # URI form required (vault:// aws:// gcp:// azure:// env://)
+        secretRef: "vault://pg-prod-readonly"      # a URI (<scheme>://…), e.g. vault://, env://
       streams: [public.customers]
       watermark: { strategy: lsn }                 # Postgres LSN-based
 
@@ -480,7 +490,7 @@ build:
 
     debezium:
       connector_class: io.debezium.connector.postgresql.PostgresConnector
-      deployment: { mode: managed }                # Forge provisions via Helm
+      deployment: { mode: managed }                # the platform provisions the connector
       image_signature:
         verifier: cosign                           # cosign is the only verifier today
         publicKey: "k8s://acme/cosign-pub"
@@ -534,12 +544,12 @@ A FLUID-aware platform takes this file, provisions the connector, registers it i
 > **Goal:** publish an output port that an AI agent can describe, sample, and query directly — with governance enforced from the contract, not bolted on at the gateway.
 > **New in this step:** `exposes[].mcp` (⭐ 0.7.4).
 
-Adding an `mcp` block to an expose opts that output port into the **Fluid MCP gateway**. A tool such as `fluid mcp output-port serve` then surfaces the port to Claude Code, Cursor, or any MCP client, exposing `describe` / `sample` / `query` operations against the contract.
+Adding an `mcp` block to an expose opts that output port into an MCP output-port gateway. The reference implementation's `fluid mcp output-port serve` then surfaces the port to Claude Code, Cursor, or any MCP client, exposing `describe` / `sample` / `query` operations against the contract.
 
-The contract below is `0.7.4`-valid and runs without cloud credentials (DuckDB over a local CSV):
+The contract below is valid against 0.7.5 and runs without cloud credentials (DuckDB over a local CSV next to the contract):
 
 ```yaml
-fluidVersion: "0.7.4"
+fluidVersion: "0.7.5"
 kind: DataProduct
 id: silver.demo.customer_segments_v1
 name: Customer Segments (MCP demo)
@@ -635,9 +645,139 @@ The `mcp` block opts the port in; the actual *who/what/how* rules come from the 
 - **`policy.agentPolicy`** (Example 7) is enforced **at the gateway on every read**. `allowedModels` / `deniedModels` gate which LLM may call the port, and `allowedUseCases` / `deniedUseCases` gate why. A request that doesn't satisfy `allowedModels` ∧ `allowedUseCases` is rejected before any data is read.
 - **Column-level `sensitivity`** drives **value redaction**. A column marked `sensitivity: pii` (like `email` above) has its *values* replaced with a redaction marker (e.g. `[REDACTED-PII]`) in every `sample` / `query` result, while the column itself stays visible — the agent learns the field exists but never sees a real address. `sensitivity: phi` is treated the same way for protected health information.
 
-The result: an agent connected through the Fluid MCP gateway can explore the port's shape and semantics, run governed queries, and stay inside the contract's model/use-case/redaction guardrails — without a single flag or proxy outside the contract.
+The result: an agent connected through such a gateway can explore the port's shape and semantics, run governed queries, and stay inside the contract's model/use-case/redaction guardrails — without a single flag or proxy outside the contract.
 
 > See the [MCP how-to](/fluid/how-to/mcp) for the end-to-end agentic-access story, and the [0.7.4 release notes](/fluid/releases/0.7.4) for the full `exposes[].mcp` reference.
+
+---
+
+## 12. Stream Kafka into Iceberg
+
+> **Goal:** land Kafka topics continuously in an Iceberg table through Kafka Connect, with the table's catalog named in the contract.
+> **New in this step:** the `kafka-connect` Iceberg streaming sink and the Iceberg catalog location fields (⭐ 0.7.5).
+
+```yaml
+# 12-kafka-to-iceberg.fluid.yml
+fluidVersion: "0.7.5"
+kind: DataProduct
+id:   sales.bronze.orders_stream
+name: "Orders (streamed)"
+metadata:
+  owner: { team: sales-data }
+  productType: SDP
+builds:
+  - id: ingest_orders
+    pattern: acquisition
+    engine: kafka-connect
+    capabilities: [streaming]
+    outputs: [orders]
+    properties:
+      source:
+        kind: kafka
+        mode: streaming
+        connection: { secretRef: "env://KAFKA_BOOTSTRAP" }
+        streams: [orders, payments]
+      kafka-connect:
+        iceberg_sink_enabled: true                 # derive the Iceberg sink connector
+        sink_topics: [orders, payments]
+        streamingSink: { commitIntervalMs: 60000, autoCreate: true, evolveSchema: true }
+exposes:
+  - exposeId: orders
+    kind: table
+    contract:
+      schema:
+        - { name: order_id, type: STRING,  required: true }
+        - { name: amount,   type: NUMERIC }
+    binding:
+      platform: aws
+      format: iceberg
+      location:
+        bucket: acme-lake
+        database: sales
+        table: orders
+        region: eu-west-1
+        catalog: glue                              # ⭐ 0.7.5 — Iceberg catalog kind
+        warehouse: "s3://acme-lake/warehouse"      # ⭐ 0.7.5
+```
+
+The sink settings live under the build's `properties`, in the key named after the engine. For a managed alternative, the `confluent` platform (Confluent Cloud Tableflow) materialises a topic as an Iceberg table — see [What's New in 0.7.5](/fluid/releases/0.7.5#confluent-confluent-cloud-tableflow-binding).
+
+---
+
+## 13. Vector output port (pgvector)
+
+> **Goal:** publish embeddings of a text column as a vector output port that a retrieval (RAG) application can query.
+> **New in this step:** `binding.platform: pgvector`, `format: pgvector_table` and `binding.vectorConfig` (⭐ 0.7.5).
+
+```yaml
+# 13-vector-port.fluid.yml
+fluidVersion: "0.7.5"
+kind: DataProduct
+id:   support.gold.ticket_embeddings
+name: "Support ticket embeddings"
+metadata:
+  owner: { team: support-ai }
+exposes:
+  - exposeId: tickets
+    kind: vector
+    contract:
+      schema:
+        - { name: ticket_id, type: STRING, required: true }
+        - { name: body,      type: TEXT, labels: { ai-embeddable: "true" } }
+    binding:
+      platform: pgvector
+      format: pgvector_table
+      location: { database: support, schema: public, table: tickets }
+      vectorConfig:
+        dimensions: 1536                           # required, 1–16000
+        embeddingModel: text-embedding-3-small
+        distanceMetric: cosine                     # cosine | l2 | inner_product | l1
+        indexType: hnsw                            # hnsw | ivfflat | none
+        hnsw: { m: 16, efConstruction: 64 }
+        sourceKeyColumn: ticket_id                 # ties each embedding back to its source row
+```
+
+Which columns are embedded is not part of the schema; the reference implementation embeds the columns labelled `ai-embeddable: "true"`.
+
+---
+
+## 14. Preview: packaging and declared consumers (0.7.6)
+
+> 🧪 **0.7.6 is a preview.** It is opt-in — declare `fluidVersion: "0.7.6"` — and can still change before it is promoted. See [0.7.6 (preview)](/fluid/releases/0.7.6).
+> **New in this step:** top-level `packaging` and `consumers`.
+
+```yaml
+# 14-preview-packaging.fluid.yml
+fluidVersion: "0.7.6"
+kind: DataProduct
+id:   finance.gold.revenue
+name: "Revenue"
+metadata:
+  owner: { team: finance-analytics }
+packaging:
+  mode: shared                                     # write into platform-owned containers…
+  pool: analytics-eu
+  containers: { warehouse: isolated }              # …but own the warehouse
+consumers:
+  - name: weekly_revenue_dashboard
+    type: dashboard                                # dashboard | notebook | analysis | ml | application
+    label: "Weekly Revenue Dashboard"
+    maturity: high
+    exposeIds: [revenue]
+exposes:
+  - exposeId: revenue
+    kind: table
+    contract:
+      schema:
+        - { name: day,     type: DATE,    required: true }
+        - { name: revenue, type: NUMERIC, required: true }
+    binding:
+      platform: snowflake
+      format: snowflake_table
+      location: { account: acme-eu, database: FINANCE, schema: GOLD, table: REVENUE }
+```
+
+The 0.7.6 release note covers the rest of the preview: cross-mesh pins on `consumes[]`, encryption keys and principal mapping on bindings, and expiring data with `lifecycle.expire`.
 
 ---
 
@@ -645,5 +785,5 @@ The result: an agent connected through the Fluid MCP gateway can explore the por
 
 - [**Anatomy**](/fluid/schema/anatomy) — guided tour of every top-level block.
 - [**Cheatsheet**](/fluid/schema/cheatsheet) — one-row-per-field lookup table.
-- [**What's New**](/fluid/releases/) — auto-generated diffs between each version.
-- [**Full Specification**](/fluid/schema/specification) — exhaustive field-by-field reference.
+- [**What's New**](/fluid/releases/) — release notes for each version.
+- [**Specification**](/fluid/schema/specification) — validation semantics and the document structure.

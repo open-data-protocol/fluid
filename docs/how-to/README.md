@@ -2,6 +2,10 @@
 
 Task-focused walkthroughs that show FLUID working alongside the tools you already run — ingestion sources, transformation engines, orchestrators, and AI agents. Each guide is self-contained; start with the one closest to your problem.
 
+::: warning Most of these guides use a legacy manifest shape
+The YAML in these guides predates the current schema — most of it declares `fluidVersion: "1.0"`, a version that was never published, and the build-patterns guide uses 0.3.0 — and it does **not** validate against the latest stable schema, 0.7.5. Each guide says so at the top. Read them for the integration patterns; for YAML that validates, use [**Examples**](/fluid/examples/), the [**Anatomy**](/fluid/schema/anatomy) and the [**release notes**](/fluid/releases/).
+:::
+
 For a step-by-step tour of the schema itself, see [**Examples**](/fluid/examples/). For field-level reference, see the [**Cheatsheet**](/fluid/schema/cheatsheet).
 
 | Guide | What it covers |

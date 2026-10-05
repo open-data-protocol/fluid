@@ -1,5 +1,7 @@
 # A Practical Guide to Integrating dbt with FLUID
 
+> ℹ️ **Legacy manifest shape.** The FLUID YAML in this guide uses an earlier, illustrative manifest shape (`fluidVersion: "1.0"`, a version that was never published) to illustrate the dbt-orchestration pattern, and does **not** validate against any published FLUID schema. On the current schema (latest stable `0.7.5`), the equivalent is `build.pattern: hybrid-reference` with `engine: dbt` — see [**Examples → Consume another product**](/fluid/examples/#_5-consume-another-product).
+
 > **Unlock seamless, contract-aware data engineering with FLUID and dbt.**
 
 ---
@@ -100,6 +102,7 @@ Ingest raw customer data from GCS → Load to "bronze" table → Use dbt to tran
 #### File 1: `bronze_raw_customers/product.fluid.yml`
 *Ingest raw data from GCS into BigQuery.*
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: 1.0
 kind: DataProduct
@@ -143,6 +146,7 @@ build:
 #### File 2: `silver_stg_customers/product.fluid.yml`
 *Orchestrate dbt to build the silver product.*
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: 1.0
 kind: DataProduct
@@ -201,10 +205,10 @@ build:
 version: 2
 sources:
     - name: staging
-        database: bq-prod-lakehouse
-        schema: bronze
-        tables:
-            - name: raw_customers
+      database: bq-prod-lakehouse
+      schema: bronze
+      tables:
+          - name: raw_customers
 ```
 
 ---
@@ -234,21 +238,21 @@ from source
 version: 2
 models:
     - name: stg_customers
-        description: "Cleansed customer records from raw source."
-        columns:
-            - name: customer_id
-                description: "The unique customer identifier."
-                tests:
-                    - not_null
-                    - unique
-            - name: first_name
-                description: "Customer's first name."
-            - name: last_name
-                description: "Customer's last name."
-            - name: created_at
-                description: "Timestamp when the record was ingested."
-                tests:
-                    - not_null
+      description: "Cleansed customer records from raw source."
+      columns:
+          - name: customer_id
+            description: "The unique customer identifier."
+            tests:
+                - not_null
+                - unique
+          - name: first_name
+            description: "Customer's first name."
+          - name: last_name
+            description: "Customer's last name."
+          - name: created_at
+            description: "Timestamp when the record was ingested."
+            tests:
+                - not_null
 ```
 
 ---
@@ -270,5 +274,3 @@ models:
 ---
 
 > **By adopting FLUID, you move from a world of implicit, brittle glue code to explicit, version-controlled, contract-aware data products. This is the foundation for a scalable, trustworthy data fabric.**
-
-> ℹ️ The manifests above use the legacy `fluidVersion: 1.0` shape to illustrate the dbt-orchestration pattern. On the current schema (latest `0.7.4`), the equivalent is `build.pattern: hybrid-reference` with `engine: dbt` — see [**Examples → Consume another product**](/fluid/examples/#_5-consume-another-product).

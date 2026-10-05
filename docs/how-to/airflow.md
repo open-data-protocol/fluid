@@ -1,6 +1,8 @@
 # Integrating dbt and Airflow with FLUID: A Practical Guide
 
-This guide presents a hands-on approach to integrating the [FLUID specification](https://github.com/open-data-protocol/fluid/blob/main/specification.md) with core data stack tools like **dbt** and **Airflow**. It explains how FLUID bridges the gap between these tools, clarifies their responsibilities, and demonstrates how to orchestrate robust, contract-aware data pipelines.
+> ℹ️ **Legacy manifest shape.** The YAML in this guide uses an earlier, illustrative manifest shape (`fluidVersion: "1.0"`, a version that was never published) and does **not** validate against any published FLUID schema. Read it as a description of the integration pattern. On the current schema (latest stable `0.7.5`), orchestration is expressed with the `orchestration` block — `engine: airflow`, with `airflow.dagId` and `airflow.tasks[]` — see [**Anatomy §6**](/fluid/schema/anatomy#_6-orchestration-who-actually-runs-the-build).
+
+This guide presents a hands-on approach to integrating the [FLUID specification](/fluid/schema/specification) with core data stack tools like **dbt** and **Airflow**. It explains how FLUID bridges the gap between these tools, clarifies their responsibilities, and demonstrates how to orchestrate robust, contract-aware data pipelines.
 
 ---
 
@@ -75,6 +77,7 @@ Organize by data domain. FLUID files live with the dbt project they orchestrate.
 
 **`silver_stg_customers/product.fluid.yml`**:
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: 1.0
 kind: DataProduct
@@ -188,5 +191,3 @@ for spec_file in glob.glob(f"{FLUID_PRODUCT_PATH}/**/*.fluid.yml", recursive=Tru
 ## Conclusion
 
 By adopting FLUID, you move from implicit, brittle glue code to explicit, version-controlled, contract-aware data products. This is the foundation for a scalable, trustworthy data platform.
-
-> ℹ️ The manifest above uses the legacy `fluidVersion: 1.0` shape. On the current schema (latest `0.7.4`), orchestration is expressed via the top-level `orchestration` block (e.g. `engine: airflow`) — see [**Examples → Source-aligned acquisition**](/fluid/examples/#_10-source-aligned-acquisition).

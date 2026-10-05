@@ -75,6 +75,7 @@ export default defineUserConfig({
           { text: 'Core Principles', link: '/concepts/principles' },
           { text: 'Agentic-Native Layer', link: '/concepts/agentic-native' },
           { text: 'FLUID vs ODCS / ODPS', link: '/concepts/comparisons' },
+          { text: 'Reference Implementation', link: '/concepts/forge-cli' },
         ],
       },
       {
@@ -82,16 +83,28 @@ export default defineUserConfig({
         children: [
           { text: 'Anatomy', link: '/schema/anatomy' },
           { text: 'Cheatsheet', link: '/schema/cheatsheet' },
-          { text: 'Full Specification', link: '/schema/specification' },
+          { text: 'Minimal Contract', link: '/schema/minimal-contract' },
+          { text: 'Specification', link: '/schema/specification' },
           { text: 'Versions', link: '/schema/versions' },
-          { text: 'JSON Schema 0.7.5 ↗', link: 'https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json', target: '_blank' },
-          { text: 'Reference (HTML) ↗', link: 'https://open-data-protocol.github.io/fluid/specs/0.7.5/fluid-spec.html', target: '_blank' },
+          { text: 'Changelog', link: '/schema/changelog' },
+          { text: 'JSON Schema 0.7.5 (stable) ↗', link: 'https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json', target: '_blank' },
+          { text: 'Reference 0.7.5 (HTML) ↗', link: 'https://open-data-protocol.github.io/fluid/specs/0.7.5/fluid-spec.html', target: '_blank' },
+          { text: 'Preview: 0.7.6', link: '/releases/0.7.6' },
         ],
       },
       { text: 'Examples', link: '/examples/' },
       { text: 'How-to', link: '/how-to/' },
       { text: "What's New", link: '/releases/' },
       { text: 'Deck', link: '/deck/' },
+      {
+        text: 'Project',
+        children: [
+          { text: 'Contributing', link: '/contributing/' },
+          { text: 'Governance ↗', link: 'https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md', target: '_blank' },
+          { text: 'Conformance Corpus ↗', link: 'https://github.com/open-data-protocol/fluid/blob/main/tests/README.md', target: '_blank' },
+          { text: 'Vision', link: '/vision/' },
+        ],
+      },
       { text: 'GitHub', link: 'https://github.com/open-data-protocol/fluid' },
     ],
 
@@ -162,6 +175,7 @@ export default defineUserConfig({
           text: "What's New",
           children: [
             '/releases/README.md',
+            '/releases/0.7.6.md',
             '/releases/0.7.5.md',
             '/releases/0.7.4.md',
             '/releases/0.7.3.md',

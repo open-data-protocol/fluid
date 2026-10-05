@@ -17,7 +17,7 @@
 
 ---
 
-FLUID is one YAML file that describes a data product end to end — **schema, build, orchestration, agentic governance, sovereignty, and semantics**. Write it once; validate it, compile it, and deploy it anywhere. It compiles to Bitol ODPS + ODCS for catalog interop via the reference compiler, [`forge-cli`](https://github.com/Agenticstiger/forge-cli).
+FLUID is one YAML file that describes a data product end to end — **schema, build, orchestration, agentic governance, sovereignty, and semantics**. Write it once; validate it, compile it, and deploy it anywhere. It compiles to Bitol ODPS + ODCS for catalog interop via the reference implementation, [`forge-cli`](https://github.com/Agenticstiger/forge-cli).
 
 ## How the pieces fit
 
@@ -61,14 +61,25 @@ exposes:
 
 ## JSON Schema
 
-- **Latest:** `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json`
-- Use it in your editor — add this line to any `.fluid.yml`:
+- **Latest stable: 0.7.5** — `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json`
+- **Preview: 0.7.6** — `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json`. A contract uses it only by declaring `fluidVersion: "0.7.6"`, and it can still change before it is promoted to stable. See **[Stable and preview versions](https://open-data-protocol.github.io/fluid/schema/versions#stable-and-preview-versions)** and **[What's new in 0.7.6](https://open-data-protocol.github.io/fluid/releases/0.7.6)**.
+- A document is validated against the schema of the `fluidVersion` it declares. To use a field, declare the version that added it — see **[Choosing `fluidVersion`](https://open-data-protocol.github.io/fluid/schema/versions#choosing-fluidversion)**.
+- Editor support — add this line to a file that declares `fluidVersion: "0.7.5"` (use the URL matching the version the file declares):
   ```yaml
   # yaml-language-server: $schema=https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json
   ```
 - All versions, diffs, and the generated HTML reference: **[Schema → Versions](https://open-data-protocol.github.io/fluid/schema/versions)**.
 
-> **Note:** 0.7.5 ("Streaming Kafka → Iceberg Sink & Confluent Tableflow") is **additive and fully backward-compatible** with 0.7.4 — every valid 0.7.4 contract still validates. See **[What's New in 0.7.5](https://open-data-protocol.github.io/fluid/releases/0.7.5)**.
+0.7.5 is additive over 0.7.4: every valid 0.7.4 contract stays valid when it declares `"0.7.5"`. See **[What's New in 0.7.5](https://open-data-protocol.github.io/fluid/releases/0.7.5)**.
+
+## Validate a contract
+
+With a JSON Schema Draft 2020-12 validator, against the schema of the declared version (validators that compile `pattern` as ECMA-262, as JavaScript ones do, should read the [known interoperability issue](https://open-data-protocol.github.io/fluid/schema/specification#known-interoperability-issue-one-pattern-is-not-an-ecma-262-regular-expression) first). Or with the reference implementation, [`data-product-forge`](https://open-data-protocol.github.io/fluid/concepts/forge-cli):
+
+```bash
+pip install data-product-forge
+fluid validate contract.fluid.yaml
+```
 
 ## Build the docs locally
 

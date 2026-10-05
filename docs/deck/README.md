@@ -111,13 +111,13 @@ A visual tour of FLUID. Use ← / → (or the controls) to move between slides. 
 
 <section class="deck-slide">
 <h2>Structuring an Enterprise Data Product</h2>
-<p>The "gold standard" for a complex product: a multi-file layout that lets different teams own different parts of one contract.</p>
+<p>One contract, owned by several teams. FLUID itself defines a single document; splitting it across files is left to tools. With the reference implementation, <code>fluid split</code> writes a root contract plus a <code>fragments/</code> directory that maps onto team ownership:</p>
 <ul>
-<li><strong>Data Modeler</strong> — owns <code>exposes.yml</code> and the <code>schema_*.yml</code> files.</li>
-<li><strong>Data Engineer</strong> — owns <code>build.yml</code> and <code>consumes.yml</code>.</li>
-<li><strong>Governance Lead</strong> — owns <code>quality.yml</code> and <code>accessPolicy.yml</code>.</li>
+<li><strong>Data Modeler</strong> — owns <code>fragments/exposes/&lt;exposeId&gt;.yaml</code>: each output port with its schema and quality rules.</li>
+<li><strong>Data Engineer</strong> — owns <code>fragments/builds/&lt;id&gt;.yaml</code>.</li>
+<li><strong>Governance Lead</strong> — owns <code>fragments/sovereignty.yaml</code> and <code>fragments/access-policy.yaml</code>.</li>
 </ul>
-<p>A root <code>fluid.yml</code> composes the detailed implementation files (via <code>$ref</code>) that live in a <code>.fluid/</code> directory — separating high-level identity from its parts while keeping a single source of truth.</p>
+<p>The root file keeps identity and ownership and points at each fragment with <code>$ref</code>; <code>fluid bundle</code> resolves it back into the one document that is validated. See <a href="/fluid/schema/specification#composing-a-document-from-several-files">Composing a document from several files</a>.</p>
 </section>
 
 <section class="deck-slide">
@@ -165,7 +165,7 @@ A visual tour of FLUID. Use ← / → (or the controls) to move between slides. 
 <li><strong>Vendors</strong> — build the next generation of FLUID-aware tools.</li>
 <li><strong>Developers</strong> — shape the spec and grow the ecosystem.</li>
 </ul>
-<p>Help us build the missing protocol for the agentic era. Start with the <a href="/fluid/guide/">guide</a>, explore the <a href="/fluid/concepts/">concepts</a>, or dive into the <a href="/fluid/schema/">schema</a> (current version 0.7.4).</p>
+<p>Help us build the missing protocol for the agentic era. Start with the <a href="/fluid/guide/">guide</a>, explore the <a href="/fluid/concepts/">concepts</a>, or dive into the <a href="/fluid/schema/">schema</a> (latest stable version 0.7.5).</p>
 </section>
 
 </Deck>
