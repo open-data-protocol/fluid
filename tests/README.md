@@ -177,7 +177,7 @@ builds its validator with `jsonschema.validators.validator_for(schema)`, which
 honours the dialect each schema declares.
 
 The case that pins it is in `tests/0.7.6/consumes-pinning.json`. 0.7.6 is the
-first FLUID schema to use a 2020-12-only assertion keyword, `dependentRequired`
+first FLUID schema to use a 2020-12-only assertion keyword with a non-empty value, `dependentRequired`
 (`consumes[].upstreamWorkspace` requires `upstreamDigest`), and the case
 "upstreamWorkspace is set without the upstreamDigest it requires" is invalid
 under 2020-12 while a Draft 7 validator accepts it. `conformance/check_reference.py`
@@ -237,6 +237,6 @@ unpinned enums, required members, closed objects and bounds.
 
 Re-vendoring an existing version can add constraints too: 0.7.5 was first
 published here as a pre-release copy, and replacing it with the stable one
-added the vector output port and new location fields that no case pinned,
+added the pgvector platform, the pgvector_table format, binding.vectorConfig and new location fields that no case pinned,
 which took coverage below the CI floor until the cases in
 `tests/0.7.5/binding.json` were added.

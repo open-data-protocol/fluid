@@ -12,7 +12,7 @@
 #   drift        the vendored schemas are byte-identical to the ones the
 #                reference implementation's latest release ships. This used
 #                to live in schema-sync.yml, which compared against forge-cli
-#                `main`, failed every scheduled run from 29 June to 31 August
+#                `main`, failed every scheduled run from 22 June to 31 August
 #                2026, and was then disabled by GitHub for inactivity, so
 #                later pull requests merged with no drift check at all.
 #   generated    specs/ (the HTML reference) and schema-diffs/ are what the
