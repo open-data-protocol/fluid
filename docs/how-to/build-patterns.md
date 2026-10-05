@@ -2,7 +2,7 @@
 
 *A Practical Guide to Build Patterns for FLUID v0.3.0*
 
-> ℹ️ **This guide reflects the v0.3.0 build-pattern model.** The pattern *names* and the `build` block have evolved since: the current schema (latest `0.7.4`) uses `build.pattern` values such as `embedded-logic`, `hybrid-reference`, and `acquisition`, with the transformation engine and properties as direct children of `build`. Read this as a conceptual tour of the available *styles* of build; for current, schema-valid syntax see [**Examples**](/fluid/examples/).
+> ℹ️ **This guide reflects the v0.3.0 build-pattern model.** The pattern *names* and the `build` block have evolved since: the current schema (latest stable `0.7.5`) uses `build.pattern` values such as `embedded-logic`, `hybrid-reference`, and `acquisition`, with the transformation engine and properties as direct children of `build`. Its YAML does not validate even against the 0.3.0 schema (for example, its ids carry a `:1.0.0` suffix that the 0.3.0 id pattern rejects). Read this as a conceptual tour of the available *styles* of build; for current, schema-valid syntax see [**Examples**](/fluid/examples/).
 
 ---
 
@@ -32,6 +32,7 @@ This guide explores **four canonical Build Patterns**, complete with real-world 
 
 ### Example: High-Value Customers in BigQuery
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "0.3.0"
 kind: DataProduct
@@ -127,6 +128,7 @@ build:
 
 ### Example: Quarterly Financial Report with dbt + Snowflake
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "0.3.0"
 kind: DataProduct
@@ -207,6 +209,7 @@ build:
 
 ### Example: Spark Structured Streaming (5G Latency Alerts)
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "0.3.0"
 kind: DataProduct
@@ -288,6 +291,7 @@ build:
 
 ### Example: Data Vault 2.0 Model with Iceberg
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "0.3.0"
 kind: DataProduct

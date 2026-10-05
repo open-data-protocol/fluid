@@ -35,7 +35,7 @@ A FLUID contract describes a data product end to end: its schema, build logic, d
 
 This structure separates **interface** (what you get) from **implementation** (how it's built), enabling reliable data ecosystems ready for both humans and AI agents.
 
-> The latest schema version is **0.7.4**, which adds runtime `agentPolicy` enforcement at the MCP gateway. Like the 0.7.1 → 0.7.3 line, **0.7.4 is additive and fully backward-compatible** — every valid 0.7.3 contract still validates. See the release notes for details.
+> The latest stable schema version is **0.7.5**; **0.7.6** is a preview that a contract uses only by declaring it. Every stable release after 0.7.2 has been additive over its predecessor; the one recorded narrowing is the step into 0.7.2 (0.7.1 → 0.7.2). See [What's New](/fluid/releases/) and [Versions](/fluid/schema/versions).
 
 ---
 

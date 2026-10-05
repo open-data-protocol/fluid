@@ -1,5 +1,7 @@
 # Source-Aligned Ingestion from On-Prem Oracle to Cloud
 
+> ℹ️ **Legacy manifest shape.** This guide predates the current schema: its YAML uses an earlier manifest shape (`fluidVersion: "1.0"`, `metadata.dataProduct`, `exposes[].location`) and does **not** validate against any published FLUID schema. For the current source-aligned ingestion model (latest stable `0.7.5`), see the `build.pattern: acquisition` example in [**Examples → Source-aligned acquisition**](/fluid/examples/#_10-source-aligned-acquisition).
+
 This example showcases a core FLUID ecosystem pattern: **Source-Aligned Data Product**. The objective is to create a reliable, governable, and secure mirror of a source system in the cloud's bronze layer—without altering the data's meaning.
 
 ---
@@ -16,6 +18,7 @@ This example showcases a core FLUID ecosystem pattern: **Source-Aligned Data Pro
 
 A single `customer.bronze.raw_oracle_customers.fluid.yml` file drives the entire process—no extra configuration or code required.
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "1.0"
 kind: DataProduct
@@ -34,70 +37,70 @@ metadata:
 # 2. CONSUMES: Source system definition.
 consumes:
     - type: oracle-db
-        connection: secret:onprem-oracle-erp-readonly-creds
-        properties:
-            query: |
-                SELECT
-                    CUST_ID,
-                    F_NAME,
-                    L_NAME,
-                    CUST_EMAIL_ADDR,
-                    PHONE_INTL,
-                    COUNTRY_CODE,
-                    CREATED_TS,
-                    LAST_UPDATED_TS
-                FROM ERP.CUSTOMERS
-                WHERE LAST_UPDATED_TS > '{{ watermark.last_updated_ts }}'
+      connection: secret:onprem-oracle-erp-readonly-creds
+      properties:
+          query: |
+              SELECT
+                  CUST_ID,
+                  F_NAME,
+                  L_NAME,
+                  CUST_EMAIL_ADDR,
+                  PHONE_INTL,
+                  COUNTRY_CODE,
+                  CREATED_TS,
+                  LAST_UPDATED_TS
+              FROM ERP.CUSTOMERS
+              WHERE LAST_UPDATED_TS > '{{ watermark.last_updated_ts }}'
 
 # 3. EXPOSES: Output interface.
 exposes:
     - location:
-            type: gcs
-            connection: secret:gcp-prod-sa-key
-            format: { type: 'parquet' }
-            properties:
-                bucket: 'prod-customer-landing-zone'
-                path: 'raw_oracle_customers/'
-                partitionBy: ['load_date']
+          type: gcs
+          connection: secret:gcp-prod-sa-key
+          format: { type: 'parquet' }
+          properties:
+              bucket: 'prod-customer-landing-zone'
+              path: 'raw_oracle_customers/'
+              partitionBy: ['load_date']
 
-        # 4. CONTRACT: Governance and enforcement.
-        contract:
-            schema:
-                columns:
-                    - { name: 'customer_id', type: 'INT64', nullable: false }
-                    - { name: 'first_name_pii', type: 'STRING' }
-                    - { name: 'last_name_pii', type: 'STRING' }
-                    - { name: 'email_hash', type: 'STRING' }
-                    - { name: 'phone_token', type: 'STRING' }
-                    - { name: 'country_code', type: 'STRING' }
-                    - { name: 'created_ts', type: 'TIMESTAMP' }
-                    - { name: 'last_updated_ts', type: 'TIMESTAMP' }
-                    - { name: 'load_date', type: 'DATE' }
+      # 4. CONTRACT: Governance and enforcement.
+      contract:
+          schema:
+              columns:
+                  - { name: 'customer_id', type: 'INT64', nullable: false }
+                  - { name: 'first_name_pii', type: 'STRING' }
+                  - { name: 'last_name_pii', type: 'STRING' }
+                  - { name: 'email_hash', type: 'STRING' }
+                  - { name: 'phone_token', type: 'STRING' }
+                  - { name: 'country_code', type: 'STRING' }
+                  - { name: 'created_ts', type: 'TIMESTAMP' }
+                  - { name: 'last_updated_ts', type: 'TIMESTAMP' }
+                  - { name: 'load_date', type: 'DATE' }
 
-            quality:
-                - rule: not_null
-                    columns: [customer_id]
-                    onFailure: { action: 'reject_row' }
-                - rule: regex_match
-                    columns: [CUST_EMAIL_ADDR]
-                    pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-                    onFailure: { action: 'quarantine_row', location: 'gs://prod-customer-quarantine/invalid_emails/' }
+          quality:
+              - rule: not_null
+                columns: [customer_id]
+                onFailure: { action: 'reject_row' }
+              - rule: regex_match
+                columns: [CUST_EMAIL_ADDR]
+                pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                onFailure: { action: 'quarantine_row', location: 'gs://prod-customer-quarantine/invalid_emails/' }
 
-            privacy:
-                - classification: PII
-                    columns: [CUST_EMAIL_ADDR]
-                    treatment:
-                        type: hashing
-                        properties: { algorithm: 'SHA256' }
-                        newColumn: 'email_hash'
-                - classification: SPI
-                    columns: [PHONE_INTL]
-                    treatment:
-                        type: tokenization
-                        properties:
-                            vault: 'gcp-dlp-service'
-                            keyId: 'customer-phone-key'
-                        newColumn: 'phone_token'
+          privacy:
+              - classification: PII
+                columns: [CUST_EMAIL_ADDR]
+                treatment:
+                    type: hashing
+                    properties: { algorithm: 'SHA256' }
+                    newColumn: 'email_hash'
+              - classification: SPI
+                columns: [PHONE_INTL]
+                treatment:
+                    type: tokenization
+                    properties:
+                        vault: 'gcp-dlp-service'
+                        keyId: 'customer-phone-key'
+                    newColumn: 'phone_token'
 
 # 5. BUILD: Implementation logic.
 build:
@@ -147,5 +150,3 @@ build:
 > - **Governed:** Data contracts and privacy rules are enforced in-flight.
 > - **Cloud-Native:** Runs on ephemeral, scalable GCP DataProc clusters.
 > - **Extensible:** Easily adapted for other sources, targets, or domains.
-
-> ℹ️ This guide predates the current schema and uses the legacy `fluidVersion: "1.0"` manifest shape (`metadata.dataProduct`, `exposes[].location`, `contract.quality`). For the current source-aligned ingestion model, see the `build.pattern: acquisition` example in [**Examples → Source-aligned acquisition**](/fluid/examples/#_10-source-aligned-acquisition) (the latest schema is `0.7.4`).

@@ -1,88 +1,29 @@
-# Fluid Protocol Specification
+# FLUID Specification
 
-::: tip Latest schema version
-The latest published JSON Schema is **0.7.5**. This page is the narrative protocol specification; for the version-specific, field-by-field reference see the [**Cheatsheet**](/fluid/schema/cheatsheet), the [**Anatomy**](/fluid/schema/anatomy), and the [**Versions**](/fluid/schema/versions) index (raw JSON Schema + generated HTML per version).
+::: tip Versions
+**Latest stable: 0.7.5. Preview: 0.7.6.** This page specifies the structure of a FLUID document as defined by the **0.7.5** JSON Schema. For every version's schema and generated field-by-field reference, see [**Versions**](/fluid/schema/versions); for what is new in the preview, see [0.7.6 (preview)](/fluid/releases/0.7.6).
 :::
 
-This document provides the complete, official specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
+FLUID (Federated Layered Unified Interchange Definition) is an open, declarative specification for **data products**, written in YAML or JSON and kept in version control. It is not a platform or a single tool: it is a shared language that tools read to build, deploy, govern and serve a data product.
 
-### The Strategic Imperative: A Protocol for the Agentic Era
-The contemporary enterprise is shifting from process automation to an Agentic Ecosystem, where autonomous AI agents drive operations with unprecedented speed and intelligence. This paradigm shift, enabled by communication standards like the Model Context Protocol (MCP), exposes a foundational vulnerability in modern data architecture: the lack of a common language for defining, governing, and interacting with data assets.
+A FLUID document describes one data product: what it **consumes** (its inputs), what it **exposes** (its output ports, each with a contract and a binding to where the data lives), how it is **built**, and the policies around it — access, sovereignty, AI-agent use, retention. This page is for anyone implementing a FLUID-aware tool or checking that one conforms.
 
-Today's data landscape is a fragmented collection of imperative pipelines, siloed tool configurations, and implicit knowledge. This static, brittle foundation cannot support the dynamic, real-time demands of an agentic workforce. Agents require a data fabric that is not only accessible but also discoverable, trustworthy, and context-aware.
-
-FLUID is the standard designed to create this fabric. It addresses this challenge by providing a declarative, universal protocol for defining Data Products. It is the missing piece of the puzzle, serving as the foundational layer that makes an organization truly MCP-ready. While MCP standardizes how agents communicate, FLUID standardizes the trustworthy Data Products they communicate with.
-
-### What is FLUID?
-FLUID is an open, declarative specification, written in YAML and managed in version control. It is not a platform or a single tool, but a shared language that enables a decentralized ecosystem of compliant tools to work in concert.
-
-It re-frames the data lifecycle around the concept of a Data Product: a versioned, autonomous asset with a clearly defined interface, contract, and implementation. By unifying the definition of what a data product consumes (its dependencies), what it exposes (its public interface), and how it is built (its implementation logic), FLUID provides a holistic, auditable, and machine-readable blueprint for every data asset in the enterprise.
-
-This document details the full specification for this protocol, providing the technical foundation required to build the governable, scalable, and agent-ready data ecosystems of the future.
-
-> 📖 *FLUID Data Products* is [available on Amazon](https://amzn.eu/d/ikMlWNV).
-
-🌊 FLUID: Federated Layered Unified Interchange Definition
+**What defines conformance.** The published JSON Schemas define which documents are valid FLUID documents, and the [conformance corpus](https://github.com/open-data-protocol/fluid/blob/main/tests/README.md) pins that behaviour case by case, so that "FLUID-conformant" can be checked without any particular implementation ([GOVERNANCE.md](https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md)). [`data-product-forge`](/fluid/concepts/forge-cli) is the reference implementation: implementation #1 under test, not the referee. Where this page and a schema disagree, the schema is authoritative and this page is wrong.
 
 ---
 
-## 🧭 Core Principles
+## Core principles
 
-- **Data as a Product**
-    Data is a first-class asset with a clear owner, a versioned interface, and a machine-readable contract.
-
-- **Declarative, Not Imperative**
-    Contracts define the desired end state of a data product. The FLUID-aware framework is responsible for the implementation.
-
-- **Contracts as Code**
-    Governance (schema, quality, build, privacy) is embedded directly into version-controlled files, enabling automated, proactive enforcement.
-
-- **Federated Ownership**
-    Data products are owned and managed by the domain teams who know the data best, enabling a true, scalable Data Mesh.
+- **Data as a product** — data is a first-class asset with an owner, a versioned interface and a machine-readable contract.
+- **Declarative, not imperative** — a document states the desired end state; FLUID-aware tools decide how to reach it.
+- **Contracts as code** — schema, quality, build and policy live in version-controlled files, so they can be checked automatically.
+- **Federated ownership** — data products are owned by the domain teams that know the data.
 
 ---
 
-## 🏗️ Contract Structure: Monolithic vs. Modular
+## Documents and files
 
-The FLUID specification is designed for flexibility.
-A data product contract can be defined in a single, **monolithic file** or composed from multiple, specialized files.
-
-### Monolithic Structure (For Simplicity)
-
-For simple data products owned by a single team, all definitions can be contained within a single root `fluid.yml` file.
-
-```
-/dp-simple-product/
-└── 📄 fluid.yml   # All definitions are inline.
-```
-
----
-
-### Modular Structure (For Complexity & Federation)
-
-For complex, enterprise-grade products with multiple stakeholders, the contract can be broken into logical, linked files.
-This is the recommended best practice.
-
-The root `fluid.yml` acts as a "table of contents," referencing detailed configuration files stored in a dedicated `.fluid/` directory using the `$ref` keyword.
-
-```
-/dp-complex-product/
-│
-├── 📄 fluid.yml     # The main entrypoint, contains high-level identity.
-│
-└── 📁 .fluid/        # A dedicated folder for all contract details.
-        ├── 📄 consumes.yml
-        ├── 📄 build.yml
-        ├── 📄 exposes.yml
-        ├── 📄 schema.yml
-        └── 📄 quality.yml
-```
-
-## Preamble
-
-This document provides the complete, official specification for the FLUID (Federated Layered Unified Interchange Definition) protocol. It is intended for data architects, platform engineers, and developers who are building the next generation of data infrastructure, as well as for vendors seeking to make their tools compliant with this open standard.
-
----
+A FLUID document is a single YAML or JSON object. **The file name is not normative.** Pages on this site name files `*.fluid.yml`; the reference implementation scaffolds and looks for `contract.fluid.yaml`. Either is fine.
 
 ## Validation semantics
 
@@ -98,7 +39,7 @@ This is the Draft 2020-12 default, and FLUID keeps it for two reasons of its own
 
 The first is that conformance must not depend on which validator you run. `format` vocabularies are optional in Draft 2020-12 and implementations differ widely in which formats they recognise and what they pull in to check them. Were FLUID to make `format` assertive, the same document could be conformant in one language and non-conformant in another, which would defeat the purpose of publishing a conformance corpus at all.
 
-The second is that the choice is not symmetric. Declaring `format` assertive would invalidate documents that are valid today — a narrowing, which [GOVERNANCE.md](https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md) forbids between versions and `scripts/check-compat.py` enforces on every pull request. Annotation-only is therefore the only reading available to a pre-1.0 specification that has already published twelve schema versions. A future version may add assertive checking behind a new, opt-in keyword; it may not retroactively sharpen this one.
+The second is that the choice is not symmetric. Declaring `format` assertive would invalidate documents that are valid today — a narrowing, which [GOVERNANCE.md](https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md) forbids between versions and `scripts/check-compat.py` enforces on every pull request. Annotation-only is therefore the only reading available to a pre-1.0 specification that has already published many schema versions. A future version may add assertive checking behind a new, opt-in keyword; it may not retroactively sharpen this one.
 
 Implementations that do want to assert formats are served by the conformance corpus rather than left to guess: the cases that depend on assertion live in [`tests/optional/`](https://github.com/open-data-protocol/fluid/tree/main/tests/optional), separated from the core tier for exactly this reason, and `conformance/run.py` runs them under a format-asserting validator.
 
@@ -108,225 +49,188 @@ FLUID defines a **field** named `format` in several places — `exposes[].bindin
 
 The collision of names is unfortunate and is called out here because it is easy to read "`format` is an annotation" as applying to them. It does not. The sentence above is about the JSON Schema *keyword*; this paragraph is about a FLUID *field* that happens to share its spelling.
 
----
+### The declared `fluidVersion` selects the schema
 
-## 1. Specification Root
+Because the schema is chosen by the document's own `fluidVersion`, a later schema accepting an earlier `fluidVersion` value is not a verdict on documents that declare that earlier version. The 0.7.5 schema's `fluidVersion` enum lists `"0.7.3"`, `"0.7.4"` and `"0.7.5"`; a document declaring `"0.7.4"` is still validated against the 0.7.4 schema, so it cannot use a field that only 0.7.5 defines. See [Choosing `fluidVersion`](/fluid/schema/versions#choosing-fluidversion).
 
-The FLUID definition is a YAML or JSON file (`.fluid.yml` OR `.fluid.json`) with the following root-level objects.
+### Known interoperability issue: one `pattern` is not an ECMA-262 regular expression
 
-| Key            | Type           | Required | Description                                                                 |
-|----------------|----------------|----------|-----------------------------------------------------------------------------|
-| fluidVersion   | String         | Yes      | The version of the FLUID specification this file adheres to (e.g., 0.7.4).   |
-| kind           | String         | Yes      | The type of data product definition. See section 1.1.                       |
-| id             | String         | Yes      | A globally unique, versioned id for the data product (customer360_v1).      |
-| name           | String         | Yes      | A human-readable name for the data product (e.g., "Customer 360").          |
-| description    | String         | Yes      | A brief description of the product's purpose.                               |
-| domain         | String         | Yes      | The business domain that owns this product (e.g., "Marketing").             |
-| metadata       | Object         | Yes      | Identification, ownership, and classification information. See section 1.2. |
-| consumes       | Object / List  | Yes      | Defines the input data sources needed to build the product. See section 1.4.|
-| build          | Object         | Yes      | Contains the implementation logic for how the product is built. See 1.5.    |
-| exposes        | Object / List  | Yes      | Defines the public output interface(s) of the product. See section 1.3.     |
-| accessPolicy   | Object         | No       | Defines the static access control policies for the data product. See 1.6.   |
-| dynamicPolicies| Object         | No       | Defines context-aware access policies that adapt at runtime. See 1.7.       |
-| operations     | Object         | No       | Defines SLAs, lifecycle, and observability characteristics. See 1.8.        |
-| extensions     | Object         | No       | Registers required external plugins. See section 1.9.                       |
+Draft 2020-12 says a `pattern` SHOULD be a valid ECMA-262 regular expression. In the 0.7.2 to 0.7.6 schemas, the second alternative of the column `type` (`$defs/column/properties/type`) begins with the inline flag `(?i)`, which ECMA-262 does not have: JavaScript's `RegExp` rejects it as an invalid group. Python's `re`, which the conformance tooling in this repository uses, accepts it and matches case-insensitively. A validator that compiles patterns as ECMA-262 may therefore refuse that pattern, or the schema, where a Python-based validator does not. This is recorded here rather than resolved: changing the pattern would be a schema change, and schemas are changed upstream (see [CONTRIBUTING.md](https://github.com/open-data-protocol/fluid/blob/main/CONTRIBUTING.md)).
 
 ---
 
-### 1.1 kind Enumeration
 
-The `kind` key specifies the nature of the data product.
+## Composing a document from several files
 
-- **DataProduct**: A standard, materialized data asset.
-- **VirtualDataProduct**: A product that exists only as a logical view or query, without its own physical storage.
-- **EgressFlow**: A product specifically designed to export data securely to an external system.
+FLUID defines **one document**. The standard does not define how a document may be assembled from several files; any such mechanism is **implementation-defined**, and nothing in this section is normative.
 
----
+What follows from the rest of this specification:
 
-### 1.2 metadata Block
+1. **A composed root is not a FLUID document.** The published schemas have no `$ref` property in a document, and the root object and most nested objects are closed (`additionalProperties: false`), so a file that stands in `{ $ref: ... }` for a block fails validation. Splitting a valid contract into fragments with the reference implementation's `fluid split` and validating the root file directly against the 0.7.5 schema gives errors such as `Additional properties are not allowed ('$ref' was unexpected)`.
+2. **Validate the resolved document.** Conformance is a property of the single document a composition mechanism produces. Resolve first, then validate that result against the schema of its `fluidVersion`.
 
-| Key               | Type           | Required | Description                                                                 |
-|-------------------|----------------|----------|-----------------------------------------------------------------------------|
-| owner             | Object         | Yes      | Ownership details (e.g., { team: 'finance', email: 'finance@company.com' }).|
-| layer             | String         | No       | The architectural layer (e.g., "Gold", "Silver", "Bronze")                  |
-| status            | String         | No       | The lifecycle status (e.g., "Published", "Development", "Deprecated").      |
-| sensitivity_level | String         | No       | The overall data classification (e.g., "Confidential", "Public").           |
-| cost_center       | String         | No       | An identifier for automated FinOps cost attribution.                        |
-| tags              | Map[String]    | No       | Key-value pairs for categorization (e.g., layer: gold, domain: finance).    |
-| classification    | String         | Yes      | Default privacy level: public, internal, confidential, restricted.          |
-| purpose           | Object         | No       | Detailed, machine-readable description of the business purpose.             |
-| version           | String         | No       | (Recommended) Semantic version of this data product definition (e.g., 1.0.0)|
+### How the reference implementation composes contracts (non-normative)
 
-#### 1.2.1 purpose Block
+`data-product-forge` resolves `$ref` nodes before it validates, plans or applies a contract, so the rest of its pipeline sees one document. As of data-product-forge 0.18:
 
-| Key                | Type           | Required | Description                                                                 |
-|--------------------|----------------|----------|-----------------------------------------------------------------------------|
-| business_purpose   | String         | Yes      | A clear statement of why this data product exists.                          |
-| use_cases          | List           | No       | A list of specific business use cases it supports.                          |
-| target_group       | List           | No       | The intended audience for this product.                                     |
-| limitations        | String         | No       | Any known limitations or constraints of the data.                           |
+- A `$ref` node is an object whose only key is `$ref`; its value is a path to a YAML or JSON file, resolved relative to the file that contains it, optionally followed by `#` and an [RFC 6901](https://www.rfc-editor.org/rfc/rfc6901) JSON Pointer. A referenced YAML file must hold an object, not a list. Same-document refs (`#/...`) are left as written; cycles and nesting deeper than 20 levels are errors.
+- **Refs are confined to the root contract's directory tree.** A ref that resolves outside it — through `..` or a symlink — is refused, as are absolute paths and URLs (`https://`, `file://`, `s3://`, …). Setting `FLUID_REF_ROOT` (or passing `ref_root=` to the loader) widens the root to a directory that contains the contract, for monorepos that share fragments; a `FLUID_REF_ROOT` that does not contain the contract is ignored with a `ref_root_env_ignored` warning.
+- `fluid split` turns a single-file contract into a root plus a `fragments/` directory (`fragments/exposes/<exposeId>.yaml`, `fragments/builds/<id>.yaml`, `fragments/sovereignty.yaml`, `fragments/access-policy.yaml`); `fluid bundle` resolves a root back into one document.
+- Its `.fluid/` directories hold the tool's own runtime state (receipts, run records, staging data), which its generated `.gitignore` partly excludes from version control. They are not a place for contract fragments.
+
+Details: [Composing a contract from fragments](https://agenticstiger.github.io/forge_docs/concepts/contract-refs.html), [`fluid split`](https://agenticstiger.github.io/forge_docs/cli/split.html) and [`fluid bundle`](https://agenticstiger.github.io/forge_docs/cli/bundle.html) in the reference implementation's documentation.
 
 ---
 
-### 1.3 exposes Block (The Output Port)
+## 1. Document structure (0.7.5)
 
-Defines the public interface of the data product. This is what consumers interact with.
+The tables summarise the 0.7.5 schema. They name every top-level member and the main nested blocks; the [generated reference](/fluid/specs/0.7.5/fluid-spec.html) has every field. **Closed** means `additionalProperties: false`: a member the table does not list makes the document invalid.
 
-| Key      | Type   | Required | Description                                                        |
-|----------|--------|----------|--------------------------------------------------------------------|
-| name     | String | If list  | A unique name for this output port within the product.              |
-| location | Object | Yes      | The physical or virtual location where the data product is materialized. See 1.3.1. |
-| contract | Object | Yes      | The schema, quality, and privacy promises for this output. See 1.3.2. |
+### 1.1 Root
 
-#### 1.3.1 location Object
+The root object is **closed**.
 
-| Key        | Type   | Required      | Description                                                        |
-|------------|--------|--------------|--------------------------------------------------------------------|
-| type       | String | Yes           | bigquery, s3, snowflake, gcs, iceberg, api, kafka, or virtual.     |
-| connection | String | Yes           | Reference to a secret in a vault (e.g., secret:gcp-prod-dwh-key).  |
-| format     | Object | If not virtual| Describes the data format (e.g., { type: 'parquet' }).             |
-| properties | Object | Yes           | Technology-specific properties (e.g., project, dataset, table).    |
+| Member | Type | Required | Meaning |
+|---|---|:-:|---|
+| `fluidVersion` | string, one of `"0.7.3"`, `"0.7.4"`, `"0.7.5"` | ✅ | The schema version the document declares. It selects the schema the document is validated against. |
+| `kind` | `DataProduct` \| `MLPipeline` | ✅ | The kind of product. |
+| `id` | identifier | ✅ | Globally unique product id, e.g. `finance.gold.customer_360`. |
+| `name` | string | ✅ | Display name. |
+| `metadata` | object (§1.2) | ✅ | Ownership and classification. |
+| `exposes` | array of expose (§1.3) | ✅ | The product's output ports. |
+| `description`, `domain` | string | | Business description and owning domain. |
+| `tags` | array of unique tags | | Each tag lower-case: `^[a-z0-9][a-z0-9-]*[a-z0-9]$` or a single character. |
+| `labels` | map of string → string | | Key/value labels. |
+| `consumes` | array of consume (§1.4) | | Upstream data products this product reads. |
+| `build` | build (§1.5) | | How the product is built. |
+| `builds` | array of build (§1.5) | | Several builds for one product. |
+| `orchestration` | object (§1.6) | | Scheduling and workflow-engine settings. |
+| `accessPolicy` | object (§1.7) | | Access grants for the product. |
+| `sovereignty` | object (§1.7) | | Jurisdiction and data-residency constraints. |
+| `governance` | object (§1.7) | | Account-wide AWS Lake Formation settings. |
+| `retention` | object | | ISO-8601 durations for operational records: `runState`, `runLogs`, `lineage`, `dlq`. |
+| `lifecycle` | object | | `state` (`preview` \| `active` \| `deprecated` \| `retired`), `retention`, `deprecationPolicy`. |
+| `lineage` | object | | `granularity` (`table_level` \| `field_level`), `upstream[]`, `downstream[]`. |
+| `schemaEvolution` | object | | `strategy` (`semantic_versioning` \| `date_based` \| `sequential`), `compatibility` (`backward_compatible` \| `forward_compatible` \| `full_compatible` \| `breaking`), `changePolicy`. |
+| `machineLearning` | object | | `enabled`, `framework`, `models[]`. |
+| `environments` | map of name → environment | | Per-environment overrides of `metadata` and `exposes`. |
+| `docs` | object | | `homepage`, `runbook`, `dictionary`, `changeLog`. |
+| `extensions` | object (open) | | Vendor- or plugin-namespaced configuration. |
 
-#### 1.3.2 contract Object
+An **identifier** matches `^[A-Za-z0-9_][A-Za-z0-9_.-]*[A-Za-z0-9_]$` (or is a single letter, digit or underscore). A **duration** is an ISO-8601 duration such as `P30D` or `PT15M`.
 
-| Key         | Type     | Required      | Description                                                        |
-|-------------|----------|--------------|--------------------------------------------------------------------|
-| inheritFrom | String   | No           | dbt, fluid-product, or openApi. Populates the contract from a source.|
-| model / spec| String   | If inheriting| The dbt model name or path to the OpenAPI spec file/URL.           |
-| schema      | Object   | Yes          | Defines the columns and data types. See 1.3.2.1.                   |
-| quality     | List     | No           | List of data quality rules to enforce. See 1.3.2.2.                |
-| privacy     | List     | No           | List of privacy classifications and treatments. See 1.3.2.3.        |
-| semantics   | Object   | No           | Adds machine-readable meaning to the data. See 1.3.2.4.            |
+### 1.2 `metadata`
 
-##### 1.3.2.1 schema.columns Array
+**Closed.** `owner` is required; no member of `owner` is.
 
-| Key     | Type    | Required | Description                                  |
-|---------|---------|----------|----------------------------------------------|
-| name    | String  | Yes      | Column name.                                 |
-| type    | String  | Yes      | Data type (STRING, INT64, NUMERIC, TIMESTAMP, JSON, BOOLEAN, DATE). |
-| nullable| Boolean | No       | true by default.                             |
+| Member | Type | Meaning |
+|---|---|---|
+| `owner` (required) | object, closed: `team`, `email`, `slack`, `oncall` | Who owns the product. `email` carries `format: email`, which is an annotation (see [Validation semantics](#validation-semantics)). |
+| `layer` | string | Free-form layer label; `Bronze` / `Silver` / `Gold` is a convention, not an enum. |
+| `productType` | `SDP` \| `ADP` \| `CDP` | Source-aligned, aggregated or consumption-aligned data product. |
+| `classification` | `public` \| `internal` \| `confidential` \| `restricted` | Default classification. Optional. |
+| `businessContext` | object: `domain`, `subdomain`, `businessCapability`, `valueStream` | Business context. |
+| `experimental` | array of unique strings | Experimental features the document opts into. |
+| `createdAt` | string, `format: date-time` | Creation time. |
+| `provenance` | object | Generation envelope written by tooling (tool, version, command, time). |
+| `tags` | array of tags | |
 
-##### 1.3.2.2 quality Array Item
+### 1.3 `exposes[]` — output ports
 
-| Key      | Type   | Required      | Description                                                        |
-|----------|--------|--------------|--------------------------------------------------------------------|
-| rule     | String | Yes          | not_null, unique, regex_match, in_set, or a custom SQL expression. |
-| columns  | List   | If applicable| Column(s) to apply the rule to.                                    |
-| pattern/set| String/List|If applicable| Parameters for regex_match or in_set.                         |
-| onFailure| Object | Yes          | action (reject_row, quarantine_row, fail_pipeline, alert) and optional notifications. |
+Each expose is **closed** and requires `exposeId`, `kind`, `contract` and `binding`.
 
-##### 1.3.2.3 privacy Array Item
+| Member | Type | Meaning |
+|---|---|---|
+| `exposeId` (required) | identifier | Id of the port, unique within the product. |
+| `kind` (required) | `table` \| `view` \| `api` \| `file` \| `stream` \| `topic` \| `feature_store` \| `model` \| `vector` \| `graph` \| `time_series` \| `other` | What the port is. |
+| `contract` (required) | object, closed | The data's shape and promises. Must contain `schema` or `openapiRef` (or both). |
+| `binding` (required) | object, closed | Where the data lives (§1.3.2). |
+| `policy` | object, closed | `authn`, `authz` (`readers`, `writers`, `columnRestrictions`), `privacy` (`masking[]`, `rowLevelPolicy`), `classification`, `agentPolicy`. |
+| `semantics` | object, closed | Business meaning: `entities`, `measures`, `dimensions`, `metrics`. |
+| `qos` | object, closed | `availability`, `freshnessSLO`, `dataLossSLO`, `latencyP95`, `completenessTarget`, `errorBudget`. |
+| `mcp` | object, closed | `sampling.maxRows`, `classification.dataClass` for serving the port to AI agents over MCP. |
+| `lifecycle`, `observability`, `docs` | object | Per-port lifecycle, observability and documentation. |
+| `title`, `description`, `version` | string (`version` is semver) | |
+| `crawler`, `iceberg` | object | AWS Glue crawler and Iceberg table-maintenance settings. |
+| `tags`, `labels` | | |
 
-| Key           | Type   | Required      | Description                                                        |
-|---------------|--------|--------------|--------------------------------------------------------------------|
-| classification| String | No           | PII, SPI, Confidential. Overrides metadata.classification.         |
-| columns       | List   | Yes          | Column(s) to apply the treatment to. Can be ['*'].                 |
-| treatment     | Object | Yes          | type (hashing, masking, encryption, tokenization) and properties.  |
+#### 1.3.1 `contract`
 
-##### 1.3.2.4 semantics Object
+| Member | Type | Meaning |
+|---|---|---|
+| `schema` | array of column | The columns. |
+| `openapiRef` | string | Reference to an OpenAPI document, for `kind: api`. |
+| `dq` | object: `rules[]`, `monitoring` | Data-quality rules. Each rule is closed and requires `id`, `type` (`freshness` \| `completeness` \| `uniqueness` \| `valid_values` \| `accuracy` \| `schema` \| `anomaly_detection` \| `drift_detection`) and `severity` (`info` \| `warn` \| `error` \| `critical`). |
+| `schemaPolicy` | `strict` \| `discover_and_freeze` \| `evolve_safe` \| `evolve_all` | How the output schema may change. |
+| `schemaSignature` | `sha256:` + 64 hex | A digest of the schema. |
+| `guarantees`, `quality` | object, array | Compatibility promises and additional quality checks. |
 
-| Key           | Type   | Description                                                        |
-|---------------|--------|--------------------------------------------------------------------|
-| ontology      | String | Reference to an external ontology (e.g., URL to an OWL or RDF file).|
-| classifications| List  | Maps columns to terms in a business glossary or formal ontology.   |
+A **column** is closed and requires `name` and `type`. `type` is a type name such as `string`, `int64`, `numeric`, `timestamp` or `json` from a fixed list, matched case-insensitively and optionally with parameters (`VARCHAR(255)`, `DECIMAL(10,2)`). Other members: `required` (boolean), `description`, `sensitivity` (`none` \| `internal` \| `confidential` \| `restricted` \| `pii` \| `phi` \| `cleartext` \| `treated` \| `anonymized` \| `pseudonymized` \| `tokenized` \| `encrypted`), `semanticType`, `businessName`, `businessDefinition`, `validationRules`, `tags`, `labels`.
 
----
+#### 1.3.2 `binding`
 
-### 1.4 consumes Block (The Input Port)
+Closed; requires `platform`, `format` and `location`.
 
-| Key             | Type   | Required      | Description                                                        |
-|-----------------|--------|--------------|--------------------------------------------------------------------|
-| type            | String | Yes          | gcs, kafka, s3, api, postgres-cdc, sftp, or fluid-product.         |
-| name            | String | If type: fluid-product | The dataProduct name of the upstream FLUID definition.      |
-| alias           | String | If list      | A local alias to refer to this source in the build block.          |
-| onUpstreamChange| String | No           | Action on upstream contract change: fail, alert, triggerRebuild.   |
-| connection      | String | If physical type | Reference to a secret in a vault.                             |
-| format          | Object | If physical type | Describes the data format (e.g., { type: 'json' }).           |
-| properties      | Object | If physical type | Technology-specific properties (e.g., Kafka topic, API endpoint). |
+| Member | Type | Meaning |
+|---|---|---|
+| `platform` (required) | `gcp` \| `aws` \| `azure` \| `snowflake` \| `databricks` \| `kafka` \| `confluent` \| `local` \| `kubernetes` \| `postgres` \| `pgvector` \| `other` | The platform. |
+| `format` (required) | `bigquery_table`, `snowflake_table`, `snowflake_view`, `gcs_file`, `s3_file`, `http_api`, `grpc_api`, `pubsub_topic`, `kafka_topic`, `delta_table`, `iceberg`, `parquet`, `csv`, `json`, `redshift_table`, `redshift_serverless`, `redshift_external_schema`, `postgres_table`, `athena_table`, `glue_table`, `pgvector_table`, `other` | The physical format. |
+| `location` (required) | object, closed | Platform-specific address. Members: `account`, `project`, `dataset`, `database`, `schema`, `table`, `bucket`, `path`, `gateway`, `baseUrl`, `topic`, `subscription`, `region`, `zone`, `environment_id`, `kafka_cluster_id`, `confluent_role_arn`, `stream`, `namespace`, `workgroup`, `iam_role_arn`, `external_schema`, `glue_database`, `catalog`, `warehouse`, `uri`, `partitionBy`. None is required by the schema. |
+| `icebergConfig` | object | Iceberg table settings (write version, file format, partition spec, sort order). |
+| `vectorConfig` | object, closed; `dimensions` required | Vector / embeddings output-port settings. |
+| `governance` | object: `lakeFormation` | Per-resource AWS Lake Formation settings: `registerLocation`, `grants[]`, `tags`, `rowFilter`. |
+| `properties` | object (open) | Platform-specific extra properties. |
+| `tags`, `labels` | | |
 
----
+### 1.4 `consumes[]` — input ports
 
-### 1.5 build Block (The Implementation)
+Each entry is **closed** and requires `productId` and `exposeId`: the upstream product and the port it reads. Optional: `versionConstraint` (a semver range such as `^2.0.0`), `qosExpectations` (`freshnessMax`, `maxStaleness`, `minCompleteness`), `requiredPolicies[]`, `purpose`, `tags`, `labels`.
 
-| Key             | Type   | Required      | Description                                                                    |
-|-----------------|--------|--------------|---------------------------------------------------------------------------------|
-| engine          | String | Yes          | The engine to use: sql, python, dbt, dbt-cloud, spark-sql.                      |
-| script          | String | Yes          | The specific asset to execute (e.g., a script path or dbt model selector).      |
-| trigger         | Object | Yes      | Defines how the build is initiated (schedule, event, manual).      |
-| runtime         | Object | Yes      | The underlying compute platform where the build will run (airflow, gcp-cloud-run). |
-| dependencies    | Object | No       | Defines the execution dependencies on other data products.         |
-| retries         | Object | No       | Configuration for handling transient failures: count, delay.       |
-| notifications   | Object | No       | Defines how to send alerts (channel, target) on onSuccess or onFailure. |
+### 1.5 `build` and `builds[]`
 
----
+A build is **closed**; no member is required.
 
-### 1.6 accessPolicy (Static Access)
+| Member | Type | Meaning |
+|---|---|---|
+| `id` | identifier | Build id (useful when there are several). |
+| `pattern` | `hybrid-reference` \| `embedded-logic` \| `multi-stage` \| `acquisition` | Selects the shape of `properties`. |
+| `engine` | `dbt`, `sql`, `python`, `spark`, `glue`, `custom`, `duckdb`, `airbyte`, `meltano`, `dlt`, `kafka-connect`, `debezium`, or `dbt-<adapter>` | The engine. |
+| `properties` | object | The pattern's settings (below). |
+| `execution` | object, closed | `trigger`, `runtime`, `retries`, `notifications[]`, `orchestration`. |
+| `capabilities` | array | What the build asks of its runner, e.g. `incremental_dedup`, `cdc`, `streaming`, `exactly_once`. |
+| `repository`, `description` | string | |
+| `outputs` | array of identifier | The `exposeId`s the build produces. |
+| `dependencies`, `transformations` | array | |
 
-| Key        | Type   | Required | Description                                                        |
-|------------|--------|----------|--------------------------------------------------------------------|
-| visibility | String | No       | Default discoverability: private, internal.                        |
-| grants     | List   | Yes      | A list of static, explicit access grants.                          |
+`properties` is validated according to `pattern`:
 
-#### 1.6.1 grants Array Item
+| `pattern` | `properties` shape | Required |
+|---|---|---|
+| `hybrid-reference` | `model`, `target`, `select`, `models`, `vars`, `materializations` — a reference to a model kept elsewhere, such as a dbt project | `model` |
+| `embedded-logic` | `sql`, `language` (`sql` \| `flink_sql` \| `pyspark` \| `scala` \| `python` \| `r`), `parameters` | `sql` |
+| `multi-stage` | `stages[]`, `orchestration` | — |
+| `acquisition` | `source` (`kind`, `mode` required), `sink`, `delivery`, `schemaEvolution`, `preLand`, `quality`, `cost`, `catalog`, `concurrency`, `lineage`, and one settings key per engine: `duckdb`, `airbyte`, `meltano`, `dlt`, `kafka-connect`, `debezium` | `source` |
 
-| Key        | Type   | Required | Description                                                        |
-|------------|--------|----------|--------------------------------------------------------------------|
-| principal  | String | Yes      | The actor receiving the grant. Format: `user:<email>`, `group:<name>`, `agent:<id>`. |
-| permissions| List   | Yes      | Rights granted: readData, readMetadata, manage.                    |
-| scope      | Object | No       | Fine-grained access. See 1.6.2.                                    |
+### 1.6 `orchestration`
 
-#### 1.6.2 scope Object
+Requires `engine` (`airflow` \| `dagster` \| `prefect` \| `kubeflow` \| `custom` \| `none`). Defined members: `mode` (`generated` \| `manual` \| `hybrid`), `generateOnChange`, and per-engine settings `airflow` (which requires `dagId`, and holds `tasks[]`), `dagster`, `prefect`.
 
-| Key         | Type   | Required | Description                                                        |
-|-------------|--------|----------|--------------------------------------------------------------------|
-| columns     | List   | No       | Allow-list of columns the principal can view.                      |
-| rowFilter   | String | No       | SQL WHERE clause for secure view.                                  |
-| privacyView | String | No       | treated (default, views post-privacy data), cleartext (views pre-privacy data). |
+The object is **open**: it does not set `additionalProperties`, so members it does not define — such as an `orchestration.tasks` list — are accepted **without being checked**. The only task shape the schema checks is `orchestration.airflow.tasks[]` (and the same under `build.execution.orchestration`). See the [Cheatsheet](/fluid/schema/cheatsheet#orchestration-fields).
 
----
+### 1.7 Access and governance
 
-### 1.7 dynamicPolicies (Adaptive Access)
-
-| Key   | Type | Required | Description                                                        |
-|-------|------|----------|--------------------------------------------------------------------|
-| rules | List | Yes      | A list of contextual access rules, evaluated in order.              |
-
-#### 1.7.1 rules Array Item
-
-| Key       | Type   | Required | Description                                                        |
-|-----------|--------|----------|--------------------------------------------------------------------|
-| name      | String | Yes      | A descriptive name for the policy rule.                            |
-| condition | String | Yes      | An expression evaluated against the agent's context. Supports interpolation. |
-| grant     | Object | Yes      | The permissions and scope to grant if the condition is met.        |
-
----
-
-### 1.8 operations Block
-
-| Key         | Type   | Required | Description                                                        |
-|-------------|--------|----------|--------------------------------------------------------------------|
-| sla         | Object | No       | Defines the Service Level Agreements for this product. See 1.8.1.  |
-| lifecycle   | Object | No       | Manages data retention and archival policies. See 1.8.2.           |
-| observability| Object| No       | Configures logging, alerting, and monitoring. See 1.8.3.           |
-
-#### 1.8.1 sla Object
-
-Defines cost, latency, freshness, accuracy, sustainability, and feedbackSignals.
-
-#### 1.8.2 lifecycle Object
-
-Defines retention (period, condition) and archival (trigger, destination).
-
-#### 1.8.3 observability Object
-
-Defines logging (level, destination) and alerting (onFailure notifications).
+| Block | Shape |
+|---|---|
+| `accessPolicy` | Closed; `grants[]`, each closed with `principal` (required), `permissions` (`read`, `select`, `query`, `write`, `insert`, `update`, `delete`, `create`, `admin`, `manage`), `resources` (array of strings, e.g. JSONPath selecting exposes) and `conditions` (open object). |
+| `sovereignty` | Closed: `jurisdiction`, `allowedRegions`, `deniedRegions`, `dataResidency` (boolean), `crossBorderTransfer` (boolean), `transferMechanisms`, `regulatoryFramework`, `enforcementMode` (`strict` \| `advisory` \| `audit`), `validationRequired`. |
+| `exposes[].policy.agentPolicy` | Closed: `allowedModels`, `deniedModels`, `maxTokensPerRequest`, `maxTokensPerDay`, `allowedUseCases` / `deniedUseCases` (from `inference`, `reasoning`, `analysis`, `summarization`, `classification`, `embedding`, `search`, `qa`, `code_generation`, `fine_tuning`, `training`, `rag`), `canReason`, `canStore`, `retentionPolicy`, `auditRequired`, `purposeLimitation`. It exists only per expose, not at the root. |
+| `governance.lakeFormation` | Closed: `admins` (IAM ARNs) and `tagDefinitions` (tag key → allowed values). `admins` is **authoritative**: applying it replaces the account's Lake Formation admin list. The schema's description adds that applying it also clears the account's create-database and create-table default permissions, trusted resource owners and parameters, and that destroying the emitted `aws_lakeformation_data_lake_settings` resource empties the admin list and resets `CROSS_ACCOUNT_VERSION` to 1. |
 
 ---
 
-### 1.9 extensions Block
+## Further reading
 
-| Key                  | Type | Description                                                        |
-|----------------------|------|--------------------------------------------------------------------|
-| customTransformations| List | A list of custom transformation engines the build requires.         |
-| policyEngines        | List | A list of external policy engines (e.g., OPA) needed to evaluate policies. |
-| observabilityHooks   | List | A list of custom hooks to send metrics and traces to external systems. |
+- [Anatomy](/fluid/schema/anatomy) — a guided tour of the blocks, with examples.
+- [Cheatsheet](/fluid/schema/cheatsheet) — one row per field.
+- [Changelog](/fluid/schema/changelog) — what changed in each version.
+- *FLUID Data Products* (book) is [available on Amazon](https://amzn.eu/d/ikMlWNV).

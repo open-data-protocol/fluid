@@ -1,8 +1,8 @@
 # Unlocking Governable AI: Agentic Data Access with MCP & FLUID
 
-> ⭐ **As of schema `0.7.4`, the recommended path is the `exposes[].mcp` block.** Add `mcp.sampling` / `mcp.classification` to an output port to opt it into the **Fluid MCP gateway**, where `policy.agentPolicy` (allowed/denied models and use cases) is enforced at runtime on every read and column-level `sensitivity: pii` / `phi` redacts values. See the [**0.7.4 release notes**](/fluid/releases/0.7.4) for the full reference and [**Examples → Agent-consumable output port (MCP)**](/fluid/examples/#_11-agent-consumable-output-port-mcp) for a complete, valid contract.
+> ⭐ **As of schema `0.7.4`, the recommended path is the `exposes[].mcp` block.** Add `mcp.sampling` / `mcp.classification` to an output port to opt it into an MCP output-port gateway — the reference implementation provides one — where `policy.agentPolicy` (allowed/denied models and use cases) is enforced at runtime on every read and column-level `sensitivity: pii` / `phi` redacts values. See the [**0.7.4 release notes**](/fluid/releases/0.7.4) for the full reference and [**Examples → Agent-consumable output port (MCP)**](/fluid/examples/#_11-agent-consumable-output-port-mcp) for a complete, valid contract.
 >
-> The walkthrough below explains the *conceptual* request/authorization flow that underpins this gateway. It uses an earlier illustrative manifest shape; treat the YAML as a narrative aid, not a `0.7.4` template.
+> The walkthrough below explains the *conceptual* request/authorization flow that underpins this gateway. It uses an earlier illustrative manifest shape; treat the YAML as a narrative aid: it declares `fluidVersion: 1.0`, a version that was never published, and does not validate against any published FLUID schema. For a valid contract, use the example linked above.
 
 **Imagine this:**
 A sales executive simply asks their AI assistant:
@@ -25,6 +25,7 @@ Together, they enable **agentic data access**: AI agents can act on behalf of us
 
 A data engineering team publishes a FLUID data product:
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: 1.0
 kind: DataProduct
@@ -54,23 +55,23 @@ exposes:
         grants:
             # Sales team: see treated PII for their region
             - principal: group:sales-de@company.com
-                permissions: [readData]
-                scope:
-                    privacyView: treated
-                    columns: [customer_id, full_name, email, country, total_lifetime_value]
-                    rowFilter: "country = 'DE'"
+              permissions: [readData]
+              scope:
+                  privacyView: treated
+                  columns: [customer_id, full_name, email, country, total_lifetime_value]
+                  rowFilter: "country = 'DE'"
             # Fraud agent: see cleartext PII
             - principal: agent:fraud_investigation_agent_v1
-                permissions: [readData]
-                scope:
-                    privacyView: cleartext
-                    columns: [customer_id, full_name, email, last_purchase_date]
+              permissions: [readData]
+              scope:
+                  privacyView: cleartext
+                  columns: [customer_id, full_name, email, last_purchase_date]
             # AI Assistant: limited, read-only access (no PII)
             - principal: agent:ai_assistant_prod
-                permissions: [readData]
-                scope:
-                    privacyView: treated
-                    columns: [customer_id, country, total_lifetime_value, last_purchase_date]
+              permissions: [readData]
+              scope:
+                  privacyView: treated
+                  columns: [customer_id, country, total_lifetime_value, last_purchase_date]
 ```
 
 **Key Takeaway:**

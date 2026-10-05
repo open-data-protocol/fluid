@@ -1,5 +1,7 @@
 # A Practical Guide to Integrating Data Vault 2.0
 
+> ℹ️ **Legacy manifest shape.** The YAML in this guide uses an earlier, illustrative manifest shape (`fluidVersion: "1.0"`, a version that was never published) to illustrate the Data Vault pattern, and does **not** validate against any published FLUID schema. On the current schema (latest stable `0.7.5`), express dbt builds with `build.pattern: hybrid-reference` and upstream links with `consumes[]` — see the [**dbt how-to**](/fluid/how-to/dbt) and [**Examples**](/fluid/examples/).
+
 This guide presents a hands-on proposal for integrating the [FLUID specification](https://github.com/open-data-protocol/fluid) with core data stack tools like **dbt** and **datavault 2.0**. It explains how this integration streamlines data engineering workflows, clarifies tool responsibilities, and solves common pain points in modern data platforms.
 
 ## Example: Building a Data Vault 2.0 Product
@@ -63,6 +65,7 @@ FROM source_data
 ### FLUID Files
 
 **1. Hub Data Product (`customer_hub/product.fluid.yml`):**
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: 1.0
 kind: DataProduct
@@ -71,9 +74,9 @@ metadata:
     owner: { team: 'data-architecture' }
 consumes:
     - type: dbt-model
-        name: stg_crm_customers
+      name: stg_crm_customers
     - type: dbt-model
-        name: stg_ecommerce_users
+      name: stg_ecommerce_users
 exposes:
     location:
         type: bigquery
@@ -99,6 +102,7 @@ build:
 ```
 
 **2. Satellite Data Product (`crm_satellite/product.fluid.yml`):**
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: 1.0
 kind: DataProduct
@@ -141,5 +145,3 @@ Engineers declare dependencies in FLUID files; the orchestrator builds and maint
 ---
 
 > **FLUID + dbt + Airflow = Declarative, contract-aware, and maintainable data pipelines.**
-
-> ℹ️ The manifests above use the legacy `fluidVersion: 1.0` shape to illustrate the Data Vault pattern. On the current schema (latest `0.7.4`), express dbt builds via `build.pattern: hybrid-reference` and upstream links via `consumes[]` — see the [**dbt how-to**](/fluid/how-to/dbt) and [**Examples**](/fluid/examples/).

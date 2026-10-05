@@ -2,7 +2,7 @@
 
 Explore the full power and extensibility of the FLUID specification with these advanced, real-world use cases.
 
-> ℹ️ These examples use an earlier, illustrative manifest shape (`fluidVersion: "1.0"`, `metadata.dataProduct`, `exposes[].location`) to sketch the *art of the possible*. They are conceptual, not `0.7.4`-valid templates. For current, schema-valid syntax see [**Examples**](/fluid/examples/).
+> ℹ️ These examples use an earlier, illustrative manifest shape (`fluidVersion: "1.0"`, `metadata.dataProduct`, `exposes[].location`) to sketch the *art of the possible*. They are conceptual and do **not** validate against any published FLUID schema (`1.0` was never published; the latest stable schema is `0.7.5`). For current, schema-valid syntax see [**Examples**](/fluid/examples/).
 
 ---
 
@@ -14,6 +14,7 @@ Serve different data to different partners, enforcing dynamic, context-aware acc
 <details>
 <summary><strong>YAML: <code>11-dynamic-policies.fluid.yml</code></strong></summary>
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "1.0"
 kind: VirtualDataProduct
@@ -25,24 +26,24 @@ metadata:
 
 consumes:
     - type: fluid-product
-        name: inventory.gold.live_stock_by_warehouse
+      name: inventory.gold.live_stock_by_warehouse
 
 exposes:
     - location: { type: 'virtual' }
-        contract:
-            schema:
-                columns:
-                    - { name: product_sku, type: STRING }
-                    - { name: quantity_on_hand, type: INT64 }
+      contract:
+          schema:
+              columns:
+                  - { name: product_sku, type: STRING }
+                  - { name: quantity_on_hand, type: INT64 }
 
 dynamicPolicies:
     rules:
         - name: "Allow authorized partners based on JWT claim"
-            condition: "agent.jwt.claims.can_access_stock_api == true"
-            grant:
-                permissions: [readData]
-                scope:
-                    rowFilter: "partner_id = '{{ agent.jwt.claims.partner_id }}'"
+          condition: "agent.jwt.claims.can_access_stock_api == true"
+          grant:
+              permissions: [readData]
+              scope:
+                  rowFilter: "partner_id = '{{ agent.jwt.claims.partner_id }}'"
 
 build:
     execution: { trigger: { type: 'manual' } }
@@ -60,6 +61,7 @@ Bridge data engineering and MLOps by delivering features directly to a feature s
 <details>
 <summary><strong>YAML: <code>12-feature-store.fluid.yml</code></strong></summary>
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "1.0"
 kind: DataProduct
@@ -72,21 +74,21 @@ metadata:
 
 consumes:
     - type: fluid-product
-        name: customers.silver.trusted_customers
+      name: customers.silver.trusted_customers
 
 exposes:
     - location:
-            type: redis
-            connection: secret:ml-feature-store-redis-creds
-            properties:
-                keyPrefix: 'customer_churn_features'
-        contract:
-            schema:
-                columns:
-                    - { name: 'customer_id', type: 'STRING' }
-                    - { name: 'recency_days', type: 'INT64' }
-                    - { name: 'frequency_30d', type: 'INT64' }
-                    - { name: 'last_updated_ts', type: 'TIMESTAMP' }
+          type: redis
+          connection: secret:ml-feature-store-redis-creds
+          properties:
+              keyPrefix: 'customer_churn_features'
+      contract:
+          schema:
+              columns:
+                  - { name: 'customer_id', type: 'STRING' }
+                  - { name: 'recency_days', type: 'INT64' }
+                  - { name: 'frequency_30d', type: 'INT64' }
+                  - { name: 'last_updated_ts', type: 'TIMESTAMP' }
 
 build:
     transformation:
@@ -111,6 +113,7 @@ Centralize observability by consuming execution logs from all FLUID products, po
 <details>
 <summary><strong>YAML: <code>13-active-metadata.fluid.yml</code></strong></summary>
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "1.0"
 kind: DataProduct
@@ -123,34 +126,34 @@ metadata:
 
 consumes:
     - type: gcs
-        connection: secret:gcp-prod-sa-key
-        format: { type: 'jsonl' }
-        properties:
-            bucket: 'fluid-execution-logs-prod'
-            path: 'runs/'
+      connection: secret:gcp-prod-sa-key
+      format: { type: 'jsonl' }
+      properties:
+          bucket: 'fluid-execution-logs-prod'
+          path: 'runs/'
 
 exposes:
     - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'observability', table: 'fluid_runs' }
-        contract:
-            schema:
-                columns:
-                    - { name: 'run_id', type: 'STRING' }
-                    - { name: 'data_product_name', type: 'STRING' }
-                    - { name: 'status', type: 'STRING' }
-                    - { name: 'start_time', type: 'TIMESTAMP' }
-                    - { name: 'duration_ms', type: 'INT64' }
-                    - { name: 'rows_written', type: 'INT64' }
-                    - { name: 'error_message', type: 'STRING' }
-            quality:
-                - rule: in_set
-                    columns: [status]
-                    set: ['SUCCESS', 'FAILED', 'QUARANTINED']
-                    onFailure:
-                        action: 'alert'
-                        notifications:
-                            - { channel: 'slack', target: '#platform-alerts' }
+          type: bigquery
+          properties: { project: 'acme-prod-dwh', dataset: 'observability', table: 'fluid_runs' }
+      contract:
+          schema:
+              columns:
+                  - { name: 'run_id', type: 'STRING' }
+                  - { name: 'data_product_name', type: 'STRING' }
+                  - { name: 'status', type: 'STRING' }
+                  - { name: 'start_time', type: 'TIMESTAMP' }
+                  - { name: 'duration_ms', type: 'INT64' }
+                  - { name: 'rows_written', type: 'INT64' }
+                  - { name: 'error_message', type: 'STRING' }
+          quality:
+              - rule: in_set
+                columns: [status]
+                set: ['SUCCESS', 'FAILED', 'QUARANTINED']
+                onFailure:
+                    action: 'alert'
+                    notifications:
+                        - { channel: 'slack', target: '#platform-alerts' }
 
 build:
     execution: { trigger: { type: 'streaming' }, runtime: { type: 'gcp-cloud-run' } }
@@ -168,6 +171,7 @@ Enrich a Gold-layer product with formal semantic meaning from an external ontolo
 <details>
 <summary><strong>YAML: <code>14-semantic-product.fluid.yml</code></strong></summary>
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "1.0"
 kind: DataProduct
@@ -180,30 +184,30 @@ metadata:
 
 consumes:
     - type: fluid-product
-        name: products.silver.cleaned_catalog
+      name: products.silver.cleaned_catalog
 
 exposes:
     - location:
-            type: bigquery
-            properties: { project: 'acme-prod-dwh', dataset: 'gold', table: 'product_catalog' }
-        contract:
-            schema:
-                columns:
-                    - { name: 'product_id', type: 'STRING' }
-                    - { name: 'name', type: 'STRING' }
-                    - { name: 'description', type: 'STRING' }
-                    - { name: 'price', type: 'NUMERIC' }
-            semantics:
-                ontology: "https://schema.org/docs/schema_org_rdfa.html"
-                classifications:
-                    - column: product_id
-                        term: "schema:sku"
-                    - column: name
-                        term: "schema:name"
-                    - column: description
-                        term: "schema:description"
-                    - column: price
-                        term: "schema:price"
+          type: bigquery
+          properties: { project: 'acme-prod-dwh', dataset: 'gold', table: 'product_catalog' }
+      contract:
+          schema:
+              columns:
+                  - { name: 'product_id', type: 'STRING' }
+                  - { name: 'name', type: 'STRING' }
+                  - { name: 'description', type: 'STRING' }
+                  - { name: 'price', type: 'NUMERIC' }
+          semantics:
+              ontology: "https://schema.org/docs/schema_org_rdfa.html"
+              classifications:
+                  - column: product_id
+                    term: "schema:sku"
+                  - column: name
+                    term: "schema:name"
+                  - column: description
+                    term: "schema:description"
+                  - column: price
+                    term: "schema:price"
 
 build: # ... build definition ...
 ```
@@ -219,6 +223,7 @@ Create a temporary, virtual data product for a single user conversation. Joins m
 <details>
 <summary><strong>YAML: <code>15-ephemeral-product.fluid.yml</code></strong></summary>
 
+<!-- fluid-check: skip -->
 ```yaml
 fluidVersion: "1.0"
 kind: VirtualDataProduct
@@ -230,19 +235,19 @@ metadata:
 
 consumes:
     - type: fluid-product
-        name: sales.silver.clean_orders
-        alias: orders
+      name: sales.silver.clean_orders
+      alias: orders
     - type: fluid-product
-        name: customers.silver.trusted_customers
-        alias: customers
+      name: customers.silver.trusted_customers
+      alias: customers
 
 exposes:
     - location: { type: 'virtual' }
-        contract:
-            schema:
-                columns:
-                    - { name: order_id, type: STRING }
-                    - { name: order_total, type: NUMERIC }
+      contract:
+          schema:
+              columns:
+                  - { name: order_id, type: STRING }
+                  - { name: order_total, type: NUMERIC }
 
 build:
     transformation:
