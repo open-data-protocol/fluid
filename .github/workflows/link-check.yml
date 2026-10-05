@@ -1,25 +1,16 @@
 name: Link Check
 
-# Catches broken docs links before they ship.
+# External URLs in docs/, checked weekly (lychee), opening an issue when any
+# break. Scheduled only: it does not run on pull requests.
 #
-#   1. base-prefix-check — fast shell regex catching the bug class where an
-#      absolute body-markdown link like [x](/schema/foo) is NOT auto-prefixed
-#      with the /fluid/ base by VuePress, so it 404s in the rendered HTML.
-#   2. external — weekly cron (skipped on PRs) checking external URLs.
+# The per-PR base-prefix check that used to live here (absolute body links
+# missing the /fluid/ base) is now the `docs-links` job in conformance.yml.
+# This workflow has a `schedule` trigger, so GitHub disables it after 60 days
+# without repository activity -- and it was disabled that way, taking the
+# pull-request check down with it. A disabled scheduled workflow is re-enabled
+# from the Actions tab or with `gh workflow enable "Link Check"`.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - ".github/workflows/link-check.yml"
-      - ".lycheeignore"
-  pull_request:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - ".github/workflows/link-check.yml"
-      - ".lycheeignore"
   schedule:
     - cron: "13 9 * * 2"
   workflow_dispatch:
@@ -33,29 +24,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  base-prefix-check:
-    name: Base-prefix check (catches /schema/ vs /fluid/schema/)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Verify all internal absolute links carry the /fluid/ base
-        run: |
-          # VuePress base is /fluid/. Sidebar/navbar links auto-prefix, but
-          # body markdown links do NOT — an absolute link like [x](/schema/foo)
-          # renders as <a href="/schema/foo"> and 404s on the live site.
-          PREFIXES='guide|concepts|schema|examples|how-to|releases|vision|contributing|deck|specs'
-
-          if grep -rIn -E "\]\(/(${PREFIXES})[^)]*\)" docs/ --include="*.md" \
-             | grep -v "(/fluid/" ; then
-            echo ""
-            echo "::error::Found internal absolute markdown links missing the /fluid/ base prefix."
-            echo "::error::These render as <a href=\"/schema/...\"> and 404 on the live site."
-            echo "::error::Fix: rewrite [text](/schema/foo) -> [text](/fluid/schema/foo) (or use a relative path)."
-            exit 1
-          fi
-          echo "✅ All internal absolute body links carry the /fluid/ base."
-
   external:
     name: External URLs
     runs-on: ubuntu-latest

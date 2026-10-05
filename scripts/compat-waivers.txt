@@ -9,8 +9,9 @@
 # can be recorded rather than silently tolerated.
 #
 # Pre-0.7.1 pairs are not waived individually. Those schemas predate the
-# compatibility promise and, per .github/workflows/schema-sync.yml, already
-# diverge from forge-cli at the byte level; CI runs the gate from 0.7.1 only.
+# compatibility promise and are not synced with forge-cli (see
+# scripts/schema-versions.json); check-compat.py starts at 0.7.1 by default
+# (PROMISE_FLOOR) and reports the earlier pairs only with --all-history.
 
 # ---------------------------------------------------------------------------
 # 0.7.1 -> 0.7.2  --  REAL BREAK, SHIPPED. Not benign; waived only because it
@@ -53,11 +54,11 @@
 # ---------------------------------------------------------------------------
 # 0.7.3 -> 0.7.4  --  INTENTIONAL, and outside what the promise covers.
 #
-# properties/fluidVersion gained an enum (0.7.3 constrained the member by
-# pattern alone, so any \d+\.\d+(\.\d+)? was accepted; 0.7.4 restricts it to
-# ["0.7.3", "0.7.4"]). This is the version gate doing its job: a document
-# declares the schema version it targets, and that member is expected to move
-# with the release. The empirical pass in check-compat.py normalises
+# properties/fluidVersion changed from const "0.7.3" (with a pattern) to enum
+# ["0.7.3", "0.7.4"]. The gate reports "enum constraint added" because 0.7.3
+# had no enum. Every value 0.7.3 accepted is still accepted. This is the
+# version gate doing its job: a document declares the schema version it
+# targets, and that member is expected to move with the release. The empirical pass in check-compat.py normalises
 # fluidVersion across versions for exactly this reason.
 #
 # Re-examine if the enum ever DROPS a version that a supported release still

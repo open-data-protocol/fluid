@@ -1,14 +1,36 @@
 # The gate that makes FLUID a standard rather than a schema with a docs site.
 #
-# Three jobs, deliberately separate so a red build says WHICH promise broke:
+# Seven jobs, deliberately separate so a red build says WHICH promise broke:
 #
-#   meta         proves the other two gates can fail. Runs first: a green
+#   meta         proves the gates below can fail. Runs first: a green
 #                conformance run means nothing if the runner cannot go red.
 #   conformance  runs the vector corpus against the published schemas, and
 #                again against the reference implementation (forge-cli) so
 #                the corpus and the engine cannot drift apart unnoticed.
 #   compat       enforces the backward-compatibility promise the README and
 #                every release note make.
+#   drift        the vendored schemas are byte-identical to the ones in the
+#                forge-cli release PINNED in scripts/schema-versions.json
+#                (upstream.ref and upstream.commit). Pinned, so a new upstream
+#                release cannot turn an unrelated pull request red; moving
+#                the pin is a reviewed change. This used to live in
+#                schema-sync.yml, which compared against forge-cli `main`,
+#                failed every scheduled run from 22 June to 31 August 2026,
+#                and was then disabled by GitHub for inactivity, so later
+#                pull requests merged with no drift check at all.
+#   drift-latest ADVISORY. Warns when forge-cli has published a release after
+#                the pinned one. It cannot fail the run: its step is
+#                continue-on-error, and it is not a required check.
+#   generated    specs/ (the HTML reference) and schema-diffs/ are what the
+#                generators produce from schema/ today, and every other file
+#                under schema/ and specs/ is frozen and unchanged.
+#   docs-links   internal absolute links in docs/ carry the /fluid/ base.
+#                Moved here from link-check.yml for the same reason as drift.
+#
+# GitHub's inactivity rule disables only workflows that have a `schedule`
+# trigger, and it disables the whole workflow, pull-request checks included.
+# That is why this workflow has no schedule, and why per-PR gates live here
+# rather than beside a weekly job.
 
 name: conformance
 
@@ -19,8 +41,11 @@ on:
       - "schema/**"
       - "tests/**"
       - "conformance/**"
-      - "scripts/check-compat.py"
-      - "scripts/compat-waivers.txt"
+      - "scripts/**"
+      - "specs/**"
+      - "schema-diffs/**"
+      - "generate-docs.py"
+      - "generate-schema-diffs.py"
       - ".github/workflows/conformance.yml"
   # NO `paths:` filter here, and that is the point. A path-filtered check
   # cannot be a REQUIRED check: on a pull request that does not match, the
@@ -84,11 +109,12 @@ jobs:
       # `run.py` answers "do the cases pass" — a corpus of zero cases answers
       # that perfectly. `mutation_coverage.py` answers the harder question:
       # delete a constraint from the schema and see whether any case notices.
-      # It has been in this repo, runnable, and wired into nothing, so the
+      # It used to sit in this repo, runnable and wired into nothing, so the
       # figure it produces could fall to zero between releases in silence.
       #
-      # The floor is the CURRENT number rounded down (40.7% -> 40), not a
-      # target. That is the convention mutation-testing gates converge on
+      # The floor is the CURRENT number rounded down, not a target: the
+      # lowest version is 0.7.5 at 41.0% (tests/README.md has the figures).
+      # That is the convention mutation-testing gates converge on
       # (Stryker, mutmut): set the break threshold where you actually are, so
       # it catches a regression on day one — an aspirational threshold goes red
       # immediately and gets deleted by day three, which is worse than no gate.
@@ -136,15 +162,93 @@ jobs:
       # is what makes a local run and a CI run mean the same thing.
       - run: pip install "jsonschema[format]>=4.22"
 
-      # Pre-0.7.1 schemas predate the compatibility promise and already
-      # diverge from forge-cli at the byte level (see schema-sync.yml), so the
-      # gate runs over the range where the promise was actually made.
+      # The default run compares every adjacent pair from 0.7.1, the first
+      # version the compatibility promise covers, to the newest published
+      # schema, so a newly vendored version is covered without editing this
+      # file. Earlier pairs predate the promise (`--all-history` shows them).
       - name: every release keeps its backward-compatibility promise
+        run: python3 scripts/check-compat.py
+
+  drift:
+    name: schemas match the reference release
+    runs-on: ubuntu-latest
+    needs: meta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Compares every version listed in scripts/schema-versions.json byte for
+      # byte with the forge-cli commit recorded there (upstream.commit, the
+      # release upstream.ref), plus that release's preview set and its latest
+      # stable version. A pinned release, so the result depends only on this
+      # repository's contents: a new forge-cli release changes nothing here
+      # until someone edits the pin in a pull request. Not `main`: main carries
+      # unreleased schema edits nobody can install yet.
+      # The token only lifts the API rate limit; forge-cli is public. It is
+      # sent to api.github.com only.
+      - name: vendored schemas equal the pinned forge-cli release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check-schema-drift.py
+
+  drift-latest:
+    name: newer forge-cli release (advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Asks the one question the `drift` job deliberately does not: has
+      # forge-cli released since the pin? It prints what moving would involve
+      # and annotates the run with a warning. continue-on-error makes the job
+      # green whatever the script exits with (1 = a newer release exists,
+      # 2 = GitHub could not be reached), so this can never block a merge,
+      # and it is not, and should not become, a required check.
+      - name: has forge-cli released after the pinned release
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check-schema-drift.py --latest
+
+  generated:
+    name: generated files are current
+    runs-on: ubuntu-latest
+    needs: meta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The renderer is pinned exactly: the HTML is committed, so its version
+      # is part of the build's input (see scripts/requirements-docs.txt). It is
+      # installed from the hash-locked file, so a package replaced on PyPI
+      # after the lock was made is refused rather than run.
+      - run: pip install --require-hashes -r scripts/requirements-docs.lock
+      - name: specs/<version>/ matches a fresh render of every synced schema, and no other file has moved
+        run: python3 generate-docs.py --check
+      - name: schema-diffs/ matches a fresh generation
+        run: python3 generate-schema-diffs.py --check
+
+  docs-links:
+    name: docs links carry the site base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify all internal absolute links carry the /fluid/ base
         run: |
-          set -euo pipefail
-          for pair in "0.7.1 0.7.2" "0.7.2 0.7.3" "0.7.3 0.7.4" "0.7.4 0.7.5"; do
-            set -- $pair
-            echo "::group::$1 -> $2"
-            python3 scripts/check-compat.py --from "$1" --to "$2"
-            echo "::endgroup::"
-          done
+          # VuePress base is /fluid/. Sidebar/navbar links auto-prefix, but
+          # body markdown links do NOT -- an absolute link like [x](/schema/foo)
+          # renders as <a href="/schema/foo"> and 404s on the live site.
+          PREFIXES='guide|concepts|schema|examples|how-to|releases|vision|contributing|deck|specs'
+
+          if grep -rIn -E "\]\(/(${PREFIXES})[^)]*\)" docs/ --include="*.md" \
+             | grep -v "(/fluid/" ; then
+            echo ""
+            echo "::error::Found internal absolute markdown links missing the /fluid/ base prefix."
+            echo "::error::These render as <a href=\"/schema/...\"> and 404 on the live site."
+            echo "::error::Fix: rewrite [text](/schema/foo) -> [text](/fluid/schema/foo) (or use a relative path)."
+            exit 1
+          fi
+          echo "All internal absolute body links carry the /fluid/ base."

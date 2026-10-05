@@ -1,0 +1,8 @@
+# Vendored schemas and generated spec HTML are checked byte-for-byte: the drift
+# gate compares schema/ with the pinned forge-cli release, and generate-docs.py
+# --check verifies the "frozen" sha256 map in scripts/schema-versions.json. An
+# end-of-line conversion on checkout (core.autocrlf on Windows) would change
+# those bytes, so git must never convert them.
+schema/** -text
+specs/** -text
+schema-diffs/** -text

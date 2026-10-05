@@ -1,259 +1,107 @@
-# FLUID Documentation Generator
+# Generated files: the HTML reference and the schema diffs
 
-This document explains how the `generate-docs.py` script works to automatically generate HTML documentation from FLUID JSON schema files.
+Two directories in this repository are generated from `schema/` and committed:
 
-## Overview
+| Directory | Generator | What it holds |
+|---|---|---|
+| `specs/<version>/` | `generate-docs.py` | `fluid-spec.html`, the field-by-field HTML reference for one schema version, with its `schema_doc.css` and `schema_doc.min.js` |
+| `schema-diffs/` | `generate-schema-diffs.py` | one Markdown diff per pair of consecutive schema versions, and an index |
 
-The FLUID documentation generator is a Python script that:
-1. Discovers JSON schema files in the project
-2. Identifies the latest schema version
-3. Generates beautiful HTML documentation using `json-schema-for-humans`
-4. Outputs documentation to a versioned directory structure
+Neither is edited by hand. The `generated` job in
+`.github/workflows/conformance.yml` regenerates both on every pull request and
+fails if the committed files differ from a fresh run.
 
-## Prerequisites
+Nothing else may sit beside them. `generate-docs.py --check` also accounts for
+every file under `schema/` and `specs/`: each is either generated for a synced
+version (or, under `schema/`, a synced schema, which the drift check compares
+with the reference implementation) or listed with its sha256 in the `frozen`
+map of `scripts/schema-versions.json`. A file that is neither, a frozen file
+whose bytes changed, and a frozen file that is gone all fail the check. The
+frozen files are the schemas before 0.7.2 and the HTML pages earlier renderer
+releases produced for them; changing one is a deliberate edit to `frozen`.
 
-- Python 3.6+ (tested with Python 3.12)
-- Virtual environment (recommended)
-- `json-schema-for-humans` package
+## The version record
 
-### Installing Dependencies
+`scripts/schema-versions.json` says which schema versions are **synced** with
+the reference implementation, which one is the latest **stable** version, and
+which are **previews**, and it records which reference implementation release
+they were vendored from (`upstream.ref` and `upstream.commit`, the release
+`scripts/check-schema-drift.py` compares with) and the `frozen` files described
+above. Both generators and the drift check read it.
 
-```bash
-# Activate your virtual environment
-source .venv/bin/activate
-
-# Install the required package
-pip install json-schema-for-humans
-```
-
-## How It Works
-
-### 1. Schema Discovery
-
-The generator automatically discovers schema files in the `schema/` directory:
-
-```python
-def find_schema_files():
-    candidates = list(SCHEMA_DIR.glob("fluid-schema-*.json"))
-```
-
-**Expected naming pattern**: `fluid-schema-X.Y.Z.json` where X.Y.Z is the semantic version.
-
-**Example files**:
-- `fluid-schema-0.1.0.json`
-- `fluid-schema-0.5.7.json`
-- `fluid-schema-1.0.0.json`
-
-### 2. Version Extraction and Sorting
-
-The script extracts version numbers using regex and sorts them semantically:
-
-```python
-def extract_version(filename: Path) -> str:
-    match = re.search(r"(\d+\.\d+\.\d+)", filename.name)
-    return match.group(1)
-```
-
-**Sorting logic**: Files are sorted by semantic version (e.g., 0.1.0 < 0.5.7 < 1.0.0), and the **latest version** is automatically selected for documentation generation.
-
-### 3. Documentation Generation
-
-The script uses the `json-schema-for-humans` library to convert JSON schemas into readable HTML documentation:
-
-```python
-def generate_docs(schema_file: Path, version: str):
-    cmd = [
-        str(venv_path),  # Path to generate-schema-doc in venv
-        str(schema_file),
-        str(output_file),
-        "--config",
-        "default"
-    ]
-```
-
-**Key features**:
-- Uses the `default` configuration for clean, readable output
-- Automatically copies CSS and JavaScript assets
-- Generates self-contained HTML files
-
-### 4. Output Structure
-
-Documentation is generated in a versioned directory structure:
-
-```
-specs/
-├── 0.5.7/
-│   ├── fluid-spec.html     # Main documentation
-│   ├── schema_doc.css      # Styling
-│   └── schema_doc.min.js   # Interactive features
-├── 0.6.0/
-│   ├── fluid-spec.html
-│   ├── schema_doc.css
-│   └── schema_doc.min.js
-└── ...
-```
-
-## Directory Structure
-
-The generator relies on this project structure:
-
-```
-fluid/
-├── generate-docs.py        # The generator script
-├── schema/                 # Source schema files
-│   ├── fluid-schema-0.1.0.json
-│   ├── fluid-schema-0.5.7.json
-│   └── ...
-└── specs/                  # Generated documentation
-    ├── 0.5.7/
-    ├── 0.6.0/
-    └── ...
-```
-
-## Usage
-
-### Basic Usage
-
-Run the generator from the project root:
+The latest stable version is recorded on its own, not derived from the
+highest version number, because a preview has the higher number. Nothing
+should link a preview as "latest":
 
 ```bash
-# Using the virtual environment Python
-/path/to/.venv/bin/python generate-docs.py
-
-# Or if virtual environment is activated
-python generate-docs.py
+python3 generate-docs.py --print-latest-stable    # prints the stable version
 ```
 
-### Example Output
+`generate-docs.py` refuses to run if the record is inconsistent: a version
+listed as both stable and preview, a stable version that is not synced, or a
+synced non-preview version higher than the recorded stable one.
 
-```
-[fluid-docs] Looking for schema files in: /path/to/schema
-[fluid-docs] Found 7 schema files.
-[fluid-docs]   - fluid-schema-0.1.1.json
-[fluid-docs]   - fluid-schema-0.3.0.json
-[fluid-docs]   - fluid-schema-0.5.7.json
-[fluid-docs]   - ...
-[fluid-docs] Using schema: fluid-schema-0.5.7.json (version 0.5.7)
-[fluid-docs] Running command: generate-schema-doc ...
-[fluid-docs] ✅ Docs generated at: /path/to/specs/0.5.7/fluid-spec.html
-```
+## `generate-docs.py`
 
-## Configuration
+```bash
+pip install --require-hashes -r scripts/requirements-docs.lock
 
-The generator currently uses the `default` configuration from `json-schema-for-humans`. This can be customized by:
-
-1. **Modifying the config parameter**:
-   ```python
-   cmd = [..., "--config", "custom_config_name"]
-   ```
-
-2. **Using a config file**:
-   ```python
-   cmd = [..., "--config-file", "path/to/config.json"]
-   ```
-
-3. **Inline configuration**:
-   ```python
-   cmd = [..., "--config", "minify=false", "--config", "expand_buttons=true"]
-   ```
-
-## Key Features
-
-### Robust Path Resolution
-- All paths are resolved relative to the script location, not the current working directory
-- Works regardless of where you run the script from
-
-### Error Handling
-- Graceful handling of missing dependencies
-- Clear error messages with actionable advice
-- Validation of schema file naming conventions
-
-### Logging
-- Detailed console output for debugging
-- File and folder context in all messages
-- Clear success/failure indicators
-
-### Virtual Environment Support
-- Automatically uses the correct Python environment
-- Resolves the `generate-schema-doc` command path within the virtual environment
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"generate-schema-doc command not found"**
-   - Install `json-schema-for-humans`: `pip install json-schema-for-humans`
-   - Ensure you're using the correct Python environment
-
-2. **"No schema files found"**
-   - Check that files are in the `schema/` directory
-   - Verify naming follows `fluid-schema-X.Y.Z.json` pattern
-
-3. **Permission errors**
-   - Ensure the `specs/` directory is writable
-   - Check file permissions on schema files
-
-### Debug Mode
-
-For additional debugging, you can modify the script to add more verbose logging:
-
-```python
-def log(msg: str):
-    import datetime
-    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"[{timestamp}] [fluid-docs] {msg}")
+python3 generate-docs.py                  # every synced version
+python3 generate-docs.py --all            # the same, spelled out
+python3 generate-docs.py --version 0.7.6  # one version; repeat the flag for more
+python3 generate-docs.py --check          # render to a temporary directory and
+                                          # exit 1 if specs/ differs, or if a
+                                          # file under schema/ or specs/ is not
+                                          # accounted for
+python3 generate-docs.py --check-files    # only the offline half of --check;
+                                          # needs no renderer
 ```
 
-## Extending the Generator
+It renders with [json-schema-for-humans](https://github.com/coveooss/json-schema-for-humans),
+in-process, using its default configuration with the footer timestamp turned
+off, so the same schema and the same renderer produce the same bytes. The
+renderer and the libraries that shape its output are pinned exactly in
+`scripts/requirements-docs.txt`, and the script exits with an error naming the
+mismatch if any other version is installed. That file is the input; what CI and
+the docs deploy install is `scripts/requirements-docs.lock`, the same pins plus
+every transitive dependency, each with its hashes, installed with
+`--require-hashes` so that a package replaced on PyPI afterwards is refused.
+`--check` fails if the two files disagree. To move a pin, change it in
+`requirements-docs.txt`, recompile the lock, run `python3 generate-docs.py`, and
+commit the lock and the regenerated `specs/` in the same pull request:
 
-### Adding New Output Formats
-
-The generator can be extended to support additional output formats by modifying the `generate_docs` function:
-
-```python
-def generate_docs(schema_file: Path, version: str, format_type="html"):
-    if format_type == "html":
-        # Current HTML generation
-    elif format_type == "markdown":
-        # Add markdown generation
-    elif format_type == "pdf":
-        # Add PDF generation
+```bash
+pip install pip-tools     # under Python 3.12, the version CI uses
+pip-compile --generate-hashes --strip-extras \
+    --output-file=scripts/requirements-docs.lock scripts/requirements-docs.txt
 ```
 
-### Custom Schema Processing
+A preview's page is labelled by its schema's own `title`; for 0.7.6 that reads
+"FLUID 0.7.6 — Declarative Packaging Modes (preview)".
 
-You can add custom schema processing before documentation generation:
+`--version` also renders a version that is not synced, if its schema is in
+`schema/`. The pages for versions before 0.7.2 were rendered by earlier
+releases of the renderer and are not regenerated; they are frozen, which is to
+say checked by hash rather than by re-rendering.
 
-```python
-def preprocess_schema(schema_file: Path) -> Path:
-    # Load, modify, and save schema
-    # Return path to processed schema
-    pass
+## `generate-schema-diffs.py`
+
+```bash
+python3 generate-schema-diffs.py           # rewrite schema-diffs/
+python3 generate-schema-diffs.py --check   # exit 1 if schema-diffs/ is stale
 ```
 
-## Integration with CI/CD
+It compares every pair of consecutive files in `schema/`, key by key, and
+writes `diff-<old>-to-<new>.md` plus `README.md`. Long values are truncated in
+the output, so a diff file is a map of where to look, not a substitute for the
+schema. A hand-written summary between `<!-- HUMAN-NOTE:START -->` and
+`<!-- HUMAN-NOTE:END -->` in a diff file survives regeneration. The index marks
+a pair whose newer version is a preview.
 
-The generator can be integrated into automated workflows:
+## The docs site
 
-```yaml
-# GitHub Actions example
-- name: Generate Documentation
-  run: |
-    source .venv/bin/activate
-    python generate-docs.py
-    
-- name: Deploy Documentation
-  # Upload or commit generated docs
-```
-
-## Dependencies
-
-- **Python 3.6+**: Core runtime
-- **json-schema-for-humans**: Documentation generation
-- **pathlib**: Path handling (built-in)
-- **subprocess**: Command execution (built-in)
-- **re**: Regular expressions (built-in)
-
-## License
-
-This generator follows the same license as the FLUID project.
+`npm run docs:build` first runs `scripts/sync-public-assets.mjs`, which copies
+`schema/` and `specs/` into `docs/.vuepress/public/`, so the site serves every
+schema from 0.5.7 on at the URL its `$id` names, and each HTML reference beside it. The
+deploy workflow (`.github/workflows/deploy-docs.yml`) runs
+`python3 generate-docs.py` with the locked renderer before that build.

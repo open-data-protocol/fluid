@@ -1,0 +1,572 @@
+{
+  "corpusVersion": "0.7.6",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
+  "group": "masking-aggparams",
+  "description": "Typed parameters added in 0.7.6 preview: masking params' saltEnv/keyEnv environment-variable-name pattern and keepFirst/keepLast integer bounds (0..64), which leave params open to other members as the schema states; and a semantic measure's closed aggParams object with its 0..1 percentile bounds.",
+  "cases": [
+    {
+      "description": "masking params name the salt and key environment variables and keep a prefix and suffix",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "policy": {
+              "privacy": {
+                "masking": [
+                  {
+                    "column": "email",
+                    "strategy": "mask",
+                    "params": {
+                      "saltEnv": "FLUID_PII_HASH_SECRET",
+                      "keyEnv": "PII_KEY",
+                      "keepFirst": 0,
+                      "keepLast": 64
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "masking params.saltEnv is not an environment-variable name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "policy": {
+              "privacy": {
+                "masking": [
+                  {
+                    "column": "email",
+                    "strategy": "hash",
+                    "params": {
+                      "saltEnv": "pii-salt"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/privacy/masking/0/params/saltEnv",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "masking params.keyEnv is not an environment-variable name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "policy": {
+              "privacy": {
+                "masking": [
+                  {
+                    "column": "email",
+                    "strategy": "encrypt",
+                    "params": {
+                      "keyEnv": "1KEY"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/privacy/masking/0/params/keyEnv",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "masking params.keepFirst is negative",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "policy": {
+              "privacy": {
+                "masking": [
+                  {
+                    "column": "email",
+                    "strategy": "mask",
+                    "params": {
+                      "keepFirst": -1
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/privacy/masking/0/params/keepFirst",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "masking params.keepLast exceeds 64",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "policy": {
+              "privacy": {
+                "masking": [
+                  {
+                    "column": "email",
+                    "strategy": "mask",
+                    "params": {
+                      "keepLast": 65
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/privacy/masking/0/params/keepLast",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "masking params.keepLast is a string instead of an integer",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "policy": {
+              "privacy": {
+                "masking": [
+                  {
+                    "column": "email",
+                    "strategy": "mask",
+                    "params": {
+                      "keepLast": "4"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/privacy/masking/0/params/keepLast",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a percentile measure carries aggParams at the inclusive upper bound",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "orders_model",
+              "measures": [
+                {
+                  "name": "p95_order_value",
+                  "agg": "percentile",
+                  "expr": "order_value",
+                  "aggParams": {
+                    "percentile": 1,
+                    "useDiscretePercentile": true
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "aggParams.percentile is above 1",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "orders_model",
+              "measures": [
+                {
+                  "name": "p95_order_value",
+                  "agg": "percentile",
+                  "expr": "order_value",
+                  "aggParams": {
+                    "percentile": 95
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0/aggParams/percentile",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "aggParams.percentile is negative",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "orders_model",
+              "measures": [
+                {
+                  "name": "p95_order_value",
+                  "agg": "percentile",
+                  "expr": "order_value",
+                  "aggParams": {
+                    "percentile": -0.5
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0/aggParams/percentile",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "aggParams carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "semantics": {
+              "name": "orders_model",
+              "measures": [
+                {
+                  "name": "p95_order_value",
+                  "agg": "percentile",
+                  "expr": "order_value",
+                  "aggParams": {
+                    "percentile": 0.95,
+                    "interpolation": "linear"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/semantics/measures/0/aggParams",
+          "keyword": "additionalProperties",
+          "detail": "interpolation"
+        }
+      ]
+    }
+  ]
+}

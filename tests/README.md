@@ -26,6 +26,13 @@ tests/
   meta_test.py          # proves the gates can fail
 ```
 
+Each published schema version that has a directory here is run by
+`conformance/run.py`; versions without one are not part of the corpus. Today
+that is 0.7.5, the latest stable version, and 0.7.6, a preview (see
+`scripts/schema-versions.json`). The 0.7.6 directory carries every 0.7.5 group,
+ported unchanged apart from the version strings, plus groups for what 0.7.6
+adds.
+
 The core/optional split follows
 [JSON-Schema-Test-Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite).
 The core tier asserts only what every conformant JSON Schema 2020-12 validator
@@ -127,8 +134,8 @@ the corpus.
 ## Questions the corpus has surfaced
 
 Recorded here because a conformance suite's job is to turn disagreements into
-written questions rather than silent divergence. One is now answered by the
-specification; the other is still open.
+written questions rather than silent divergence. One was answered by the
+specification, the other by a fix in the reference implementation.
 
 ### Format assertion
 
@@ -155,16 +162,54 @@ removing the trail would hide that the answer was ever in doubt.
 
 *Does the reference implementation validate 2020-12 schemas correctly?*
 
-**Still open.** It validates a 2020-12 schema with a Draft 7 validator:
-`fluid_build/schema_manager.py` constructs a `jsonschema.Draft7Validator`
-while every published schema declares
-`"$schema": "https://json-schema.org/draft/2020-12/schema"`. Today this is
-latent rather than active: the schemas use only `$defs` from the 2020-12-only
-keyword set, and `#/$defs/...` references resolve under Draft 7 as ordinary
-JSON pointers. It becomes a silent-acceptance bug the moment a schema uses
+**Answered — it does now.** It used to validate a 2020-12 schema with a
+Draft 7 validator: `fluid_build/schema_manager.py` constructed a
+`jsonschema.Draft7Validator` while every published schema declares
+`"$schema": "https://json-schema.org/draft/2020-12/schema"`. That was latent
+while the schemas used only `$defs` from the 2020-12-only keyword set, and
+would have become a silent-acceptance bug the moment a schema used
 `prefixItems`, `unevaluatedProperties`, `dependentRequired`, `minContains` or
-`maxContains` — Draft 7 ignores unknown keywords, so the implementation would
+`maxContains`: Draft 7 ignores unknown keywords, so the implementation would
 accept documents the published standard rejects, with no error anywhere.
+
+forge-cli fixed it in 0.15.0 (commit 3e80563, #582): the schema manager now
+builds its validator with `jsonschema.validators.validator_for(schema)`, which
+honours the dialect each schema declares.
+
+The case that pins it is in `tests/0.7.6/consumes-pinning.json`. 0.7.6 is the
+first FLUID schema to use a 2020-12-only assertion keyword with a non-empty value, `dependentRequired`
+(`consumes[].upstreamWorkspace` requires `upstreamDigest`), and the case
+"upstreamWorkspace is set without the upstreamDigest it requires" is invalid
+under 2020-12 while a Draft 7 validator accepts it. `conformance/check_reference.py`
+against data-product-forge 0.18.1 agrees with the corpus on it.
+
+Recorded here rather than deleted, for the same reason as the question above.
+
+## Known ambiguities
+
+Behaviours of the published schemas that the corpus has not pinned because the
+standard does not say what they should be. They are recorded, not decided: a
+change here would alter which documents validate, which is a normative
+decision. Both were observed with `jsonschema` 4.26 (Draft 2020-12).
+
+### Airflow task rules apply to every task that has `params`
+
+In 0.7.1 through 0.7.6, each `allOf` rule in `$defs/airflowTask` (fluid_execute,
+bash, python) has an `if` of the form `anyOf: [{properties: {type: {const: ...}}},
+{properties: {operator: {pattern: ...}}}]`. A `properties` subschema is true
+when its member is absent, so a task that omits `operator` (or `type`) matches
+every rule's `if`, and its `params` must then satisfy all three `then` clauses.
+Observed: `{taskId, type: "bash", params: {bash_command}}` is rejected (it lacks
+`contract_path`), while the same task with `operator: "BashOperator"` added, or
+without `params`, is accepted. Whether that is intended is not specified.
+
+### An inline regex flag in `$defs/column`
+
+From 0.7.2 on, the second `anyOf` branch of `$defs/column/properties/type`
+begins with `(?i)`. ECMA-262, the regular-expression dialect JSON Schema names
+for `pattern`, has no inline flags, so whether an implementation treats the
+pattern as case-insensitive, rejects it, or matches it literally is
+implementation-defined. 0.7.1 does not use the flag.
 
 ## Measuring what the corpus is worth
 
@@ -186,17 +231,38 @@ the pattern and the type are dead weight. Redundant constraints are excluded
 from the denominator; counting them would blame the corpus for a gap it cannot
 close, and they are findings about the *schema* instead.
 
-Today: **40.7%** (415 of 1020 falsifiable constraints), with 120 redundant.
-Most of what remains is `type` constraints, which need a wrong-typed value for
-every property in the schema. Of the constraints that carry real meaning —
-enums, required members, closed objects, bounds — 38 remain unpinned.
+Today: **41.0%** for 0.7.5 (432 of 1053 falsifiable constraints, 123
+redundant) and **42.0%** for 0.7.6 (477 of 1137, 128 redundant). The gate
+applies to the lowest. Most of what remains is `type` constraints, which need a
+wrong-typed value for every property in the schema; `--format json` lists the
+unpinned enums, required members, closed objects and bounds.
 
 ## Adding a version
 
-1. Publish `schema/fluid-schema-<version>.json` (authored in forge-cli, synced
-   here by `.github/workflows/schema-sync.yml`).
-2. Create `tests/<version>/` and port the previous version's groups.
-3. Run `scripts/check-compat.py --from <previous> --to <version>`. If it
+1. Vendor `schema/fluid-schema-<version>.json` byte for byte from a forge-cli
+   release and record it in `scripts/schema-versions.json` (`synced`, and
+   `preview` if it is one). The schemas are authored in forge-cli and checked
+   here by the `drift` job in `.github/workflows/conformance.yml`;
+   [CONTRIBUTING.md](../CONTRIBUTING.md) has the re-vendoring steps.
+2. Create `tests/<version>/` (and `tests/optional/<version>/`) by porting the
+   previous version's groups: change `corpusVersion`, the `schema` URI and
+   every `fluidVersion`, and any description that names the version. Run the
+   corpus; a ported case that now fails is a narrowing to explain, not a case
+   to delete.
+3. Add groups for what the version adds, with valid cases and minimal invalid
+   ones. `conformance/mutation_coverage.py --version <version>` lists the new
+   constraints no case pins yet; the CI floor applies to every version
+   separately, so a new version with thin coverage fails the build.
+4. Run `scripts/check-compat.py --from <previous> --to <version>`. If it
    reports a narrowing, either the change is a mistake or it is deliberate and
    belongs in `scripts/compat-waivers.txt` **with the evidence that settled
    it** — the waiver file is a decision record, not a mute button.
+5. Regenerate `specs/` and `schema-diffs/` (`python3 generate-docs.py`,
+   `python3 generate-schema-diffs.py`) and run `conformance/check_reference.py`
+   against the reference implementation.
+
+Re-vendoring an existing version can add constraints too: 0.7.5 was first
+published here as a pre-release copy, and replacing it with the stable one
+added the pgvector platform, the pgvector_table format, binding.vectorConfig and new location fields that no case pinned,
+which took coverage below the CI floor until the cases in
+`tests/0.7.5/binding.json` were added.

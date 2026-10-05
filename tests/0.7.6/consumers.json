@@ -1,0 +1,462 @@
+{
+  "corpusVersion": "0.7.6",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
+  "group": "consumers",
+  "description": "Declared downstream consumers (0.7.6 preview): the consumers array, each consumerRef's required name and type, the type and maturity enums, the closed owner object, the identifier rules on name and exposeIds, and consumerRef's closed property set.",
+  "cases": [
+    {
+      "description": "a consumer carries every member",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "ltv_dashboard",
+            "label": "Customer LTV dashboard",
+            "type": "dashboard",
+            "owner": {
+              "team": "bi",
+              "email": "bi@acme.example"
+            },
+            "url": "https://bi.acme.example/d/ltv",
+            "maturity": "high",
+            "exposeIds": [
+              "profiles_table"
+            ]
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a consumer carrying only its required name and type",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "churn_model",
+            "type": "ml"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a consumer omits its required type",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "churn_model"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers/0",
+          "keyword": "required",
+          "detail": "type"
+        }
+      ]
+    },
+    {
+      "description": "a consumer omits its required name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "type": "ml"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "consumer.type names a kind outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "ltv_report",
+            "type": "report"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers/0/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "consumer.maturity names a level outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "churn_model",
+            "type": "ml",
+            "maturity": "experimental"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers/0/maturity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a consumer carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "churn_model",
+            "type": "ml",
+            "sla": "P1D"
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers/0",
+          "keyword": "additionalProperties",
+          "detail": "sla"
+        }
+      ]
+    },
+    {
+      "description": "consumer.owner carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": [
+          {
+            "name": "churn_model",
+            "type": "ml",
+            "owner": {
+              "team": "ds",
+              "slack": "#ds"
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers/0/owner",
+          "keyword": "additionalProperties",
+          "detail": "slack"
+        }
+      ]
+    },
+    {
+      "description": "consumers is a single object instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "consumers": {
+          "name": "churn_model",
+          "type": "ml"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/consumers",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}
