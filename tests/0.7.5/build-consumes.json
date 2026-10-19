@@ -128,6 +128,38 @@
       "errors": [{ "pointer": "/build/engine", "keyword": "anyOf" }]
     },
     {
+      "description": "build.engine flink is not a 0.7.5 engine (the 0.7.6 preview adds it)",
+      "contract": {
+        "fluidVersion": "0.7.5",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments",
+            "language": "flink_sql"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/build/engine", "keyword": "anyOf" }]
+    },
+    {
       "description": "hybrid-reference build's properties omit the required model",
       "contract": {
         "fluidVersion": "0.7.5",

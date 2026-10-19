@@ -579,7 +579,7 @@
         }
         tags: {
           type: "object"
-          description: "LF-tag (TBAC) associations applied to this table. Keys must reference tag definitions declared in th..."
+          description: "LF-tag (TBAC) associations applied to this table, as tag key to value. Emitted as aws_lakeformation_..."
           additionalProperties: {
             type: "string"
           }

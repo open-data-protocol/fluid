@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "expose-policy",
-  "description": "The exposePolicy block reached via exposes[].policy: its own closed property set, the authn enum, the authz sub-object (closed property set, columnRestrictions items' closed property set and access enum), the privacy sub-object (closed property set, masking items' required column/strategy, closed property set and strategy enum, rowLevelPolicy's required expression and closed property set), and the classification enum.",
+  "description": "The exposePolicy block reached via exposes[].policy: its own closed property set, the authn enum, the authz sub-object (closed property set, columnRestrictions items' closed property set and access enum, and from 0.7.6 access: mask with its mask rule and rowFilters items' required principal/where, name pattern and closed property set), the privacy sub-object (closed property set, masking items' required column/strategy, closed property set and strategy enum, rowLevelPolicy's required expression and closed property set), and the classification enum.",
   "cases": [
     {
       "description": "policy block populated with authn, authz, privacy, and classification",
@@ -225,6 +225,367 @@
       },
       "valid": false,
       "errors": [{ "pointer": "/exposes/0/policy/authz/columnRestrictions/0/access", "keyword": "enum" }]
+    },
+    {
+      "description": "authz masks a column for one principal and filters rows for another (0.7.6)",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "readers": ["group:support", "group:analysts-eu"],
+                "columnRestrictions": [
+                  {
+                    "principal": "group:support",
+                    "columns": ["phone"],
+                    "access": "mask",
+                    "mask": "last_four"
+                  }
+                ],
+                "rowFilters": [
+                  { "principal": "group:analysts-eu", "name": "eu_only", "where": "region = 'EU'" }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "columnRestrictions access mask without the mask rule",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "columnRestrictions": [
+                  { "principal": "group:support", "columns": ["phone"], "access": "mask" }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/authz/columnRestrictions/0",
+          "keyword": "required",
+          "detail": "mask"
+        }
+      ]
+    },
+    {
+      "description": "columnRestrictions mask rule on a deny restriction",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "columnRestrictions": [
+                  {
+                    "principal": "group:support",
+                    "columns": ["phone"],
+                    "access": "deny",
+                    "mask": "last_four"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/authz/columnRestrictions/0/access", "keyword": "const" }
+      ]
+    },
+    {
+      "description": "columnRestrictions mask rule without an access",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "columnRestrictions": [
+                  { "principal": "group:support", "columns": ["phone"], "mask": "last_four" }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/authz/columnRestrictions/0",
+          "keyword": "required",
+          "detail": "access"
+        }
+      ]
+    },
+    {
+      "description": "columnRestrictions mask rule outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "columnRestrictions": [
+                  {
+                    "principal": "group:support",
+                    "columns": ["phone"],
+                    "access": "mask",
+                    "mask": "redact"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/authz/columnRestrictions/0/mask", "keyword": "enum" }
+      ]
+    },
+    {
+      "description": "rowFilters item omits the required where",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": { "rowFilters": [{ "principal": "group:analysts-eu", "name": "eu_only" }] }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/authz/rowFilters/0",
+          "keyword": "required",
+          "detail": "where"
+        }
+      ]
+    },
+    {
+      "description": "rowFilters item omits the required principal",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": { "rowFilters": [{ "name": "eu_only", "where": "region = 'EU'" }] }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/authz/rowFilters/0",
+          "keyword": "required",
+          "detail": "principal"
+        }
+      ]
+    },
+    {
+      "description": "rowFilters item's where is empty",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "rowFilters": [
+                  { "principal": "group:analysts-eu", "name": "eu_only", "where": "" }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        { "pointer": "/exposes/0/policy/authz/rowFilters/0/where", "keyword": "minLength" }
+      ]
+    },
+    {
+      "description": "rowFilters item's name is not a lowercase identifier",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "rowFilters": [
+                  { "principal": "group:analysts-eu", "name": "EU-only", "where": "region = 'EU'" }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [{ "pointer": "/exposes/0/policy/authz/rowFilters/0/name", "keyword": "pattern" }]
+    },
+    {
+      "description": "rowFilters item carries an unrecognized property",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": { "owner": { "team": "customer-analytics" } },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": { "project": "acme-prod", "dataset": "customers", "table": "profiles" }
+            },
+            "contract": { "schema": [{ "name": "customer_id", "type": "string" }] },
+            "policy": {
+              "authz": {
+                "rowFilters": [
+                  {
+                    "principal": "group:analysts-eu",
+                    "name": "eu_only",
+                    "where": "region = 'EU'",
+                    "priority": 1
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/policy/authz/rowFilters/0",
+          "keyword": "additionalProperties",
+          "detail": "priority"
+        }
+      ]
     },
     {
       "description": "privacy carries an unrecognized property",

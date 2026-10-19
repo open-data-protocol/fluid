@@ -1,9 +1,9 @@
 # Schema Changes: 0.7.5 → 0.7.6
 
-**Total changes:** 30
-- ✅ Added: 22
+**Total changes:** 40
+- ✅ Added: 27
 - ❌ Removed: 0
-- 📝 Modified: 8
+- 📝 Modified: 13
 
 <!-- HUMAN-NOTE:START -->
 > **Note — 0.7.6 is a preview.** 0.7.5 is the latest stable version. A contract
@@ -18,6 +18,57 @@
 ---
 
 ## ✅ Added Properties
+
+### `$defs.acquisitionSink.properties.catalogAuth`
+```json
+{
+  type: "object"
+  description: "NEW in v0.7.6: How the Iceberg sink config forge-cli DERIVES (kafka-connect with sink.format iceberg..."
+  additionalProperties: false
+  required: ["type"]
+  properties: {
+    type: {
+      type: "string"
+      enum: ["oauth2", "bearer"]
+      description: "oauth2: OAuth2 client credentials against oauth2ServerUri. bearer: a static bearer token."
+    }
+    credentialEnv: {
+      type: "string"
+      pattern: "^[A-Za-z_][A-Za-z0-9_]*(?![\\s\\S])"
+      not: {
+        pattern: "(?:^|_)(?=[A-Za-z]*[0-9])[A-Za-z0-9]{20,}(?:_|$)"
+      }
+      description: "type oauth2: the NAME of the environment variable holding client_id:client_secret (Iceberg splits it..."
+    }
+    oauth2ServerUri: {
+      type: "string"
+      pattern: "^https?://[^\\s/?#@]+(?:[/?#]\\S*)?$"
+      not: {
+        pattern: "\\$\\{|[\\x00-\\x1f\\x7f]|^\\s*env:"
+      }
+      description: "type oauth2: absolute URL starting with a lowercase http:// or https:// of the identity provider's t..."
+    }
+    scope: {
+      type: "string"
+      minLength: 1
+      not: {
+        pattern: "\\$\\{|[\\x00-\\x1f\\x7f]|^\\s*env:"
+      }
+      description: "type oauth2: the OAuth2 scope to request (Iceberg's default, catalog, is not one most identity provi..."
+    }
+    audience: {
+      type: "string"
+      minLength: 1
+      not: {
+        pattern: "\\$\\{|[\\x00-\\x1f\\x7f]|^\\s*env:"
+      }
+      description: "type oauth2, optional: sent as the audience parameter on the token request."
+    }
+    ... (2 more)
+  }
+  ... (1 more)
+}
+```
 
 ### `$defs.binding.allOf`
 ```json
@@ -70,6 +121,26 @@
   enum: ["cross-account", "none", "all-grantees"]
   default: "cross-account"
   description: "NEW in v0.7.6: Which grants[] principals get a statement in the aws_s3_bucket_policy emitted beside ..."
+}
+```
+
+### `$defs.bindingGovernance.properties.lakeFormation.properties.maskedViews`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  required: ["definer", "validationConnection"]
+  description: "Where the protected Glue Data Catalog views of the expose's masked columns come from (NEW in v0.7.6)..."
+  properties: {
+    definer: {
+      type: "string"
+      description: "ARN of the IAM role the views are defined as: Glue and Lake Formation must be allowed to assume it (..."
+    }
+    validationConnection: {
+      type: "string"
+      description: "The Glue connection of type VIEW_VALIDATION_ATHENA (WORKGROUP_NAME) Glue validates each view's SQL t..."
+    }
+  }
 }
 ```
 
@@ -197,6 +268,11 @@
 }
 ```
 
+### `$defs.exposePolicy.properties.authz.properties.columnRestrictions.items.allOf`
+```json
+[{"if": {"properties": {"access": {"const": "mask"}}, "required": ["access"]}, "then": {"required": ["mask"]}}, {"if": {"required": ["mask"]}, "then": {"properties": {"access": {"const": "mask"}}, "required": ["access"]}}]
+```
+
 ### `$defs.exposePolicy.properties.authz.properties.columnRestrictions.items.properties.access.description`
 ```json
 "deny: the principal may not read the columns. allow: only the principals an allow names may read the..."
@@ -207,9 +283,50 @@
 "Columns of this expose's schema."
 ```
 
+### `$defs.exposePolicy.properties.authz.properties.columnRestrictions.items.properties.mask`
+```json
+{
+  type: "string"
+  enum: ["last_four", "first_four", "nullify"]
+  description: "The masking rule an access: mask restriction applies, required with it and refused without it. last_..."
+}
+```
+
 ### `$defs.exposePolicy.properties.authz.properties.columnRestrictions.items.properties.principal.description`
 ```json
 "Logical principal the restriction applies to, written as in accessPolicy (e.g. group:analysts@compan..."
+```
+
+### `$defs.exposePolicy.properties.authz.properties.rowFilters`
+```json
+{
+  type: "array"
+  description: "Row-level access control (NEW in v0.7.6). Each filter lets its principal read only the rows its wher..."
+  items: {
+    type: "object"
+    additionalProperties: false
+    required: ["principal", "where"]
+    properties: {
+      principal: {
+        type: "string"
+        description: "Logical principal the filter applies to, written as in accessPolicy; binding.principals maps it per ..."
+      }
+      name: {
+        type: "string"
+        pattern: "^[a-z][a-z0-9_]{0,62}$"
+        description: "The filter's name on the platform (the row access policy or data cells filter); derived from the pri..."
+      }
+      where: {
+        type: "string"
+        minLength: 1
+        description: "One SQL boolean expression over the expose's columns, e.g. consent_data_analytics = true AND is_supp..."
+      }
+      description: {
+        type: "string"
+      }
+    }
+  }
+}
 ```
 
 ### `$defs.exposePolicy.properties.privacy.properties.masking.description`
@@ -363,6 +480,30 @@
 
 ## 📝 Modified Properties
 
+### `$defs.acquisitionSink.properties.catalog.enum`
+
+**Before:**
+```json
+[...6 items...]
+```
+
+**After:**
+```json
+[...8 items...]
+```
+
+### `$defs.bindingLocation.properties.catalog.description`
+
+**Before:**
+```json
+"NEW in v0.7.5: Iceberg catalog kind/profile selector — maps to iceberg.catalog.type (e.g. glue, rest..."
+```
+
+**After:**
+```json
+"NEW in v0.7.5: The Iceberg catalog that owns this table: glue, rest, lakekeeper, polaris, unity, nes..."
+```
+
 ### `$defs.bindingLocation.properties.partitionBy.description`
 
 **Before:**
@@ -373,6 +514,30 @@
 **After:**
 ```json
 "NEW in v0.7.5: Iceberg partition columns — a FLUID abstraction over the Iceberg PARTITIONED BY / Par..."
+```
+
+### `$defs.build.properties.engine.anyOf`
+
+**Before:**
+```json
+[{"enum": ["dbt", "sql", "python", "spark", "glue", "custom", "duckdb", "airbyte", "meltano", "dlt", "kafka-connect", "debezium"]}, {"pattern": "^dbt-[a-z0-9]+([_-][a-z0-9]+)*$"}]
+```
+
+**After:**
+```json
+[{"enum": ["dbt", "sql", "python", "spark", "glue", "custom", "duckdb", "airbyte", "meltano", "dlt", "kafka-connect", "debezium", "flink"]}, {"pattern": "^dbt-[a-z0-9]+([_-][a-z0-9]+)*$"}]
+```
+
+### `$defs.build.properties.engine.description`
+
+**Before:**
+```json
+"Build/ingestion engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-quali..."
+```
+
+**After:**
+```json
+"Build/ingestion engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-quali..."
 ```
 
 ### `$defs.expose.properties.lifecycle.$ref`
@@ -397,6 +562,18 @@
 **After:**
 ```json
 "Column-level access control. A column named in any restriction is restricted. 'deny': the principal ..."
+```
+
+### `$defs.exposePolicy.properties.authz.properties.columnRestrictions.items.properties.access.enum`
+
+**Before:**
+```json
+["allow", "deny"]
+```
+
+**After:**
+```json
+["allow", "deny", "mask"]
 ```
 
 ### `$id`

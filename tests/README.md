@@ -181,7 +181,7 @@ first FLUID schema to use a 2020-12-only assertion keyword with a non-empty valu
 (`consumes[].upstreamWorkspace` requires `upstreamDigest`), and the case
 "upstreamWorkspace is set without the upstreamDigest it requires" is invalid
 under 2020-12 while a Draft 7 validator accepts it. `conformance/check_reference.py`
-against data-product-forge 0.18.1 agrees with the corpus on it.
+against data-product-forge 0.21.0 agrees with the corpus on it.
 
 Recorded here rather than deleted, for the same reason as the question above.
 
@@ -232,7 +232,7 @@ from the denominator; counting them would blame the corpus for a gap it cannot
 close, and they are findings about the *schema* instead.
 
 Today: **41.0%** for 0.7.5 (432 of 1053 falsifiable constraints, 123
-redundant) and **42.0%** for 0.7.6 (477 of 1137, 128 redundant). The gate
+redundant) and **43.1%** for 0.7.6 (518 of 1201, 130 redundant). The gate
 applies to the lowest. Most of what remains is `type` constraints, which need a
 wrong-typed value for every property in the schema; `--format json` lists the
 unpinned enums, required members, closed objects and bounds.
