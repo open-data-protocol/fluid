@@ -66,6 +66,6 @@ exposes:
 - **[Concepts](/fluid/concepts/)** — the agentic-native layer and how FLUID compares to ODCS / ODPS.
 - **[Schema Reference](/fluid/schema/anatomy)** — every top-level block, a cheatsheet, and the full specification.
 - **[What's New in 0.7.5](/fluid/releases/0.7.5)** — the latest stable version: streaming Kafka → Iceberg sink, Confluent Cloud Tableflow, and a pgvector output port.
-- **[0.7.6 (preview)](/fluid/releases/0.7.6)** — packaging modes, declared consumers, cross-mesh pins; opt-in, and still subject to change.
+- **[0.7.6 (preview)](/fluid/releases/0.7.6)** — packaging modes, declared consumers, cross-mesh pins, row filters and masked columns, Flink builds; opt-in, and still subject to change.
 - **[See the deck](/fluid/deck/)** — the FLUID story in slides.
 - **[Contributing & governance](/fluid/contributing/)** — how the standard is maintained, and how to take part.

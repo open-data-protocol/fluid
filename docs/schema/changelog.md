@@ -21,6 +21,11 @@ No narrowing change. **Preview:** the 0.7.6 schema can still change before it is
 - `exposes[].binding.governance.lakeFormation.bucketPolicy` (`cross-account` | `none` | `all-grantees`; `cross-account` is the default). Its description says that an emitted `aws_s3_bucket_policy` is authoritative and replaces every other statement on the bucket; see the [0.7.6 notes](/fluid/releases/0.7.6#binding-fields-encryption-principals-lake-formation-bucket-policy).
 - `exposes[].lifecycle` now refers to a new `exposeLifecycle` definition: the root `lifecycle` fields plus `expire` (default `false`).
 - Typed `exposes[].policy.privacy.masking[].params`: `keepFirst`, `keepLast`, `saltEnv`, `keyEnv`.
+- `exposes[].policy.authz.rowFilters[]` (`principal` and `where` required; `name` a lowercase identifier; `description`).
+- `exposes[].policy.authz.columnRestrictions[].access` value `mask`, with `columnRestrictions[].mask` (`last_four` | `first_four` | `nullify`), required with `access: mask` and refused without it.
+- `exposes[].binding.governance.lakeFormation.maskedViews` (`definer` and `validationConnection`, both required).
+- `build(s).engine` value `flink`; see the [0.7.6 notes](/fluid/releases/0.7.6#engine-flink).
+- `build(s).properties.sink.catalog` values `lakekeeper` and `polaris`, and `build(s).properties.sink.catalogAuth` (`type`: `oauth2` | `bearer`), which names the environment variables holding a REST catalog's credentials.
 - `fluidVersion` accepts `"0.7.6"`.
 
 **Described:** `exposes[].policy.authz.columnRestrictions` gains a description of its semantics (deny beats allow; a restriction never grants access; principals are logical).
@@ -147,3 +152,4 @@ No narrowing change. Note that 0.1.0 and 0.1.1 declare the same `$id` (see [Vers
 
 - **Lake Formation `admins` (0.7.3, 0.7.4, 0.7.5).** These schemas were first published with a description of `governance.lakeFormation.admins` saying that principals not listed are not removed. That is the opposite of what applying it does: the list is **authoritative**, and an admin not listed — including the identity running the apply — loses Lake Formation admin. The description was corrected in the reference implementation and the published files carry the corrected text. Only the description changed; the same documents validate.
 - **0.7.5** was re-published with the stable content (above).
+- **Lake Formation tags (0.7.3, 0.7.4, 0.7.5, 0.7.6).** These schemas were first published with a description of `exposes[].binding.governance.lakeFormation.tags` saying that its keys must reference tag definitions in the contract's top-level `governance.lakeFormation.tagDefinitions`. The schema never required that, and a key the contract does not define names a tag owned outside it, such as a platform's central LF-tag ontology, which must already exist in the account. The descriptions of `tags` and `tagDefinitions` were corrected in the reference implementation, and the published files carry the corrected text. Only the descriptions changed; the same documents validate.
