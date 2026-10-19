@@ -11,8 +11,8 @@
     "repository": "Agenticstiger/forge-cli",
     "schemaDir": "fluid_build/schemas",
     "previewSource": "fluid_build/schema_manager.py",
-    "ref": "v0.18.1",
-    "commit": "93e78d4386c70b9e040283f9c5d98a89f901c986"
+    "ref": "v0.21.0",
+    "commit": "91e071e2c2273e2ba06fd0deabfe42d78de82f2e"
   },
   "latestStable": "0.7.5",
   "preview": ["0.7.6"],

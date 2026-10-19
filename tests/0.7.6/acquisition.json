@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "acquisition",
-  "description": "The acquisition build pattern: source-aligned ingestion from an external system (source, sink, delivery/DLQ semantics, schema evolution policy, pre-land quality gates and anomaly signals, cost budgets, catalog auto-registration, single-flight concurrency, lineage emission, the kafka-connect and debezium engine blocks, and the shared deployment block for engine-managed provisioning).",
+  "description": "The acquisition build pattern: source-aligned ingestion from an external system (source, sink (its catalog, and from 0.7.6 the catalogAuth that names a REST catalog's credential by environment variable), delivery/DLQ semantics, schema evolution policy, pre-land quality gates and anomaly signals, cost budgets, catalog auto-registration, single-flight concurrency, lineage emission, the kafka-connect and debezium engine blocks, and the shared deployment block for engine-managed provisioning).",
   "cases": [
     {
       "description": "streaming CDC acquisition reaching every sub-block: source, sink, delivery, schema evolution, quality gates and anomalies, cost budget, catalog, concurrency lock, lineage, kafka-connect (schema registry + streaming sink + managed deployment), and debezium",
@@ -1349,7 +1349,58 @@
       ]
     },
     {
-      "description": "sink catalog outside the recognized set",
+      "description": "sink catalog lakekeeper (recognized from 0.7.6)",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "sink catalog polaris (recognized from 0.7.6)",
       "contract": {
         "fluidVersion": "0.7.6",
         "kind": "DataProduct",
@@ -1397,11 +1448,1237 @@
           }
         }
       },
+      "valid": true
+    },
+    {
+      "description": "sink catalog outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "hadoop"
+            }
+          }
+        }
+      },
       "valid": false,
       "errors": [
         {
           "pointer": "/build/properties/sink/catalog",
           "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth oauth2 names the client-credentials variable, token endpoint, scope and audience (0.7.6)",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "lakekeeper",
+                "audience": "lakekeeper"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "sink catalogAuth bearer names the token variable (0.7.6)",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "bearer",
+                "tokenEnv": "UNITY_CATALOG_TOKEN"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "sink catalogAuth omits the required type",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "tokenEnv": "UNITY_CATALOG_TOKEN"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "required",
+          "detail": "type"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth type outside the recognized set",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "sigv4",
+                "tokenEnv": "UNITY_CATALOG_TOKEN"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth carries the token itself instead of naming its variable",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "bearer",
+                "tokenEnv": "UNITY_CATALOG_TOKEN",
+                "token": "redacted"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "additionalProperties",
+          "detail": "token"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth oauth2 omits the required scope",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "required",
+          "detail": "scope"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth oauth2 also names a bearer tokenEnv",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "lakekeeper",
+                "tokenEnv": "UNITY_CATALOG_TOKEN"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth bearer omits the required tokenEnv",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "bearer"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "required",
+          "detail": "tokenEnv"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth bearer also names an oauth2 credentialEnv",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "bearer",
+                "tokenEnv": "UNITY_CATALOG_TOKEN",
+                "credentialEnv": "LAKEKEEPER_CLIENT"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth tokenEnv is a variable reference, not a variable name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "bearer",
+                "tokenEnv": "${UNITY_CATALOG_TOKEN}"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/tokenEnv",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth tokenEnv is shaped like a token, not a variable name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "unity",
+              "catalogAuth": {
+                "type": "bearer",
+                "tokenEnv": "dapi0123456789abcdef0123456789"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/tokenEnv",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth credentialEnv is shaped like a token, not a variable name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "CLIENT_a1b2c3d4e5f6g7h8i9j0k1",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "lakekeeper"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/credentialEnv",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth oauth2ServerUri carries a user:password@ part",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://client:secret@keycloak.example.com/realms/lake/token",
+                "scope": "lakekeeper"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/oauth2ServerUri",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth scope is a variable reference",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "${CATALOG_SCOPE}"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/scope",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth oauth2 omits the required credentialEnv",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "lakekeeper"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "required",
+          "detail": "credentialEnv"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth oauth2 omits the required oauth2ServerUri",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "scope": "lakekeeper"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth",
+          "keyword": "required",
+          "detail": "oauth2ServerUri"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth credentialEnv is a variable reference, not a variable name",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "${LAKEKEEPER_CLIENT}",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "lakekeeper"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/credentialEnv",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth scope is empty",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": ""
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/scope",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "description": "sink catalogAuth resource starts with env:",
+      "contract": {
+        "fluidVersion": "0.7.6",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "acquisition",
+          "engine": "kafka-connect",
+          "properties": {
+            "source": {
+              "kind": "postgres",
+              "mode": "full_refresh"
+            },
+            "sink": {
+              "catalog": "lakekeeper",
+              "catalogAuth": {
+                "type": "oauth2",
+                "credentialEnv": "LAKEKEEPER_CLIENT",
+                "oauth2ServerUri": "https://keycloak.example.com/realms/lake/protocol/openid-connect/token",
+                "scope": "lakekeeper",
+                "resource": "env:CATALOG_RESOURCE"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/sink/catalogAuth/resource",
+          "keyword": "not"
         }
       ]
     },
