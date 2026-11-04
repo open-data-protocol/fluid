@@ -1,6 +1,6 @@
 # Schema Reference
 
-Everything you need to read, write, and validate a FLUID contract. **The latest stable schema is 0.7.5; 0.7.6 is a preview** (see [Versions](/fluid/schema/versions#stable-and-preview-versions)).
+Everything you need to read, write, and validate a FLUID contract. **The latest stable schema is 0.7.6; 0.7.7 is a preview** (see [Versions](/fluid/schema/versions#stable-and-preview-versions)).
 
 | Page | Use it for |
 |---|---|
@@ -13,8 +13,8 @@ Everything you need to read, write, and validate a FLUID contract. **The latest 
 
 ## Machine-readable artifacts
 
-- **JSON Schema (0.7.5, stable):** [`/fluid/schema/fluid-schema-0.7.5.json`](/fluid/schema/fluid-schema-0.7.5.json) — point your validator here.
-- **Generated HTML reference (0.7.5):** [`/fluid/specs/0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html) — every type, enum and validation rule, rendered from the schema.
-- **Preview (0.7.6):** [`fluid-schema-0.7.6.json`](/fluid/schema/fluid-schema-0.7.6.json) · [`specs/0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html).
+- **JSON Schema (0.7.6, stable):** [`/fluid/schema/fluid-schema-0.7.6.json`](/fluid/schema/fluid-schema-0.7.6.json) — point your validator here.
+- **Generated HTML reference (0.7.6):** [`/fluid/specs/0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html) — every type, enum and validation rule, rendered from the schema.
+- **Preview (0.7.7):** [`fluid-schema-0.7.7.json`](/fluid/schema/fluid-schema-0.7.7.json) · [`specs/0.7.7/fluid-spec.html`](/fluid/specs/0.7.7/fluid-spec.html).
 
 Validate a document against the schema of the `fluidVersion` it declares. For older versions, see [**Versions**](/fluid/schema/versions).

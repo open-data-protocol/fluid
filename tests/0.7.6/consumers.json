@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "consumers",
-  "description": "Declared downstream consumers (0.7.6 preview): the consumers array, each consumerRef's required name and type, the type and maturity enums, the closed owner object, the identifier rules on name and exposeIds, and consumerRef's closed property set.",
+  "description": "Declared downstream consumers (0.7.6): the consumers array, each consumerRef's required name and type, the type and maturity enums, the closed owner object, the identifier rules on name and exposeIds, and consumerRef's closed property set.",
   "cases": [
     {
       "description": "a consumer carries every member",

@@ -2,13 +2,14 @@
 
 Every published version of the FLUID JSON Schema. Point your validator at a version's JSON Schema; read its generated HTML reference for the field-by-field detail.
 
-- **Latest stable: 0.7.5.** Use it for new contracts.
-- **Preview: 0.7.6.** Published so that it can be read and validated against. It can still change before it is promoted. See [Stable and preview versions](#stable-and-preview-versions).
+- **Latest stable: 0.7.6.** Use it for new contracts.
+- **Preview: 0.7.7.** Published so that it can be read and validated against. It can still change before it is promoted. See [Stable and preview versions](#stable-and-preview-versions).
 
 | Version | Status | JSON Schema | HTML Reference |
 |---|---|---|---|
-| **0.7.6** | **Preview** | [`fluid-schema-0.7.6.json`](/fluid/schema/fluid-schema-0.7.6.json) | [`0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html) |
-| **0.7.5** | **Stable (latest)** | [`fluid-schema-0.7.5.json`](/fluid/schema/fluid-schema-0.7.5.json) | [`0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html) |
+| **0.7.7** | **Preview** | [`fluid-schema-0.7.7.json`](/fluid/schema/fluid-schema-0.7.7.json) | [`0.7.7/fluid-spec.html`](/fluid/specs/0.7.7/fluid-spec.html) |
+| **0.7.6** | **Stable (latest)** | [`fluid-schema-0.7.6.json`](/fluid/schema/fluid-schema-0.7.6.json) | [`0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html) |
+| 0.7.5 | Stable | [`fluid-schema-0.7.5.json`](/fluid/schema/fluid-schema-0.7.5.json) | [`0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html) |
 | 0.7.4 | Stable | [`fluid-schema-0.7.4.json`](/fluid/schema/fluid-schema-0.7.4.json) | [`0.7.4/fluid-spec.html`](/fluid/specs/0.7.4/fluid-spec.html) |
 | 0.7.3 | Stable | [`fluid-schema-0.7.3.json`](/fluid/schema/fluid-schema-0.7.3.json) | [`0.7.3/fluid-spec.html`](/fluid/specs/0.7.3/fluid-spec.html) |
 | 0.7.2 | Stable | [`fluid-schema-0.7.2.json`](/fluid/schema/fluid-schema-0.7.2.json) | [`0.7.2/fluid-spec.html`](/fluid/specs/0.7.2/fluid-spec.html) |
@@ -35,13 +36,13 @@ For what changed between any two versions, see the [**Changelog**](/fluid/schema
 
 ### What "preview" means for you
 
-- **A contract opts in explicitly**, by declaring `fluidVersion: "0.7.6"`. Nothing else selects a preview.
-- **Expect to re-validate.** The compatibility gate compares two *versions*. It cannot compare one revision of the 0.7.6 file with an earlier revision of the same file, so a contract written against an earlier revision of 0.7.6 may need changes after a later one. The schemas are authored in the reference implementation, [forge-cli](https://github.com/Agenticstiger/forge-cli), where `fluid_build/schemas/fluid-schema-0.7.6.json` has changed several times since 0.7.6 opened; its history is the record of those changes.
-- **Promotion** makes a preview the latest stable version and is announced in its release notes. 0.7.5 went through the same path: it was an opt-in preview in forge-cli from 0.9.0 and was promoted to stable in forge-cli 0.12.0, when 0.7.6 opened as the next preview.
+- **A contract opts in explicitly**, by declaring `fluidVersion: "0.7.7"`. Nothing else selects a preview.
+- **Expect to re-validate.** The compatibility gate compares two *versions*. It cannot compare one revision of the 0.7.6 file with an earlier revision of the same file, so a contract written against an earlier revision of 0.7.7 may need changes after a later one. The schemas are authored in the reference implementation, [forge-cli](https://github.com/Agenticstiger/forge-cli), where `fluid_build/schemas/fluid-schema-0.7.7.json` can change while 0.7.7 is a preview; its history is the record of those changes.
+- **Promotion** makes a preview the latest stable version and is announced in its release notes. 0.7.5 went through the same path: it was an opt-in preview in forge-cli from 0.9.0 and was promoted to stable in forge-cli 0.12.0, when 0.7.6 opened as the next preview. 0.7.6 followed: promoted in forge-cli 0.26.0, when 0.7.7 opened as the next preview.
 
 ### How the reference implementation treats a preview (non-normative)
 
-[`data-product-forge`](/fluid/concepts/forge-cli) bundles 0.7.6 and validates a contract that declares it (`✅ Valid FLUID contract (schema v0.7.6)`), but never chooses it on its own: its newest *stable* bundled version is its default, and `fluid init --quickstart` writes `fluidVersion: 0.7.5`. This describes one implementation. The standard's rule is only the one in [Validation semantics](/fluid/schema/specification#validation-semantics): a document is validated against the schema of the version it declares.
+[`data-product-forge`](/fluid/concepts/forge-cli) bundles 0.7.7 and validates a contract that declares it (`✅ Valid FLUID contract (schema v0.7.7)`), but never chooses it on its own: its newest *stable* bundled version, 0.7.6, is its default. This describes one implementation. The standard's rule is only the one in [Validation semantics](/fluid/schema/specification#validation-semantics): a document is validated against the schema of the version it declares.
 
 ---
 

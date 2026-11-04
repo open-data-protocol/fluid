@@ -1,11 +1,11 @@
 # Schema Anatomy
 
-A FLUID contract is one YAML file. This page walks **every top-level block** of the latest stable schema, **0.7.5**, in the order you'd typically author them, with a one-paragraph "what / when / why" for each and a link into the generated reference doc for the field-by-field details.
+A FLUID contract is one YAML file. This page walks **every top-level block** of the latest stable schema, **0.7.6**, in the order you'd typically author them, with a one-paragraph "what / when / why" for each and a link into the generated reference doc for the field-by-field details.
 
 > 📋 If you just want a one-line-per-field table, see the [**Cheatsheet**](/fluid/schema/cheatsheet).
 > 🟢 If you want a copy-pasteable minimal example, see the [**Minimal Valid Contract**](/fluid/schema/minimal-contract).
-> 📚 Full field-by-field reference: [`specs/0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html).
-> 🧪 Blocks marked **0.7.6 preview** need `fluidVersion: "0.7.6"` and can still change — see [0.7.6 (preview)](/fluid/releases/0.7.6).
+> 📚 Full field-by-field reference: [`specs/0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html).
+> 🧪 Blocks marked **0.7.6** need `fluidVersion: "0.7.6"` or later — see [0.7.6](/fluid/releases/0.7.6).
 
 The YAML blocks on this page fit together: merged in order into the [minimal contract](/fluid/schema/minimal-contract), they form one contract that validates against the 0.7.5 schema.
 
@@ -49,7 +49,7 @@ The YAML blocks on this page fit together: merged in order into the [minimal con
 │  machineLearning { ... }   docs { ... }                      │
 └──────────────────────────────────────────────────────────────┘
 
-  0.7.6 preview adds: packaging, consumers[], consumes[].upstream*,
+  0.7.6 adds: packaging, consumers[], consumes[].upstream*,
   binding.{encryption, principals, packaging}, lifecycle.expire
 ```
 
@@ -115,7 +115,7 @@ consumes:
 **When:** any product that isn't strictly source-aligned (i.e. not `build.pattern: acquisition`).
 **Why:** the orchestrator builds the DAG from `consumes`. No `consumes` → no automatic upstream waiting, no automatic lineage. Each entry can also state `qosExpectations` (`freshnessMax`, `maxStaleness`, `minCompleteness`) and `requiredPolicies`.
 
-> 🧪 **0.7.6 preview:** `upstreamWorkspace` and `upstreamDigest` pin an upstream that lives in another mesh; setting the first requires the second. See [0.7.6](/fluid/releases/0.7.6#cross-mesh-pins-on-consumes).
+> 🧪 **0.7.6:** `upstreamWorkspace` and `upstreamDigest` pin an upstream that lives in another mesh; setting the first requires the second. See [0.7.6](/fluid/releases/0.7.6#cross-mesh-pins-on-consumes).
 
 ---
 
@@ -209,7 +209,7 @@ exposes:
 
 Platform + format + location. Plus `icebergConfig` (0.7.2+) when format is `iceberg` (write version, file format, `partitionSpec`, `sortOrder`), so the contract owns table-format details too. **0.7.4** adds the `postgres` platform and the `postgres_table` / `athena_table` / `glue_table` formats. **0.7.5** adds the `confluent` (Tableflow) and `pgvector` platforms, `pgvector_table`, `vectorConfig`, and location fields for Iceberg catalogs, Redshift Serverless and Kinesis — see [0.7.5](/fluid/releases/0.7.5). Optional `binding.governance` carries per-resource AWS Lake Formation settings.
 
-> 🧪 **0.7.6 preview** adds `binding.encryption.kms`, `binding.principals` (logical principal → platform identity), `binding.packaging`, and Lake Formation `bucketPolicy`; a bucket policy it emits is **authoritative** and replaces every other statement on the bucket. See [0.7.6](/fluid/releases/0.7.6#binding-fields-encryption-principals-lake-formation-bucket-policy).
+> 🧪 **0.7.6** adds `binding.encryption.kms`, `binding.principals` (logical principal → platform identity), `binding.packaging`, and Lake Formation `bucketPolicy`; a bucket policy it emits is **authoritative** and replaces every other statement on the bucket. See [0.7.6](/fluid/releases/0.7.6#binding-fields-encryption-principals-lake-formation-bucket-policy).
 
 ---
 
@@ -371,7 +371,7 @@ exposes:
 `admins` is **authoritative, not additive**. Applying it sets the account's Lake Formation admins to exactly this list, so any admin you do not list is **removed** — including the role or user that runs the apply, after which Lake Formation grants and registrations that need an admin can fail. List every principal that must stay an admin, the deploying identity included. (The 0.7.3–0.7.5 schemas were first published with a description saying the opposite; see the [Changelog](/fluid/schema/changelog#corrections-to-published-schemas).) In the reference implementation, applying this block also clears the account's other data-lake settings that it does not set: the create-database and create-table default permissions, trusted resource owners and parameters. Destroying the emitted `aws_lakeformation_data_lake_settings` resource empties the admin list and resets `CROSS_ACCOUNT_VERSION` to 1. See the field's description in the [schema](/fluid/specs/0.7.5/fluid-spec.html).
 :::
 
-> 🧪 **0.7.6 preview** adds `binding.principals`, which maps the logical principals named in `accessPolicy` and `columnRestrictions` to each platform's identities, writes down what `columnRestrictions` means (deny beats allow; a restriction never grants access), and adds typed masking `params`. See [0.7.6](/fluid/releases/0.7.6).
+> 🧪 **0.7.6** adds `binding.principals`, which maps the logical principals named in `accessPolicy` and `columnRestrictions` to each platform's identities, writes down what `columnRestrictions` means (deny beats allow; a restriction never grants access), and adds typed masking `params`. See [0.7.6](/fluid/releases/0.7.6).
 
 > ⭐ **0.7.4 — runtime enforcement.** When an expose also carries an [`mcp` block](#mcp-0-7-4-opt-this-expose-into-the-mcp-output-port-gateway), the `agentPolicy` above stops being passive metadata: an MCP gateway that implements 0.7.4, such as the reference implementation's, enforces `allowedModels` / `deniedModels` and `allowedUseCases` / `deniedUseCases` on every read. The `agentPolicy` shape is unchanged — 0.7.4 only changes *when* it bites.
 
@@ -405,7 +405,7 @@ These are the deeper-cut blocks — every one is opt-in:
 - **`lifecycle`** — `state: preview | active | deprecated | retired`, `retention` (an ISO-8601 duration) and `deprecationPolicy` (`noticePeriod`, `contact`, `replacement`). Note that `preview` here is a *product's* state; it has nothing to do with preview *schema versions*. 🧪 In the 0.7.6 preview, an expose's `lifecycle` also takes `expire: true`, which deletes data older than `retention`.
 - **`docs`** — `homepage`, `runbook`, `dictionary`, `changeLog`.
 
-For the field-by-field detail on each, see the generated reference: [`specs/0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html).
+For the field-by-field detail on each, see the generated reference: [`specs/0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html).
 
 ---
 

@@ -1,8 +1,8 @@
 # Schema Changes: 0.7.5 → 0.7.6
 
-**Total changes:** 40
-- ✅ Added: 27
-- ❌ Removed: 0
+**Total changes:** 54
+- ✅ Added: 40
+- ❌ Removed: 1
 - 📝 Modified: 13
 
 <!-- HUMAN-NOTE:START -->
@@ -114,6 +114,27 @@
 }
 ```
 
+### `$defs.binding.properties.serialization`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.6: How message VALUES (and keys) are serialized on the wire. A Kafka binding today decla..."
+  properties: {
+    value: {
+      type: "string"
+      enum: [...6 items...]
+      description: "How message values are serialized."
+    }
+    key: {
+      type: "string"
+      enum: [...6 items...]
+      description: "How message keys are serialized, for a topic whose keys are not opaque bytes."
+    }
+  }
+}
+```
+
 ### `$defs.bindingGovernance.properties.lakeFormation.properties.bucketPolicy`
 ```json
 {
@@ -144,10 +165,73 @@
 }
 ```
 
+### `$defs.bindingLocation.properties.host`
+```json
+{
+  type: "string"
+  description: "NEW in v0.7.6: Host or endpoint; for a Kafka binding, the bootstrap servers. The ODCS server mapper ..."
+}
+```
+
+### `$defs.column.properties.quality`
+```json
+{
+  type: "array"
+  description: "NEW in v0.7.6: Column-level data quality rules, in ODCS's own shape — the array that is written stra..."
+  items: {
+    type: "object"
+    minProperties: 1
+    properties: {
+      id: {
+        type: "string"
+        pattern: "^[A-Za-z0-9_-]+$"
+        description: "Stable rule identifier, unique within this column's rules. The pattern is ODCS `$defs.StableId`. Rul..."
+      }
+      type: {
+        type: "string"
+        enum: [...4 items...]
+        description: "ODCS quality check type. text = prose; library = one of ODCS's predefined metrics; sql = a query who..."
+      }
+      metric: {
+        type: "string"
+        enum: [...5 items...]
+        description: "type: library only. The five predefined metrics ODCS v3.1.0 defines; a name outside this list is not..."
+      }
+      arguments: {
+        type: "object"
+        description: "type: library only. Extra arguments for the metric — `pattern` (a regex) or `validValues` (a list) f..."
+      }
+      query: {
+        type: "string"
+        description: "type: sql only. The query whose result the comparison operator is applied to."
+      }
+      ... (6 more)
+    }
+  }
+}
+```
+
 ### `$defs.consumeRef.dependentRequired`
 ```json
 {
   upstreamWorkspace: ["upstreamDigest"]
+}
+```
+
+### `$defs.consumeRef.properties.contractId`
+```json
+{
+  type: "string"
+  description: "NEW in v0.7.6: The upstream contract's OWN id, for an upstream that has one of its own — a product n..."
+}
+```
+
+### `$defs.consumeRef.properties.contractVersion`
+```json
+{
+  $ref: "#/$defs/semver"
+  description: "NEW in v0.7.6: The exact upstream contract version this product was built and tested against, within..."
+  examples: ["2.1.0"]
 }
 ```
 
@@ -212,6 +296,38 @@
     }
     ... (3 more)
   }
+}
+```
+
+### `$defs.descriptionObject`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.6: The structured form of the root `description`. The three field names are Bitol's — OD..."
+  properties: {
+    purpose: {
+      type: "string"
+      description: "What this data product is for."
+    }
+    usage: {
+      type: "string"
+      description: "How a consumer is expected to use it."
+    }
+    limitations: {
+      type: "string"
+      description: "What it must not be used for, and what it does not cover."
+    }
+  }
+}
+```
+
+### `$defs.exposeContract.properties.id`
+```json
+{
+  type: "string"
+  description: "NEW in v0.7.6: An explicit, stable contract id, used verbatim as the ODCS `id` and as the ODPS outpu..."
+  minLength: 1
 }
 ```
 
@@ -459,6 +575,44 @@
 }
 ```
 
+### `$defs.teamMember`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.6: One member of `metadata.team.members`. The field names and the username-only required..."
+  required: ["username"]
+  properties: {
+    username: {
+      type: "string"
+      description: "The member's identifier in the organisation's directory \u2014 the one field Bitol requires."
+    }
+    name: {
+      type: "string"
+      description: "Display name."
+    }
+    role: {
+      type: "string"
+      description: "The role this member holds on this product, e.g. 'owner', 'steward', 'data engineer'. Free-form: Bit..."
+    }
+    email: {
+      type: "string"
+      format: "email"
+    }
+  }
+}
+```
+
+### `$defs.trigger.allOf`
+```json
+[{"if": {"type": "object", "required": ["type"], "properties": {"type": {"const": "continuous"}}}, "then": {"allOf": [{"description": "cron is not allowed with type continuous: a continuous job runs all the time, so its trigger takes no other trigger. Remove cron, or set type: schedule.", "not": {"required": ["cron"]}}, {"description": "schedule is not allowed with type continuous: a continuous job runs all the time, so its trigger takes no other trigger. Remove schedule, or set type: schedule.", "not": {"required": ["schedule"]}}, {"description": "datasets is not allowed with type continuous: a continuous job runs all the time, so its trigger takes no other trigger. Remove datasets, or set type: dataset.", "not": {"required": ["datasets"]}}, {"description": "event is not allowed with type continuous: a continuous job runs all the time, so its trigger takes no other trigger. Remove event, or set type: event.", "not": {"required": ["event"]}}, {"description": "timetable is not allowed with type continuous: a continuous job runs all the time, so its trigger takes no other trigger. Remove timetable, or set type: timetable.", "not": {"required": ["timetable"]}}]}}]
+```
+
+### `$defs.trigger.properties.type.description`
+```json
+"NEW in v0.7.6: continuous, for a build that runs as a long-lived job on its own platform, such as an..."
+```
+
 ### `properties.consumers`
 ```json
 {
@@ -470,12 +624,51 @@
 }
 ```
 
+### `properties.description.description`
+```json
+"NEW in v0.7.6: Either a plain string — unchanged meaning, it becomes `purpose` on export — or the st..."
+```
+
+### `properties.description.oneOf`
+```json
+[{"type": "string", "description": "Prose description. Exported as `description.purpose`."}, {"$ref": "#/$defs/descriptionObject"}]
+```
+
+### `properties.metadata.properties.team`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.6: The team behind this product, as a roster rather than a single contact. `metadata.own..."
+  properties: {
+    name: {
+      type: "string"
+      description: "Team name, e.g. 'Sales Analytics'."
+    }
+    members: {
+      type: "array"
+      description: "The people on the team, each with the role they hold on this product."
+      items: {
+        $ref: "#/$defs/teamMember"
+      }
+    }
+  }
+}
+```
+
 ### `properties.packaging`
 ```json
 {
   $ref: "#/$defs/packaging"
   description: "NEW in v0.7.6: Contract-wide packaging default — declarative container ownership (isolated = this pr..."
 }
+```
+
+## ❌ Removed Properties
+
+### `properties.description.type`
+```json
+"string"
 ```
 
 ## 📝 Modified Properties
@@ -576,6 +769,18 @@
 ["allow", "deny", "mask"]
 ```
 
+### `$defs.trigger.properties.type.enum`
+
+**Before:**
+```json
+[...7 items...]
+```
+
+**After:**
+```json
+[...8 items...]
+```
+
 ### `$id`
 
 **Before:**
@@ -599,19 +804,7 @@
 
 **After:**
 ```json
-"FLUID contract schema 0.7.6 — the current PREVIEW version, opened when 0.7.5 was promoted to stable...."
-```
-
-### `properties.fluidVersion.description`
-
-**Before:**
-```json
-"Contract schema version. Accepts '0.7.3' (source-aligned data products + acquisition pattern + inges..."
-```
-
-**After:**
-```json
-"Contract schema version. Accepts '0.7.3' (source-aligned data products + acquisition pattern + inges..."
+"FLUID contract schema 0.7.6 — opened as the preview when 0.7.5 was promoted to stable, and stable it..."
 ```
 
 ### `properties.fluidVersion.enum`
@@ -635,5 +828,5 @@
 
 **After:**
 ```json
-"FLUID 0.7.6 \u2014 Declarative Packaging Modes (preview)"
+"FLUID 0.7.6 \u2014 Declarative Packaging Modes"
 ```

@@ -35,7 +35,7 @@ A FLUID contract describes a data product end to end: its schema, build logic, d
 
 This structure separates **interface** (what you get) from **implementation** (how it's built), enabling reliable data ecosystems ready for both humans and AI agents.
 
-> The latest stable schema version is **0.7.5**; **0.7.6** is a preview that a contract uses only by declaring it. Every stable release after 0.7.2 has been additive over its predecessor; the one recorded narrowing is the step into 0.7.2 (0.7.1 → 0.7.2). See [What's New](/fluid/releases/) and [Versions](/fluid/schema/versions).
+> The latest stable schema version is **0.7.6**; **0.7.7** is a preview that a contract uses only by declaring it. Every stable release after 0.7.2 has been additive over its predecessor; the one recorded narrowing is the step into 0.7.2 (0.7.1 → 0.7.2). See [What's New](/fluid/releases/) and [Versions](/fluid/schema/versions).
 
 ---
 

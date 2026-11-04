@@ -11,12 +11,12 @@
     "repository": "Agenticstiger/forge-cli",
     "schemaDir": "fluid_build/schemas",
     "previewSource": "fluid_build/schema_manager.py",
-    "ref": "v0.21.0",
-    "commit": "91e071e2c2273e2ba06fd0deabfe42d78de82f2e"
+    "ref": "v0.27.0",
+    "commit": "c0e97c076f735205f4767f67f0bd05bcd78a47cd"
   },
-  "latestStable": "0.7.5",
-  "preview": ["0.7.6"],
-  "synced": ["0.7.2", "0.7.3", "0.7.4", "0.7.5", "0.7.6"],
+  "latestStable": "0.7.6",
+  "preview": ["0.7.7"],
+  "synced": ["0.7.2", "0.7.3", "0.7.4", "0.7.5", "0.7.6", "0.7.7"],
   "notSynced": {
     "0.7.1": "The reference implementation bundles a different document under the same $id (it adds orchestration, icebergConfig, binding.properties and more). Re-vendoring it would change which documents the published 0.7.1 accepts, so it is a decision for the maintainers rather than a sync, and the published copy is left as it is.",
     "0.0.1-0.5.7": "Predate the compatibility promise; the reference implementation no longer bundles them."

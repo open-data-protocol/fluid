@@ -1,0 +1,2099 @@
+{
+  "corpusVersion": "0.7.7",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
+  "group": "binding",
+  "description": "The binding object embedded in every expose: its required platform/format/location members, the platform and format enums, the closed bindingLocation property set (including the v0.7.5 Confluent Tableflow, Iceberg catalog-profile, Redshift Serverless and Kinesis fields), icebergConfig's own structure -- writeVersion/fileFormat enums, its closed property set, and the partitionSpec/sortOrder arrays' per-entry required fields and enums -- and the v0.7.5 vector output port: platform pgvector, format pgvector_table, and vectorConfig's closed property set, required dimensions and its inclusive 1..16000 bounds, its vectorType/indexType/distanceMetric enums, and the closed hnsw/ivfflat parameter objects with their minimums. Also documents that the schema does not cross-validate platform against format or location fields against platform.",
+  "cases": [
+    {
+      "description": "binding carrying only the three required members",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "kafka",
+              "format": "kafka_topic",
+              "location": {
+                "topic": "customer-events"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "bindingLocation combines the general-purpose addressing properties in one object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "other",
+              "location": {
+                "account": "123456789012",
+                "project": "acme-prod",
+                "dataset": "customers",
+                "database": "analytics",
+                "schema": "public",
+                "table": "profiles",
+                "bucket": "acme-data-lake",
+                "path": "raw/customers/profiles/",
+                "gateway": "internal-gw.acme.com",
+                "baseUrl": "https://api.acme.com/v1/customers",
+                "topic": "customer-profile-updates",
+                "subscription": "profile-updates-sub",
+                "region": "us-central1",
+                "zone": "us-central1-a"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "Confluent Tableflow location fields accompany a confluent platform binding",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "confluent",
+              "format": "iceberg",
+              "location": {
+                "topic": "orders",
+                "environment_id": "env-abc123",
+                "kafka_cluster_id": "lkc-xyz789",
+                "confluent_role_arn": "arn:aws:iam::123456789012:role/confluent-tableflow-role"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "platform and format name binding to unrelated cloud ecosystems",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "azure",
+              "format": "bigquery_table",
+              "location": {
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "icebergConfig specifies partitioning, sort order, and table properties in full",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "icebergConfig": {
+                "writeVersion": 2,
+                "fileFormat": "parquet",
+                "partitionSpec": [
+                  {
+                    "name": "created_year",
+                    "sourceColumn": "created_at",
+                    "transform": "year"
+                  },
+                  {
+                    "name": "customer_bucket",
+                    "sourceColumn": "customer_id",
+                    "transform": "bucket",
+                    "numBuckets": 16
+                  }
+                ],
+                "sortOrder": [
+                  {
+                    "column": "created_at",
+                    "direction": "desc",
+                    "nullOrder": "nulls-last"
+                  }
+                ],
+                "properties": {
+                  "write.format.default": "parquet",
+                  "history.expire.max-snapshot-age-ms": "604800000"
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "icebergConfig at writeVersion 1 carries only a file format",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "databricks",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/legacy/"
+              },
+              "icebergConfig": {
+                "writeVersion": 1,
+                "fileFormat": "avro"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "platform is absent from the binding",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "format": "kafka_topic",
+              "location": {
+                "topic": "customer-events"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding",
+          "keyword": "required",
+          "detail": "platform"
+        }
+      ]
+    },
+    {
+      "description": "format is absent from the binding",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "kafka",
+              "location": {
+                "topic": "customer-events"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding",
+          "keyword": "required",
+          "detail": "format"
+        }
+      ]
+    },
+    {
+      "description": "location is absent from the binding",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "kafka",
+              "format": "kafka_topic"
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding",
+          "keyword": "required",
+          "detail": "location"
+        }
+      ]
+    },
+    {
+      "description": "platform names a cloud provider outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "digitalocean",
+              "format": "kafka_topic",
+              "location": {
+                "topic": "customer-events"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/platform",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "format names a file type outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "kafka",
+              "format": "excel_sheet",
+              "location": {
+                "topic": "customer-events"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/format",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "bindingLocation carries an undocumented addressing property",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "kafka",
+              "format": "kafka_topic",
+              "location": {
+                "topic": "customer-events",
+                "bootstrapServers": "kafka.internal:9092"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/location",
+          "keyword": "additionalProperties",
+          "detail": "bootstrapServers"
+        }
+      ]
+    },
+    {
+      "description": "binding carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "kafka",
+              "format": "kafka_topic",
+              "location": {
+                "topic": "customer-events"
+              },
+              "connectionString": "kafka://broker1:9092,broker2:9092"
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding",
+          "keyword": "additionalProperties",
+          "detail": "connectionString"
+        }
+      ]
+    },
+    {
+      "description": "icebergConfig.writeVersion is outside the {1,2} enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "databricks",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/legacy/"
+              },
+              "icebergConfig": {
+                "writeVersion": 3,
+                "fileFormat": "avro"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig/writeVersion",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "icebergConfig.fileFormat names a format outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "databricks",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/legacy/"
+              },
+              "icebergConfig": {
+                "writeVersion": 1,
+                "fileFormat": "csv"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig/fileFormat",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "icebergConfig carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "databricks",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/legacy/"
+              },
+              "icebergConfig": {
+                "writeVersion": 1,
+                "fileFormat": "parquet",
+                "compressionCodec": "zstd"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig",
+          "keyword": "additionalProperties",
+          "detail": "compressionCodec"
+        }
+      ]
+    },
+    {
+      "description": "a partitionSpec entry omits the required transform",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "icebergConfig": {
+                "writeVersion": 2,
+                "fileFormat": "parquet",
+                "partitionSpec": [
+                  {
+                    "sourceColumn": "created_at"
+                  }
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig/partitionSpec/0",
+          "keyword": "required",
+          "detail": "transform"
+        }
+      ]
+    },
+    {
+      "description": "bindingLocation.baseUrl is a number instead of a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "http_api",
+              "location": {
+                "baseUrl": 42
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/location/baseUrl",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a partitionSpec entry omits the required sourceColumn",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "icebergConfig": {
+                "writeVersion": 2,
+                "fileFormat": "parquet",
+                "partitionSpec": [
+                  {
+                    "transform": "identity"
+                  }
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig/partitionSpec/0",
+          "keyword": "required",
+          "detail": "sourceColumn"
+        }
+      ]
+    },
+    {
+      "description": "a partitionSpec entry names a transform outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "icebergConfig": {
+                "writeVersion": 2,
+                "fileFormat": "parquet",
+                "partitionSpec": [
+                  {
+                    "sourceColumn": "id",
+                    "transform": "quarterly"
+                  }
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig/partitionSpec/0/transform",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a sortOrder entry omits the required column",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "bucket": "acme-lake",
+                "path": "warehouse/customers/profiles"
+              },
+              "icebergConfig": {
+                "writeVersion": 2,
+                "fileFormat": "parquet",
+                "sortOrder": [
+                  {
+                    "direction": "asc"
+                  }
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/icebergConfig/sortOrder/0",
+          "keyword": "required",
+          "detail": "column"
+        }
+      ]
+    },
+    {
+      "description": "pgvector platform with a pgvector_table format and only the required vectorConfig member",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "vectorConfig specifies every member, with an HNSW index",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1024,
+                "embeddingModel": "embed-english-light",
+                "vectorType": "halfvec",
+                "indexType": "hnsw",
+                "distanceMetric": "inner_product",
+                "table": "profile_embeddings",
+                "sourceKeyColumn": "customer_id",
+                "hnsw": {
+                  "m": 16,
+                  "efConstruction": 64
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "vectorConfig selects an IVFFlat index with the smallest admitted list count",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "indexType": "ivfflat",
+                "distanceMetric": "l2",
+                "ivfflat": {
+                  "lists": 1
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "vectorConfig.dimensions at its inclusive lower bound of 1",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1,
+                "indexType": "none",
+                "distanceMetric": "l1"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "vectorConfig.dimensions at its inclusive upper bound of 16000",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 16000,
+                "vectorType": "vector",
+                "distanceMetric": "cosine"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "vectorConfig omits the required dimensions",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "embeddingModel": "text-embedding-3-small"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig",
+          "keyword": "required",
+          "detail": "dimensions"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig carries a property outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "metric": "cosine"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig",
+          "keyword": "additionalProperties",
+          "detail": "metric"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.dimensions is zero, below the minimum of 1",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 0
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/dimensions",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.dimensions is 16001, above the maximum of 16000",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 16001
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/dimensions",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.dimensions is a string instead of an integer",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": "1536"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/dimensions",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig is a bare dimension count instead of an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": 1536
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.vectorType names a column type outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "vectorType": "sparsevec"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/vectorType",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.indexType names an index method outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "indexType": "diskann"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/indexType",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.distanceMetric names a metric outside its enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "distanceMetric": "hamming"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/distanceMetric",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.hnsw carries a query-time parameter outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "hnsw": {
+                  "m": 16,
+                  "efSearch": 40
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/hnsw",
+          "keyword": "additionalProperties",
+          "detail": "efSearch"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.hnsw.m is zero, below the minimum of 1",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "hnsw": {
+                  "m": 0
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/hnsw/m",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.hnsw.efConstruction is zero, below the minimum of 1",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "hnsw": {
+                  "efConstruction": 0
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/hnsw/efConstruction",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.hnsw.m is a fraction instead of an integer",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "hnsw": {
+                  "m": 16.5
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/hnsw/m",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.ivfflat carries a query-time parameter outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "ivfflat": {
+                  "lists": 100,
+                  "probes": 10
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/ivfflat",
+          "keyword": "additionalProperties",
+          "detail": "probes"
+        }
+      ]
+    },
+    {
+      "description": "vectorConfig.ivfflat.lists is zero, below the minimum of 1",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "pgvector",
+              "format": "pgvector_table",
+              "location": {
+                "database": "rag",
+                "schema": "public",
+                "table": "profile_embeddings"
+              },
+              "vectorConfig": {
+                "dimensions": 1536,
+                "ivfflat": {
+                  "lists": 0
+                }
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/vectorConfig/ivfflat/lists",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "Iceberg catalog-profile location fields accompany an iceberg binding",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "catalog": "rest",
+                "warehouse": "s3://acme-lakehouse/warehouse",
+                "uri": "https://catalog.acme.example/api/catalog",
+                "database": "sales",
+                "table": "orders",
+                "partitionBy": [
+                  "order_date",
+                  "region"
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "Redshift Serverless and Kinesis location fields accompany an aws binding",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "redshift_external_schema",
+              "location": {
+                "namespace": "analytics-ns",
+                "workgroup": "analytics-wg",
+                "iam_role_arn": "arn:aws:iam::123456789012:role/redshift-spectrum",
+                "external_schema": "lake",
+                "glue_database": "sales_lake",
+                "stream": "order-events",
+                "region": "eu-west-1"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "bindingLocation.partitionBy is a single string instead of an array",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "catalog": "glue",
+                "warehouse": "s3://acme-lakehouse/warehouse",
+                "partitionBy": "order_date"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/location/partitionBy",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a bindingLocation.partitionBy entry is a number instead of a column name",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "aws",
+              "format": "iceberg",
+              "location": {
+                "catalog": "glue",
+                "warehouse": "s3://acme-lakehouse/warehouse",
+                "partitionBy": [
+                  2026
+                ]
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/binding/location/partitionBy/0",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

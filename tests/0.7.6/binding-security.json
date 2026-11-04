@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "binding-security",
-  "description": "Binding encryption and principal mapping (0.7.6 preview): encryption's closed property set; kms as 'product', 'none', an AWS alias or key/alias ARN, or a Cloud KMS crypto-key name; the platform-conditional refusals (a gcp binding refuses AWS key forms, an aws binding refuses Cloud KMS names); principals' non-empty keys, one-identity-or-unique-list values, and the platform-conditional identity forms (IAM members on gcp, IAM ARNs on aws). Also documents that platforms other than gcp and aws carry no principal-form constraint.",
+  "description": "Binding encryption and principal mapping (0.7.6): encryption's closed property set; kms as 'product', 'none', an AWS alias or key/alias ARN, or a Cloud KMS crypto-key name; the platform-conditional refusals (a gcp binding refuses AWS key forms, an aws binding refuses Cloud KMS names); principals' non-empty keys, one-identity-or-unique-list values, and the platform-conditional identity forms (IAM members on gcp, IAM ARNs on aws). Also documents that platforms other than gcp and aws carry no principal-form constraint.",
   "cases": [
     {
       "description": "a gcp binding uses a Cloud KMS key and maps logical principals to IAM members",

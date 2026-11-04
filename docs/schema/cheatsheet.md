@@ -1,9 +1,9 @@
 # Schema Cheatsheet
 
-One row per field of the latest stable schema, **0.7.5**: a one-line meaning, whether it is required, and the version it first appeared in. Rows marked 🧪 are in the **0.7.6 preview** only; a contract needs `fluidVersion: "0.7.6"` to use them, and they can still change.
+One row per field of the latest stable schema, **0.7.6**: a one-line meaning, whether it is required, and the version it first appeared in. Rows marked 🧪 were added in **0.7.6**; a contract needs `fluidVersion: "0.7.6"` or later to use them. The preview, 0.7.7, adds nested columns and the build `stream` and `mapping`; they are in its [release notes](/fluid/releases/0.7.7), not in this sheet.
 
 > 🧭 For a guided tour with context per block, read the [**Schema Anatomy**](/fluid/schema/anatomy).
-> 📚 For the exhaustive field-by-field reference, see [`specs/0.7.5/fluid-spec.html`](/fluid/specs/0.7.5/fluid-spec.html) (stable) or [`specs/0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html) (preview).
+> 📚 For the exhaustive field-by-field reference, see [`specs/0.7.6/fluid-spec.html`](/fluid/specs/0.7.6/fluid-spec.html) (stable) or [`specs/0.7.7/fluid-spec.html`](/fluid/specs/0.7.7/fluid-spec.html) (preview).
 
 "Since" is the version from which the field has been in the schema without interruption; where a member of the same name existed earlier and was removed, the row says so. Contracts before 0.5.7 had a different overall shape (see the [Changelog](/fluid/schema/changelog#before-0-7-1-history-before-the-compatibility-promise)), so for those blocks the current *shape* is newer than the name.
 
@@ -21,7 +21,7 @@ The root object is closed: a top-level key not listed here makes the document in
 | `name` | Human-readable display name. | ✅ | 0.0.1 | `string` |
 | `metadata` | Owner, layer, product type, business context. | ✅ | 0.0.1 | `object` |
 | `exposes` | Ports this product publishes. | ✅ | 0.0.1 | `object[]` |
-| `description` | Business-facing summary. | | 0.0.1 | `string` |
+| `description` | Business-facing summary: a string, or (🧪 since 0.7.6) an object with `purpose`, `usage` and `limitations`. | | 0.0.1 | `string` \| `object` |
 | `domain` | Owning business domain. | | 0.0.1 | `string` |
 | `consumes` | Upstream FLUID products this product reads. | | 0.0.1 | `object[]` |
 | `build` | How the product is produced (pattern + engine + properties). | | 0.0.1 | `object` |
@@ -58,6 +58,7 @@ The root object is closed: a top-level key not listed here makes the document in
 | `metadata.experimental` | Experimental features the contract opts into. | | 0.7.3 |
 | `metadata.businessContext` | `domain`, `subdomain`, `businessCapability`, `valueStream`. | | 0.5.7 |
 | `metadata.tags` | Tags on the metadata. (Also existed from 0.0.1 to 0.4.0.) | | 0.7.2 |
+| 🧪 `metadata.team` | A roster: `name` and `members[]`; each member needs `username` and may carry `name`, `role` and `email`. | | 0.7.6 |
 | `metadata.createdAt` | Creation time (`format: date-time`, an annotation). | | 0.5.7 |
 | `metadata.provenance` | Generation envelope written by tooling. | | 0.7.2 |
 
@@ -79,6 +80,8 @@ Each entry requires `exposeId`, `kind`, `contract` and `binding`, and is closed.
 | `exposes[].contract.schema[]` | Columns: `name` and `type` required; `required`, `description`, `sensitivity`, `semanticType`, `businessName`, `businessDefinition`, `validationRules`, `tags`, `labels`. | (one of) |
 | `exposes[].contract.openapiRef` | Reference to an OpenAPI document (for `kind: api`). | (one of) |
 | `exposes[].contract.dq.rules[]` | Declarative quality assertions (below). | |
+| 🧪 `exposes[].contract.id` | An explicit, stable contract id (at least one character); two exposes may not share one. | | 0.7.6 |
+| 🧪 `exposes[].contract.schema[].quality` | ODCS-shaped quality rules for a column: `id`, `type`, `metric`, `dimension`, `severity`, … | | 0.7.6 |
 | `exposes[].contract.schemaPolicy` | `strict` \| `discover_and_freeze` \| `evolve_safe` \| `evolve_all` (since 0.7.3). | |
 | `exposes[].contract.schemaSignature` | `sha256:` + 64 hex — a digest of the schema. | |
 | `exposes[].qos` | `availability` (a percentage string such as `"99.9%"`), `freshnessSLO`, `latencyP95` (ISO-8601 durations), `dataLossSLO`, `completenessTarget`, `errorBudget`. | |
@@ -88,6 +91,8 @@ Each entry requires `exposeId`, `kind`, `contract` and `binding`, and is closed.
 | `exposes[].binding.platform` | `gcp` \| `aws` \| `azure` \| `snowflake` \| `databricks` \| `kafka` \| `confluent` (0.7.5) \| `local` \| `kubernetes` \| `postgres` (0.7.4) \| `pgvector` (0.7.5) \| `other`. | ✅ |
 | `exposes[].binding.format` | `bigquery_table` \| `snowflake_table` \| `snowflake_view` \| `iceberg` \| `delta_table` \| `parquet` \| `csv` \| `json` \| `http_api` \| `grpc_api` \| `kafka_topic` \| `pubsub_topic` \| `gcs_file` \| `s3_file` \| `redshift_table` \| `redshift_serverless` \| `redshift_external_schema` \| `postgres_table` (0.7.4) \| `athena_table` (0.7.4) \| `glue_table` (0.7.4) \| `pgvector_table` (0.7.5) \| `other`. | ✅ |
 | `exposes[].binding.location` | Platform address; no member is required by the schema. 0.7.5 adds `environment_id`, `kafka_cluster_id`, `confluent_role_arn` (Tableflow), `catalog`, `warehouse`, `uri`, `partitionBy` (Iceberg catalogs), `namespace`, `workgroup`, `iam_role_arn`, `external_schema`, `glue_database` (Redshift Serverless), `stream` (Kinesis). | ✅ |
+| 🧪 `exposes[].binding.location.host` | Host or endpoint; for Kafka, the bootstrap servers. | | 0.7.6 |
+| 🧪 `exposes[].binding.serialization` | How Kafka values and keys are serialized: `value` and `key`, each `json` \| `avro` \| `protobuf` \| `xml` \| `avro-confluent` \| `json-confluent`. | | 0.7.6 |
 | `exposes[].binding.icebergConfig` | Iceberg table settings when `format: iceberg` (since 0.7.2). | |
 | `exposes[].binding.vectorConfig` | Vector output port for `pgvector` (since 0.7.5): `dimensions` (required, 1–16000), `embeddingModel`, `vectorType`, `indexType`, `distanceMetric`, `hnsw`, `ivfflat`, `table`, `sourceKeyColumn`. | |
 | `exposes[].binding.governance` | Per-resource AWS Lake Formation settings: `registerLocation`, `grants[]`, `tags`, `rowFilter` (since 0.7.3). Account-wide settings live in the top-level `governance` block. | |
@@ -123,7 +128,7 @@ A build is closed and has no required member.
 | `build.engine` | `dbt` \| `sql` \| `python` \| `spark` \| `glue` \| `custom` \| `duckdb` \| `airbyte` \| `meltano` \| `dlt` \| `kafka-connect` \| `debezium` (the last six since 0.7.3), or `dbt-<adapter>` such as `dbt-databricks` (since 0.7.2). | |
 | `build.capabilities` | What the build asks of its runner: `full_refresh`, `incremental_append`, `incremental_dedup`, `incremental_merge`, `cdc`, `streaming`, `schema_discovery`, `schema_evolution`, `dlp_scan`, `at_most_once`, `at_least_once`, `exactly_once` (since 0.7.3). | |
 | `build.properties` | Pattern-specific settings. `hybrid-reference` requires `model`; `embedded-logic` requires `sql`; `acquisition` requires `source` (below). | |
-| `build.execution.trigger` | `type`: `schedule` \| `event` \| `manual` \| `dependency` \| `dataset` \| `schedule_and_dataset` \| `timetable`, plus `schedule`, `cron`, `timezone`, … | |
+| `build.execution.trigger` | `type`: `schedule` \| `event` \| `manual` \| `dependency` \| `dataset` \| `schedule_and_dataset` \| `timetable` \| `continuous` (🧪 0.7.6; takes no `cron`, `schedule`, `datasets`, `event` or `timetable`), plus `schedule`, `cron`, `timezone`, … | |
 | `build.execution.runtime` | Where it runs: `platform`, `resources`, `image`, `executor`, `serviceAccount`, `timeout`. | |
 | `build.execution.retries` | `maxAttempts`, `backoffStrategy` (`fixed` \| `exponential` \| `linear`), `initialDelay`, `maxDelay`. | |
 | `build.execution.notifications[]` | `type` (`email` \| `slack` \| `webhook` \| `pagerduty`), `target`, `condition` (`success` \| `failure` \| `always`). Closed since 0.7.2. | |
@@ -209,6 +214,8 @@ When `pattern: acquisition` (0.7.3+), the schema validates `properties` against 
 | `consumes[].qosExpectations` | `freshnessMax`, `maxStaleness` (durations), `minCompleteness` (0–1). | |
 | `consumes[].requiredPolicies` | Policies the upstream must carry. | |
 | `consumes[].purpose` | Why this product reads the upstream. | |
+| 🧪 `consumes[].contractId` | The upstream's own contract id, when it has one. | |
+| 🧪 `consumes[].contractVersion` | The exact upstream version this product was built against (a semantic version). | |
 | 🧪 `consumes[].upstreamWorkspace` | The other mesh that owns the upstream. Requires `upstreamDigest`. | |
 | 🧪 `consumes[].upstreamDigest` | `sha256:` + 64 lowercase hex — the upstream contract this product was composed against. | |
 

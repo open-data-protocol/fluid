@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "lifecycle-expire-bucketpolicy",
-  "description": "Expose-level additions in 0.7.6 preview: lifecycle.expire (a boolean on the expose lifecycle, which keeps the closed property set of 0.7.5's lifecycle plus that one member), and lakeFormation.bucketPolicy's enum.",
+  "description": "Expose-level additions in 0.7.6: lifecycle.expire (a boolean on the expose lifecycle, which keeps the closed property set of 0.7.5's lifecycle plus that one member), and lakeFormation.bucketPolicy's enum.",
   "cases": [
     {
       "description": "an expose lifecycle declares a retention period and opts in to expiry",

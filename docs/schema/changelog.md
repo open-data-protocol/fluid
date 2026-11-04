@@ -1,14 +1,29 @@
 # Changelog
 
-Human-readable summaries of what changed between consecutive versions of the FLUID schema. Each entry links to the full auto-generated change list on GitHub. **0.7.5 is the latest stable version; 0.7.6 is a preview** (see [Versions](/fluid/schema/versions#stable-and-preview-versions)).
+Human-readable summaries of what changed between consecutive versions of the FLUID schema. Each entry links to the full auto-generated change list on GitHub. **0.7.6 is the latest stable version; 0.7.7 is a preview** (see [Versions](/fluid/schema/versions#stable-and-preview-versions)).
 
 "No narrowing change" below means that `python3 scripts/check-compat.py --from <a> --to <b>` reports none: every document valid under the earlier version stays valid under the later one (once it declares the later `fluidVersion`). Each summary lists the property paths present in the later schema and absent in the earlier one, plus new enum values.
 
-## 0.7.5 to 0.7.6 (preview): Declarative Packaging Modes
+## 0.7.6 to 0.7.7 (preview): Recursive Streaming Types
+
+[Full diff →](https://github.com/open-data-protocol/fluid/blob/main/schema-diffs/diff-0.7.6-to-0.7.7.md) · [Release note →](/fluid/releases/0.7.7)
+
+No narrowing change. **Preview:** the 0.7.7 schema can still change before it is promoted.
+
+**Added**
+
+- Nested columns: `column.fields` (a non-empty list of columns), `column.element`, `column.key` and `column.value`, the last three each a new closed `nestedType` (`type` required; `required`, `fields`, `element`, `key` and `value` optional, nesting again).
+- `build(s).properties.stream`, a new closed `streamSource` definition: `kind` (`kafka`), `topic`, `format` (`json` | `avro-confluent`) and `schema` required; `key` (`format` `raw` | `json` | `avro-confluent`, `schema`, `prefix`) and `metadata[]` (`name`, `from`: `topic` | `partition` | `offset` | `timestamp` | `timestamp-type` | `headers` | `leader-epoch`) optional.
+- `build(s).properties.mapping`, a new closed `recordMapping` definition: `explode` (`path` and `as`, both required) and `columns[]` (`name` and `from` required; `cast` optional).
+- `fluidVersion` accepts `"0.7.7"`.
+
+**Changed:** `embeddedLogicPattern` no longer lists `sql` as unconditionally required. It requires `sql` unless the build has a `stream` and `parameters.flink` declares `management`, and `mapping` requires `stream` (`dependentRequired`). Every document that carried `sql` is unaffected.
+
+## 0.7.5 to 0.7.6: Declarative Packaging Modes
 
 [Full diff →](https://github.com/open-data-protocol/fluid/blob/main/schema-diffs/diff-0.7.5-to-0.7.6.md) · [Release note →](/fluid/releases/0.7.6)
 
-No narrowing change. **Preview:** the 0.7.6 schema can still change before it is promoted.
+No narrowing change.
 
 **Added**
 
@@ -26,9 +41,18 @@ No narrowing change. **Preview:** the 0.7.6 schema can still change before it is
 - `exposes[].binding.governance.lakeFormation.maskedViews` (`definer` and `validationConnection`, both required).
 - `build(s).engine` value `flink`; see the [0.7.6 notes](/fluid/releases/0.7.6#engine-flink).
 - `build(s).properties.sink.catalog` values `lakekeeper` and `polaris`, and `build(s).properties.sink.catalogAuth` (`type`: `oauth2` | `bearer`), which names the environment variables holding a REST catalog's credentials.
+- `exposes[].binding.location.host` (the host or endpoint; for Kafka, the bootstrap servers) and `exposes[].binding.serialization` (`value` and `key`, each `json` | `avro` | `protobuf` | `xml` | `avro-confluent` | `json-confluent`).
+- `metadata.team` (`name`, `members[]`), with each member a new `teamMember` definition: `username` required; `name`, `role` and `email` optional; closed.
+- The root `description` accepts a plain string or a new closed `descriptionObject` (`purpose`, `usage`, `limitations`).
+- `consumes[].contractId` and `consumes[].contractVersion` (a semantic version).
+- `exposes[].contract.id` (at least one character).
+- `exposes[].contract.schema[].quality`: a list of ODCS-shaped rules. Each item needs at least one member and is open; `id`, `type` (`text` | `library` | `sql` | `custom`), `metric`, `dimension` and the other common keys are typed.
+- `build(s).execution.trigger.type` value `continuous`. A continuous trigger takes no other trigger: `cron`, `schedule`, `datasets`, `event` and `timetable` are each refused next to it. See the [0.7.6 notes](/fluid/releases/0.7.6#trigger-type-continuous).
 - `fluidVersion` accepts `"0.7.6"`.
 
 **Described:** `exposes[].policy.authz.columnRestrictions` gains a description of its semantics (deny beats allow; a restriction never grants access; principals are logical).
+
+**Re-published.** The 0.7.6 schema was first published here from forge-cli v0.21.0, while 0.7.6 was a preview. It has since gained the additions listed under "Added" from `binding.location.host` down to `trigger.type: continuous`, and its root `description` became `oneOf`. The published file has been re-vendored from forge-cli v0.27.0, which carries the stable 0.7.6. Every document the earlier copy accepted is still accepted. One conformance case, which used `binding.location.host` as an example of an undocumented addressing property, now uses another name.
 
 ## 0.7.4 to 0.7.5: Streaming Kafka to Iceberg Sink & Confluent Tableflow
 

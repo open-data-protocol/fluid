@@ -1,13 +1,13 @@
 # Minimal Contract & FLUID at a Glance
 
-Two views of a contract on the latest stable schema, **0.7.5**: the smallest file that validates, and a one-screen map of every top-level block.
+Two views of a contract on the latest stable schema, **0.7.6**: the smallest file that validates, and a one-screen map of every top-level block.
 
 ## Minimal Valid Contract
 
-The smallest file that passes JSON Schema validation against 0.7.5 — every other block is opt-in:
+The smallest file that passes JSON Schema validation against 0.7.6 — every other block is opt-in:
 
 ```yaml
-fluidVersion: "0.7.5"
+fluidVersion: "0.7.6"
 kind: DataProduct
 id:   demo.bronze.hello_world
 name: "Hello World"
@@ -25,7 +25,7 @@ exposes:
       location: { path: "./hello.parquet" }
 ```
 
-It validates against `fluid-schema-0.7.5.json` with any JSON Schema Draft 2020-12 validator, and with the reference implementation (`fluid validate` prints `✅ Valid FLUID contract (schema v0.7.5)`).
+It validates against `fluid-schema-0.7.6.json` with any JSON Schema Draft 2020-12 validator, and with the reference implementation (`fluid validate` prints `✅ Valid FLUID contract (schema v0.7.6)`).
 
 **What is required:** the six top-level keys above; inside `metadata`, only `owner` (the schema requires no member of `owner`, but name a `team`); and inside each expose, `exposeId`, `kind`, `contract` (with `schema` or `openapiRef`) and `binding` (with `platform`, `format` and `location`).
 
@@ -35,10 +35,10 @@ See the [**Examples**](/fluid/examples/) for the step-by-step progression from t
 
 ## FLUID at a Glance
 
-Every top-level block in 0.7.5, with the version each first appeared in (in its current form). `[req]` marks required blocks. This is a **map, not a contract** — the placeholders are not valid values.
+Every top-level block in 0.7.6, with the version each first appeared in (in its current form). `[req]` marks required blocks. This is a **map, not a contract** — the placeholders are not valid values.
 
 ```text
-fluidVersion: "0.7.5"            [req] the schema version this file declares
+fluidVersion: "0.7.6"            [req] the schema version this file declares
 kind: DataProduct                [req] DataProduct | MLPipeline
 id:   domain.layer.name          [req] globally unique product id
 name: "Human-readable name"      [req] display name
@@ -78,7 +78,7 @@ environments     { dev: {...}, staging: {...}, prod: {...} }
 lifecycle        { state, retention, deprecationPolicy }
 docs             { homepage, runbook, dictionary, changeLog }
 
-0.7.6 preview only (fluidVersion "0.7.6"):
+New in 0.7.6 (fluidVersion "0.7.6"):
 packaging        { mode, pool, containers }
 consumers        [ { name, type, ... } ]
 ```

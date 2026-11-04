@@ -48,7 +48,7 @@ pip install --require-hashes -r scripts/requirements-docs.lock
 
 python3 generate-docs.py                  # every synced version
 python3 generate-docs.py --all            # the same, spelled out
-python3 generate-docs.py --version 0.7.6  # one version; repeat the flag for more
+python3 generate-docs.py --version 0.7.7  # one version; repeat the flag for more
 python3 generate-docs.py --check          # render to a temporary directory and
                                           # exit 1 if specs/ differs, or if a
                                           # file under schema/ or specs/ is not
@@ -76,8 +76,8 @@ pip-compile --generate-hashes --strip-extras \
     --output-file=scripts/requirements-docs.lock scripts/requirements-docs.txt
 ```
 
-A preview's page is labelled by its schema's own `title`; for 0.7.6 that reads
-"FLUID 0.7.6 — Declarative Packaging Modes (preview)".
+A preview's page is labelled by its schema's own `title`; for 0.7.7 that reads
+"FLUID 0.7.7 — Preview: recursive streaming types".
 
 `--version` also renders a version that is not synced, if its schema is in
 `schema/`. The pages for versions before 0.7.2 were rendered by earlier

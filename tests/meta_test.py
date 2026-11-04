@@ -557,12 +557,12 @@ def unaccounted_files_gate_is_load_bearing() -> None:
         gone.write_bytes(saved)
 
         # 5. a schema that is neither synced nor frozen
-        stray = root / "schema" / "fluid-schema-0.7.7.json"
+        stray = root / "schema" / "fluid-schema-0.7.8.json"
         shutil.copy(root / "schema" / "fluid-schema-0.7.6.json", stray)
         r = gate()
         check(
             "rejects a schema that is neither synced nor frozen",
-            r.returncode == 1 and "fluid-schema-0.7.7.json" in r.stderr,
+            r.returncode == 1 and "fluid-schema-0.7.8.json" in r.stderr,
             f"exit={r.returncode}",
         )
         stray.unlink()
