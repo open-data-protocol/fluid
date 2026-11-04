@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "consumes-pinning",
-  "description": "Cross-mesh upstream pinning on consumes[] (0.7.6 preview): upstreamWorkspace requires upstreamDigest (dependentRequired, the first JSON Schema 2020-12-only assertion keyword a FLUID schema uses -- a Draft 7 validator ignores it and accepts the invalid case below), the sha256:<64 lowercase hex> digest pattern, and the non-empty workspace id.",
+  "description": "Cross-mesh upstream pinning on consumes[] (0.7.6): upstreamWorkspace requires upstreamDigest (dependentRequired, the first JSON Schema 2020-12-only assertion keyword a FLUID schema uses -- a Draft 7 validator ignores it and accepts the invalid case below), the sha256:<64 lowercase hex> digest pattern, and the non-empty workspace id.",
   "cases": [
     {
       "description": "a cross-mesh upstream names its workspace and the digest it was composed against",

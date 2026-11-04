@@ -1,0 +1,3432 @@
+{
+  "corpusVersion": "0.7.7",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
+  "group": "record-mapping",
+  "description": "How a stream's records become rows (0.7.7 preview): recordMapping's closed property set and its non-empty columns, recordExplode's path and as (required, with the dotted-path and quoted-key grammar), and recordMappingColumn's required name and from, the name and from grammars, and cast, which takes any column type.",
+  "cases": [
+    {
+      "description": "a mapping with an explode and a renamed, converted column",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": "item"
+              },
+              "columns": [
+                {
+                  "name": "sku",
+                  "from": "item.sku",
+                  "cast": "string"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a mapping with nothing in it",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {},
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a mapping column that renames a nested field and reads a quoted key",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "address.city",
+                  "from": "customer.address.city"
+                },
+                {
+                  "name": "tier",
+                  "from": "attributes['loyalty-tier']"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a mapping column cast to a parameterised type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "amount",
+                  "from": "amount",
+                  "cast": "decimal(18,2)"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "an explode over a nested array path",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "order.lines",
+                "as": "line"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "an explode over a quoted key",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "payload['line-items']",
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a mapping is a string, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": "payment_id",
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a mapping carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "filter": "amount > 0"
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping",
+          "keyword": "additionalProperties",
+          "detail": "filter"
+        }
+      ]
+    },
+    {
+      "description": "mapping.columns is an empty array",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": []
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "description": "mapping.columns is an object, not an array",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": {
+                "name": "id",
+                "from": "payment_id"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column is a string, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                "id"
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column omits name",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column omits from",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0",
+          "keyword": "required",
+          "detail": "from"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "payment_id",
+                  "default": 0
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0",
+          "keyword": "additionalProperties",
+          "detail": "default"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column name is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": 7,
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/name",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column name that is not a dotted identifier path ('1id')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "1id",
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column name that is not a dotted identifier path ('a..b')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "a..b",
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column name that is not a dotted identifier path ('a.')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "a.",
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column name that is not a dotted identifier path (\"a['x']\")",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "a['x']",
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column name that is not a dotted identifier path ('my id')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "my id",
+                  "from": "payment_id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": 7
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path ('1id')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "1id"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path ('a..b')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "a..b"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path ('a.')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "a."
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path ('a[0]')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "a[0]"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path (\"a['']\")",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "a['']"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path (\"a['x\\\\y']\")",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "a['x\\y']"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path ('a b')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "a b"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column from that is not a field path (\"items['xxxxxxxxxxxxx\")",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "items['xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx']"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a mapping column cast to a type that is not a column type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "columns": [
+                {
+                  "name": "id",
+                  "from": "payment_id",
+                  "cast": "money_of_the_realm"
+                }
+              ]
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/columns/0/cast",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "an explode is a string, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": "items"
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "an explode omits path",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode",
+          "keyword": "required",
+          "detail": "path"
+        }
+      ]
+    },
+    {
+      "description": "an explode omits as",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode",
+          "keyword": "required",
+          "detail": "as"
+        }
+      ]
+    },
+    {
+      "description": "an explode carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": "item",
+                "outer": true
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode",
+          "keyword": "additionalProperties",
+          "detail": "outer"
+        }
+      ]
+    },
+    {
+      "description": "an explode path is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": 7,
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/path",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "an explode path that is not a field path ('1items')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "1items",
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/path",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode path that is not a field path ('order..lines')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "order..lines",
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/path",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode path that is not a field path ('order.')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "order.",
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/path",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode path that is not a field path ('items[0]')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items[0]",
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/path",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode path that is not a field path (\"items['']\")",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items['']",
+                "as": "item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/path",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode as is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": 7
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/as",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "an explode as that is not a single identifier ('1item')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": "1item"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/as",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode as that is not a single identifier ('it.em')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": "it.em"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/as",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode as that is not a single identifier ('it em')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": "it em"
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/as",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an explode as that is not a single identifier ('')",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ]
+            },
+            "mapping": {
+              "explode": {
+                "path": "items",
+                "as": ""
+              }
+            },
+            "parameters": {
+              "flink": {
+                "management": "operator"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/mapping/explode/as",
+          "keyword": "pattern"
+        }
+      ]
+    }
+  ]
+}

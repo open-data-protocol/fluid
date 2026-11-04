@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "packaging",
-  "description": "Declarative packaging modes (0.7.6 preview): the top-level packaging block and its per-binding override, the isolated/shared mode enum, the non-empty pool and poolManifest strings, the closed containers map and its per-kind mode enum, and packaging's own closed property set.",
+  "description": "Declarative packaging modes (0.7.6): the top-level packaging block and its per-binding override, the isolated/shared mode enum, the non-empty pool and poolManifest strings, the closed containers map and its per-kind mode enum, and packaging's own closed property set.",
   "cases": [
     {
       "description": "top-level packaging declares a shared pool with a per-kind containers override",

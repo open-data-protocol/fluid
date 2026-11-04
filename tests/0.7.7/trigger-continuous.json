@@ -1,0 +1,1175 @@
+{
+  "corpusVersion": "0.7.7",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
+  "group": "trigger-continuous",
+  "description": "build.execution.trigger.type continuous (0.7.6): a long-lived job whose platform keeps it running, so its trigger takes no other trigger. cron, schedule, datasets, event and timetable are each refused next to it; every other trigger type keeps accepting them; a trigger that is not an object gets exactly one error; and each trigger member keeps its own type.",
+  "cases": [
+    {
+      "description": "a continuous trigger names the type and nothing else",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a continuous trigger may carry the members that are not triggers (condition, datasetsOperator, timezone)",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous",
+              "condition": "always",
+              "datasetsOperator": "all",
+              "timezone": "UTC"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a continuous trigger also carries cron",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous",
+              "cron": "0 * * * *"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a continuous trigger also carries schedule",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous",
+              "schedule": "@hourly"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a continuous trigger also carries datasets",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous",
+              "datasets": [
+                "dataset://gcp/acme-prod/customers/raw_customers"
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a continuous trigger also carries event",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous",
+              "event": "payments.landed"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a continuous trigger also carries timetable",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuous",
+              "timetable": {
+                "class": "acme.Timetable"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a schedule trigger keeps carrying cron and schedule",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "cron": "0 * * * *",
+              "schedule": "@hourly",
+              "timezone": "UTC"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a dataset trigger keeps carrying datasets, and an event trigger keeps carrying event",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "dataset",
+              "datasets": [
+                "dataset://gcp/acme-prod/customers/raw_customers"
+              ],
+              "event": "payments.landed"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a timetable trigger keeps carrying timetable",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "timetable",
+              "timetable": {
+                "class": "acme.Timetable"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a trigger with no type is not a continuous trigger, so it may carry cron",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "cron": "0 * * * *"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a trigger that is a string, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": "continuous"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a trigger that is an array, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": [
+              "continuous"
+            ]
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a trigger type outside the enum, near continuous",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "continuously"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/type",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "trigger.schedule has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "schedule": 5
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/schedule",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "trigger.event has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "event": 5
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/event",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "trigger.condition has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "condition": 5
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/condition",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "trigger.datasets has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "datasets": "dataset://gcp/acme-prod/customers/raw_customers"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/datasets",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "trigger.cron has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "cron": 5
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/cron",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "trigger.timezone has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "timezone": 5
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/timezone",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "trigger.timetable has the wrong type",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_reconciled SELECT * FROM payments"
+          },
+          "execution": {
+            "trigger": {
+              "type": "schedule",
+              "timetable": "acme.Timetable"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/execution/trigger/timetable",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

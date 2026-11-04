@@ -500,7 +500,7 @@
               "format": "kafka_topic",
               "location": {
                 "topic": "customer-events",
-                "host": "kafka.internal:9092"
+                "bootstrapServers": "kafka.internal:9092"
               }
             },
             "contract": {
@@ -519,7 +519,7 @@
         {
           "pointer": "/exposes/0/binding/location",
           "keyword": "additionalProperties",
-          "detail": "host"
+          "detail": "bootstrapServers"
         }
       ]
     },

@@ -28,10 +28,11 @@ tests/
 
 Each published schema version that has a directory here is run by
 `conformance/run.py`; versions without one are not part of the corpus. Today
-that is 0.7.5, the latest stable version, and 0.7.6, a preview (see
+that is 0.7.5, 0.7.6, the latest stable version, and 0.7.7, a preview (see
 `scripts/schema-versions.json`). The 0.7.6 directory carries every 0.7.5 group,
 ported unchanged apart from the version strings, plus groups for what 0.7.6
-adds.
+adds; the 0.7.7 directory carries every 0.7.6 group the same way, plus groups
+for what 0.7.7 adds.
 
 The core/optional split follows
 [JSON-Schema-Test-Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite).
@@ -194,7 +195,7 @@ decision. Both were observed with `jsonschema` 4.26 (Draft 2020-12).
 
 ### Airflow task rules apply to every task that has `params`
 
-In 0.7.1 through 0.7.6, each `allOf` rule in `$defs/airflowTask` (fluid_execute,
+In 0.7.1 through 0.7.7, each `allOf` rule in `$defs/airflowTask` (fluid_execute,
 bash, python) has an `if` of the form `anyOf: [{properties: {type: {const: ...}}},
 {properties: {operator: {pattern: ...}}}]`. A `properties` subschema is true
 when its member is absent, so a task that omits `operator` (or `type`) matches
@@ -232,7 +233,8 @@ from the denominator; counting them would blame the corpus for a gap it cannot
 close, and they are findings about the *schema* instead.
 
 Today: **41.0%** for 0.7.5 (432 of 1053 falsifiable constraints, 123
-redundant) and **43.1%** for 0.7.6 (518 of 1201, 130 redundant). The gate
+redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **48.2%**
+for 0.7.7 (632 of 1310, 135 redundant). The gate
 applies to the lowest. Most of what remains is `type` constraints, which need a
 wrong-typed value for every property in the schema; `--format json` lists the
 unpinned enums, required members, closed objects and bounds.
@@ -266,3 +268,12 @@ published here as a pre-release copy, and replacing it with the stable one
 added the pgvector platform, the pgvector_table format, binding.vectorConfig and new location fields that no case pinned,
 which took coverage below the CI floor until the cases in
 `tests/0.7.5/binding.json` were added.
+
+0.7.6 was re-vendored again from forge-cli v0.27.0, with the `continuous`
+trigger, the team roster, the object `description`, contract ids, Kafka
+serialization and column `quality` added after the copy first published. Without
+new cases its coverage fell to 41.7%, and the 0.7.7 preview, added in the same
+change, would have been at 39.7%, under the floor. The cases are in
+`tests/0.7.6/trigger-continuous.json` and `tests/0.7.6/bitol-fields.json`, and
+for 0.7.7 in `tests/0.7.7/stream-source.json`, `record-mapping.json` and
+`nested-columns.json`.

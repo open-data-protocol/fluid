@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.6",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json",
   "group": "masking-aggparams",
-  "description": "Typed parameters added in 0.7.6 preview: masking params' saltEnv/keyEnv environment-variable-name pattern and keepFirst/keepLast integer bounds (0..64), which leave params open to other members as the schema states; and a semantic measure's closed aggParams object with its 0..1 percentile bounds.",
+  "description": "Typed parameters added in 0.7.6: masking params' saltEnv/keyEnv environment-variable-name pattern and keepFirst/keepLast integer bounds (0..64), which leave params open to other members as the schema states; and a semantic measure's closed aggParams object with its 0..1 percentile bounds.",
   "cases": [
     {
       "description": "masking params name the salt and key environment variables and keep a prefix and suffix",
