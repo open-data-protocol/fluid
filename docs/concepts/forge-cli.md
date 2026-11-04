@@ -21,11 +21,11 @@ fluid --version
 
 ## Which FLUID versions it supports
 
-The JSON Schemas are authored in forge-cli and published here (see [CONTRIBUTING.md](https://github.com/open-data-protocol/fluid/blob/main/CONTRIBUTING.md#the-schemas-are-not-authored-here)). As of data-product-forge 0.18.1:
+The JSON Schemas are authored in forge-cli and published here (see [CONTRIBUTING.md](https://github.com/open-data-protocol/fluid/blob/main/CONTRIBUTING.md#the-schemas-are-not-authored-here)). As of data-product-forge 0.27.0:
 
-- It **bundles** the schemas for 0.7.1 to 0.7.6 and validates a contract against the schema of the `fluidVersion` it declares (`fluid validate --list-versions` lists them).
-- **0.7.5 is its default** — the newest stable version — and `fluid init --quickstart` writes `fluidVersion: 0.7.5`.
-- **0.7.6 is a preview**: validated when a contract declares it, never chosen by default. See [Stable and preview versions](/fluid/schema/versions#stable-and-preview-versions).
+- It **bundles** the schemas for 0.7.1 to 0.7.7 and validates a contract against the schema of the `fluidVersion` it declares (`fluid validate --list-versions` lists them).
+- **0.7.6 is its default** — the newest stable version, and the one the contracts it builds declare. (`fluid init --quickstart` still writes its static customer-360 example at `fluidVersion: 0.7.5`.)
+- **0.7.7 is a preview**: validated when a contract declares it, never chosen by default. See [Stable and preview versions](/fluid/schema/versions#stable-and-preview-versions).
 - For an older version it does not bundle, it fetches the schema from this repository and caches it (`--offline` restricts it to bundled and cached schemas).
 - Its bundled 0.7.1 is a different document from the published 0.7.1 under the same `$id`; see [Versions](/fluid/schema/versions#_0-7-1-two-documents-share-one-id).
 

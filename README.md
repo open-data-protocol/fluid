@@ -12,7 +12,7 @@
   <a href="https://open-data-protocol.github.io/fluid/schema/anatomy">🧭 Schema Anatomy</a> ·
   <a href="https://open-data-protocol.github.io/fluid/examples/">🚀 Examples</a> ·
   <a href="https://open-data-protocol.github.io/fluid/concepts/comparisons">🔄 vs ODCS / ODPS</a> ·
-  <a href="https://open-data-protocol.github.io/fluid/releases/0.7.5">✨ What's New</a>
+  <a href="https://open-data-protocol.github.io/fluid/releases/0.7.6">✨ What's New</a>
 </p>
 
 ---
@@ -23,7 +23,7 @@ FLUID is one YAML file that describes a data product end to end — **schema, bu
 
 ```mermaid
 flowchart LR
-    F["FLUID v0.7.5<br/>your .fluid.yml<br/>complete on its own"]
+    F["FLUID v0.7.6<br/>your .fluid.yml<br/>complete on its own"]
     FC["forge-cli<br/>compiler → IaC + DAGs"]
     BIT["Bitol ODPS + ODCS<br/>catalog interop"]
     F -.->|compile + deploy| FC
@@ -35,7 +35,7 @@ FLUID is **standalone** — the contract is complete on its own. Everything else
 ## Minimal valid contract
 
 ```yaml
-fluidVersion: "0.7.5"
+fluidVersion: "0.7.6"
 kind: DataProduct
 id: demo.bronze.hello_world
 name: Hello World
@@ -61,16 +61,16 @@ exposes:
 
 ## JSON Schema
 
-- **Latest stable: 0.7.5** — `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json`
-- **Preview: 0.7.6** — `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json`. A contract uses it only by declaring `fluidVersion: "0.7.6"`, and it can still change before it is promoted to stable. See **[Stable and preview versions](https://open-data-protocol.github.io/fluid/schema/versions#stable-and-preview-versions)** and **[What's new in 0.7.6](https://open-data-protocol.github.io/fluid/releases/0.7.6)**.
+- **Latest stable: 0.7.6** — `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json`
+- **Preview: 0.7.7** — `https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json`. A contract uses it only by declaring `fluidVersion: "0.7.7"`, and it can still change before it is promoted to stable. See **[Stable and preview versions](https://open-data-protocol.github.io/fluid/schema/versions#stable-and-preview-versions)** and **[What's new in 0.7.7](https://open-data-protocol.github.io/fluid/releases/0.7.7)**.
 - A document is validated against the schema of the `fluidVersion` it declares. To use a field, declare the version that added it — see **[Choosing `fluidVersion`](https://open-data-protocol.github.io/fluid/schema/versions#choosing-fluidversion)**.
-- Editor support — add this line to a file that declares `fluidVersion: "0.7.5"` (use the URL matching the version the file declares):
+- Editor support — add this line to a file that declares `fluidVersion: "0.7.6"` (use the URL matching the version the file declares):
   ```yaml
-  # yaml-language-server: $schema=https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.5.json
+  # yaml-language-server: $schema=https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json
   ```
 - All versions, diffs, and the generated HTML reference: **[Schema → Versions](https://open-data-protocol.github.io/fluid/schema/versions)**.
 
-0.7.5 is additive over 0.7.4: every valid 0.7.4 contract stays valid when it declares `"0.7.5"`. See **[What's New in 0.7.5](https://open-data-protocol.github.io/fluid/releases/0.7.5)**.
+0.7.6 is additive over 0.7.5: every valid 0.7.5 contract stays valid when it declares `"0.7.6"`. See **[What's New in 0.7.6](https://open-data-protocol.github.io/fluid/releases/0.7.6)**.
 
 ## Validate a contract
 

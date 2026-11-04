@@ -1,7 +1,7 @@
 # FLUID Specification
 
 ::: tip Versions
-**Latest stable: 0.7.5. Preview: 0.7.6.** This page specifies the structure of a FLUID document as defined by the **0.7.5** JSON Schema. For every version's schema and generated field-by-field reference, see [**Versions**](/fluid/schema/versions); for what is new in the preview, see [0.7.6 (preview)](/fluid/releases/0.7.6).
+**Latest stable: 0.7.6. Preview: 0.7.7.** This page specifies the structure of a FLUID document as defined by the **0.7.5** JSON Schema; the tables in section 1 have not been rewritten for 0.7.6, which is additive over 0.7.5 and adds the members listed in its [release notes](/fluid/releases/0.7.6). For every version's schema and generated field-by-field reference, see [**Versions**](/fluid/schema/versions); for the preview, see [0.7.7](/fluid/releases/0.7.7).
 :::
 
 FLUID (Federated Layered Unified Interchange Definition) is an open, declarative specification for **data products**, written in YAML or JSON and kept in version control. It is not a platform or a single tool: it is a shared language that tools read to build, deploy, govern and serve a data product.
@@ -55,7 +55,7 @@ Because the schema is chosen by the document's own `fluidVersion`, a later schem
 
 ### Known interoperability issue: one `pattern` is not an ECMA-262 regular expression
 
-Draft 2020-12 says a `pattern` SHOULD be a valid ECMA-262 regular expression. In the 0.7.2 to 0.7.6 schemas, the second alternative of the column `type` (`$defs/column/properties/type`) begins with the inline flag `(?i)`, which ECMA-262 does not have: JavaScript's `RegExp` rejects it as an invalid group. Python's `re`, which the conformance tooling in this repository uses, accepts it and matches case-insensitively. A validator that compiles patterns as ECMA-262 may therefore refuse that pattern, or the schema, where a Python-based validator does not. This is recorded here rather than resolved: changing the pattern would be a schema change, and schemas are changed upstream (see [CONTRIBUTING.md](https://github.com/open-data-protocol/fluid/blob/main/CONTRIBUTING.md)).
+Draft 2020-12 says a `pattern` SHOULD be a valid ECMA-262 regular expression. In the 0.7.2 to 0.7.7 schemas, the second alternative of the column `type` (`$defs/column/properties/type`) begins with the inline flag `(?i)`, which ECMA-262 does not have: JavaScript's `RegExp` rejects it as an invalid group. Python's `re`, which the conformance tooling in this repository uses, accepts it and matches case-insensitively. A validator that compiles patterns as ECMA-262 may therefore refuse that pattern, or the schema, where a Python-based validator does not. This is recorded here rather than resolved: changing the pattern would be a schema change, and schemas are changed upstream (see [CONTRIBUTING.md](https://github.com/open-data-protocol/fluid/blob/main/CONTRIBUTING.md)).
 
 ---
 

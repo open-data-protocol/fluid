@@ -79,7 +79,7 @@ When the drift check fails, or forge-cli releases a new schema version
 
    ```bash
    COMMIT=...   # the commit from step 1, which is also upstream.commit
-   for v in 0.7.5 0.7.6; do
+   for v in 0.7.6 0.7.7; do
      curl -fsSL "https://raw.githubusercontent.com/Agenticstiger/forge-cli/$COMMIT/fluid_build/schemas/fluid-schema-$v.json" \
        -o "schema/fluid-schema-$v.json"
    done

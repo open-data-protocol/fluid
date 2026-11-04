@@ -23,7 +23,7 @@ Four active "open data product" specs share overlapping names and adjacent scope
 | **ODCS** (Open Data Contract Standard) | LF AI & Data · Bitol | v3.1.0 — Dec 2025 | Column-level technical contract; producer↔consumer agreement for one dataset |
 | **Bitol ODPS** (Open Data Product Standard) | LF AI & Data · Bitol | v1.0.0 — Sep 2025 | Thin product manifest; bundles ODCS contracts via `contractId` on input/output ports |
 | **ODPS v4** (Open Data Product Specification) | LF · [Open-Data-Product-Initiative](https://github.com/Open-Data-Product-Initiative/v4.0) | v4.0 — Jul 2025 · v4.1 — Oct 2025 | Business + commercial wrapper: pricing · license · multi-language · marketplace |
-| **FLUID** | open-data-protocol | v0.7.5 (stable) — this repo | End-to-end operational contract: schema + build + orchestration + agentic governance + sovereignty + semantics |
+| **FLUID** | open-data-protocol | v0.7.6 (stable) — this repo | End-to-end operational contract: schema + build + orchestration + agentic governance + sovereignty + semantics |
 
 ## How they actually fit together
 
@@ -34,7 +34,7 @@ flowchart LR
     classDef core fill:#5B8DEF,color:#fff,stroke:#1E3A8A,stroke-width:4px,font-weight:bold
     classDef opt  fill:#94A3B8,color:#fff,stroke:#475569,stroke-width:1px,stroke-dasharray:6 3
 
-    F["FLUID v0.7.5<br/>your .fluid.yml<br/>standalone — complete on its own"]:::core
+    F["FLUID v0.7.6<br/>your .fluid.yml<br/>standalone — complete on its own"]:::core
 
     FC["forge-cli<br/>reference implementation<br/>(emits IaC + Airflow DAGs)"]:::opt
     BIT["Bitol ODPS + ODCS<br/>(catalog interop)"]:::opt
@@ -62,7 +62,7 @@ flowchart LR
 
 ## 📊 Capability matrix
 
-Legend: ✅ deterministic in spec · ⚠️ partial · ❌ silent. Headers abbreviated for width: **F** = FLUID v0.7.5 · **ODCS** = Bitol ODCS v3.1 · **ODPS** = Bitol ODPS v1.0 · **v4** = ODPS v4.0. Field-level detail lives in the [**Schema Cheatsheet**](/fluid/schema/cheatsheet) — this matrix is the at-a-glance scoreboard.
+Legend: ✅ deterministic in spec · ⚠️ partial · ❌ silent. Headers abbreviated for width: **F** = FLUID v0.7.6 · **ODCS** = Bitol ODCS v3.1 · **ODPS** = Bitol ODPS v1.0 · **v4** = ODPS v4.0. Field-level detail lives in the [**Schema Cheatsheet**](/fluid/schema/cheatsheet) — this matrix is the at-a-glance scoreboard.
 
 ### 📐 Data shape & quality
 

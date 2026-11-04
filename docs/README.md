@@ -36,7 +36,7 @@ FLUID is one YAML file that describes a data product end to end — **schema, bu
 ## The shape of a contract
 
 ```yaml
-fluidVersion: "0.7.5"
+fluidVersion: "0.7.6"
 kind: DataProduct
 id: demo.bronze.hello_world
 name: Hello World
@@ -65,7 +65,7 @@ exposes:
 - **[Guide](/fluid/guide/)** — what FLUID is, the quickstart, and the FAQ.
 - **[Concepts](/fluid/concepts/)** — the agentic-native layer and how FLUID compares to ODCS / ODPS.
 - **[Schema Reference](/fluid/schema/anatomy)** — every top-level block, a cheatsheet, and the full specification.
-- **[What's New in 0.7.5](/fluid/releases/0.7.5)** — the latest stable version: streaming Kafka → Iceberg sink, Confluent Cloud Tableflow, and a pgvector output port.
-- **[0.7.6 (preview)](/fluid/releases/0.7.6)** — packaging modes, declared consumers, cross-mesh pins, row filters and masked columns, Flink builds; opt-in, and still subject to change.
+- **[What's New in 0.7.6](/fluid/releases/0.7.6)** — the latest stable version: packaging modes, declared consumers, cross-mesh pins, row filters and masked columns, Flink builds, a continuous trigger, and the Bitol-shaped team, description, contract-id, serialization and quality fields.
+- **[0.7.7 (preview)](/fluid/releases/0.7.7)** — nested columns, and the Kafka stream and record mapping an embedded-logic build can read; opt-in, and still subject to change.
 - **[See the deck](/fluid/deck/)** — the FLUID story in slides.
 - **[Contributing & governance](/fluid/contributing/)** — how the standard is maintained, and how to take part.

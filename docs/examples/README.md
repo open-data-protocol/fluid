@@ -1,6 +1,6 @@
 # FLUID by Example — From "Hello World" to Production
 
-> Examples 1–13 target **`fluidVersion: "0.7.5"`**, the [latest stable schema](/fluid/schema/fluid-schema-0.7.5.json). Example 14 uses the **0.7.6 preview**.
+> Examples 1–13 target **`fluidVersion: "0.7.5"`**, which every later schema still accepts. Example 14 uses **0.7.6**, the [latest stable schema](/fluid/schema/fluid-schema-0.7.6.json).
 > Each example **adds one block** to the previous one. Read in order to learn the schema by accretion.
 > Every complete contract on this page validates against the JSON Schema of the version it declares (Draft 2020-12) and with the reference implementation's `fluid validate`; examples that show only the new block validate when merged into the example before them.
 > File names such as `01-minimal.fluid.yml` are illustrative: FLUID does not prescribe a file name, and the reference implementation scaffolds `contract.fluid.yaml`.
@@ -26,7 +26,7 @@
 | 11 | [Agent-consumable output port (MCP)](#_11-agent-consumable-output-port-mcp) | `exposes[].mcp` (⭐ 0.7.4) |
 | 12 | [Stream Kafka into Iceberg](#_12-stream-kafka-into-iceberg) | `kafka-connect` Iceberg streaming sink + Iceberg catalog location (⭐ 0.7.5) |
 | 13 | [Vector output port (pgvector)](#_13-vector-output-port-pgvector) | `platform: pgvector` + `vectorConfig` (⭐ 0.7.5) |
-| 14 | [Preview: packaging and consumers](#_14-preview-packaging-and-declared-consumers-0-7-6) | `packaging`, `consumers` (🧪 0.7.6 preview) |
+| 14 | [Packaging and consumers](#_14-packaging-and-declared-consumers-0-7-6) | `packaging`, `consumers` (🧪 0.7.6) |
 
 ---
 
@@ -741,13 +741,13 @@ Which columns are embedded is not part of the schema; the reference implementati
 
 ---
 
-## 14. Preview: packaging and declared consumers (0.7.6)
+## 14. Packaging and declared consumers (0.7.6)
 
-> 🧪 **0.7.6 is a preview.** It is opt-in — declare `fluidVersion: "0.7.6"` — and can still change before it is promoted. See [0.7.6 (preview)](/fluid/releases/0.7.6).
+> 🧪 **New in 0.7.6.** Declare `fluidVersion: "0.7.6"` to use it. See [0.7.6](/fluid/releases/0.7.6).
 > **New in this step:** top-level `packaging` and `consumers`.
 
 ```yaml
-# 14-preview-packaging.fluid.yml
+# 14-packaging.fluid.yml
 fluidVersion: "0.7.6"
 kind: DataProduct
 id:   finance.gold.revenue
@@ -777,7 +777,7 @@ exposes:
       location: { account: acme-eu, database: FINANCE, schema: GOLD, table: REVENUE }
 ```
 
-The 0.7.6 release note covers the rest of the preview: cross-mesh pins on `consumes[]`, encryption keys and principal mapping on bindings, and expiring data with `lifecycle.expire`.
+The 0.7.6 release note covers the rest of 0.7.6: cross-mesh pins on `consumes[]`, encryption keys and principal mapping on bindings, and expiring data with `lifecycle.expire`.
 
 ---
 
