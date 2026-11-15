@@ -62,6 +62,14 @@ body {
 // Homepage hero (.vp-hero) — eyebrow pill, animated gradient headline,
 // pill CTAs, faint engineering-grid texture.
 // ---------------------------------------------------------------------
+
+// The grid texture below bleeds 8vw past the hero, more than the home
+// page's side padding below about 1100px wide, so phones and tablets could
+// scroll sideways. `clip` trims only that bleed and keeps vertical overflow.
+.vp-home {
+  overflow-x: clip;
+}
+
 .vp-hero {
   position: relative;
   isolation: isolate;
@@ -240,6 +248,12 @@ body {
 .vp-sidebar {
   background: transparent;
 
+  // At the mobile breakpoint and below the sidebar is a drawer laid over
+  // the page, so it needs a solid surface or the page shows through the menu.
+  @media (max-width: palette.$MQMobile) {
+    background: var(--vp-c-bg);
+  }
+
   .sidebar-item.active {
     color: var(--vp-c-accent);
     font-weight: 600;
@@ -308,14 +322,13 @@ div[class*="language-"] {
 }
 
 // ---------------------------------------------------------------------
-// Tables — full width, alternating rows.
+// Tables — alternating rows. Keep the theme's `display: block` and
+// `overflow-x: auto`: a table wider than the column then scrolls inside
+// itself instead of widening the whole page on phones and tablets.
 // ---------------------------------------------------------------------
 [vp-content] table {
-  display: table;
-  width: 100%;
   border-collapse: collapse;
   border-radius: 10px;
-  overflow: hidden;
 
   th {
     background: var(--vp-c-bg-alt);
