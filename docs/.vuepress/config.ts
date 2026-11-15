@@ -87,8 +87,8 @@ export default defineUserConfig({
           { text: 'Specification', link: '/schema/specification' },
           { text: 'Versions', link: '/schema/versions' },
           { text: 'Changelog', link: '/schema/changelog' },
-          { text: 'JSON Schema 0.7.6 (stable) ↗', link: 'https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json', target: '_blank' },
-          { text: 'Reference 0.7.6 (HTML) ↗', link: 'https://open-data-protocol.github.io/fluid/specs/0.7.6/fluid-spec.html', target: '_blank' },
+          { text: 'JSON Schema 0.7.6 (stable)', link: 'https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.6.json', target: '_blank' },
+          { text: 'Reference 0.7.6 (HTML)', link: 'https://open-data-protocol.github.io/fluid/specs/0.7.6/fluid-spec.html', target: '_blank' },
           { text: 'Preview: 0.7.7', link: '/releases/0.7.7' },
         ],
       },
@@ -100,12 +100,11 @@ export default defineUserConfig({
         text: 'Project',
         children: [
           { text: 'Contributing', link: '/contributing/' },
-          { text: 'Governance ↗', link: 'https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md', target: '_blank' },
-          { text: 'Conformance Corpus ↗', link: 'https://github.com/open-data-protocol/fluid/blob/main/tests/README.md', target: '_blank' },
+          { text: 'Governance', link: 'https://github.com/open-data-protocol/fluid/blob/main/GOVERNANCE.md', target: '_blank' },
+          { text: 'Conformance Corpus', link: 'https://github.com/open-data-protocol/fluid/blob/main/tests/README.md', target: '_blank' },
           { text: 'Vision', link: '/vision/' },
         ],
       },
-      { text: 'GitHub', link: 'https://github.com/open-data-protocol/fluid' },
     ],
 
     sidebar: {

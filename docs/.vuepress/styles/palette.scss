@@ -34,6 +34,16 @@ $ff-indigo:     #818cf8;
 $ff-amber:      #f59e0b;   // "warning" callout semantics only
 $ff-red:        #ef4444;   // "danger" callout semantics only
 
+// ---------------------------------------------------------------------
+// Mobile breakpoint. The default theme reads it from this file; its own
+// default is 719px. The navbar's links, search box and color-mode toggle
+// need about 1120px. Narrower than that, the links pushed the search box
+// and the toggle off screen on landscape phones and tablets, so at 1149px
+// and below the links move into the menu drawer instead. Re-measure this
+// when you add a top-level navbar item.
+// ---------------------------------------------------------------------
+$MQMobile: 1149px;
+
 // =====================================================================
 // DARK (default) — on :root so the first paint is dark.
 // =====================================================================
