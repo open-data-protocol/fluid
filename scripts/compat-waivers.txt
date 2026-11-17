@@ -65,3 +65,27 @@
 # admits -- that would strand real documents rather than just old version
 # strings.
 0.7.3->0.7.4 /properties/fluidVersion
+
+# ---------------------------------------------------------------------------
+# 0.7.6 -> 0.7.7  --  DELIBERATE, in a PREVIEW. The only narrowing in the pair.
+#
+# secretRef (acquisitionSource.connection, acquisitionDeployment.auth and the
+# kafka-connect schema_registry.auth) was a string matching
+# ^[a-z][a-z0-9_+.-]*://.+ . It is now the shared $defs/secretRef: an anyOf of
+# one grammar per scheme (env, file, vault, aws-sm, gcp-sm, azure-kv, and a
+# catch-all for other lower-case schemes). The vault grammar requires a #field.
+#
+# Verified with a document from the 0.7.6 acquisition corpus:
+#     build.properties.source.connection.secretRef = "vault://secret/data/crm-db"
+#     0.7.6: VALID    0.7.7: REJECTED (anyOf)
+#     "vault://secret/data/crm-db#password": VALID under 0.7.7
+# A secretRef that already carried #field, or used another scheme, stays valid.
+#
+# Why it stands: 0.7.7 is a preview, a contract reaches it only by declaring
+# "0.7.7", and the change comes from the reference implementation's
+# "secret references end to end" work. The 0.7.7 corpus (tests/0.7.7/
+# acquisition.json) was updated to the new grammar. docs/schema/changelog.md and
+# docs/releases/0.7.7.md say the pair is not purely additive.
+#
+# Re-examine when 0.7.7 is promoted: a stable version may not narrow.
+0.7.6->0.7.7 acquisition/streaming CDC acquisition reaching every sub-block: source, sink, delivery, schema evolution, quality gates and anomalies, cost budget, catalog, concurrency lock, lineage, kafka-connect (schema registry + streaming sink + managed deployment), and debezium
