@@ -50,7 +50,7 @@
                 "host": "db.internal",
                 "port": 5432,
                 "database": "crm",
-                "secretRef": "vault://secret/data/crm-db",
+                "secretRef": "vault://secret/data/crm-db#password",
                 "schema": "public",
                 "schemas": [
                   "public",
@@ -165,7 +165,7 @@
               "schema_registry": {
                 "url": "http://schema-registry:8081",
                 "auth": {
-                  "secretRef": "vault://secret/data/sr-auth"
+                  "secretRef": "vault://secret/data/sr-auth#password"
                 }
               },
               "streamingSink": {
@@ -941,7 +941,7 @@
       "errors": [
         {
           "pointer": "/build/properties/source/connection/secretRef",
-          "keyword": "pattern"
+          "keyword": "anyOf"
         }
       ]
     },

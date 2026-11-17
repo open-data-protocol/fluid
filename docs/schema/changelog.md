@@ -8,7 +8,7 @@ Human-readable summaries of what changed between consecutive versions of the FLU
 
 [Full diff →](https://github.com/open-data-protocol/fluid/blob/main/schema-diffs/diff-0.7.6-to-0.7.7.md) · [Release note →](/fluid/releases/0.7.7)
 
-No narrowing change. **Preview:** the 0.7.7 schema can still change before it is promoted.
+One narrowing, in secret references (see **Changed**); everything else is additive. **Preview:** the 0.7.7 schema can still change before it is promoted. The file published here was re-vendored from forge-cli v0.31.0; it was first published from v0.27.0, and the items under "Added since the v0.27.0 copy" came after that.
 
 **Added**
 
@@ -16,8 +16,20 @@ No narrowing change. **Preview:** the 0.7.7 schema can still change before it is
 - `build(s).properties.stream`, a new closed `streamSource` definition: `kind` (`kafka`), `topic`, `format` (`json` | `avro-confluent`) and `schema` required; `key` (`format` `raw` | `json` | `avro-confluent`, `schema`, `prefix`) and `metadata[]` (`name`, `from`: `topic` | `partition` | `offset` | `timestamp` | `timestamp-type` | `headers` | `leader-epoch`) optional.
 - `build(s).properties.mapping`, a new closed `recordMapping` definition: `explode` (`path` and `as`, both required) and `columns[]` (`name` and `from` required; `cast` optional).
 - `fluidVersion` accepts `"0.7.7"`.
+- Added since the v0.27.0 copy:
+  - Rules about valid data: `exposes[].contract.invariants[]` (the new `invariant`, `invariantAggregate` and `invariantDependency` definitions, with `fluidSqlText` and `violationBound`), and on a column `identifierFormat`, `placeholders` and `sharedAttribute`.
+  - `exposes[].semantics.relationships[]` (a new `semanticRelationship` definition, with `sharedColumns`) and `dimensions[].typeParams.validityParams`; the entity type `natural` gains a description.
+  - `$defs/schemaRegistry` (`kind` `glue` | `confluent`), used at `stream.registry` and `binding.properties.registry`; `stream.trigger`, `stream.watermark`, `stream.checkpoint` and `stream.startingOffsets`.
+  - `mapping.columns[].maskAtIngest` (`hash`), and `embeddedLogicPattern.properties.parameters.spark`, a new `sparkParameters` definition (`runtime` required).
+  - `column.protobuf.field`, for a topic whose value is Protobuf.
+  - `build.engine` value `lakeflow`.
+  - `packaging.containers` keys `lfTagVocabulary`, `emrApplication`, `schemaRegistry`, `athenaWorkgroup`, `kmsKey` and `mwaaEnvironment`.
+  - `connection.password` and `auth.token` as `writeOnly` members, on an acquisition source and on an acquisition build's `deployment.auth`.
 
-**Changed:** `embeddedLogicPattern` no longer lists `sql` as unconditionally required. It requires `sql` unless the build has a `stream` and `parameters.flink` declares `management`, and `mapping` requires `stream` (`dependentRequired`). Every document that carried `sql` is unaffected.
+**Changed:**
+
+- `embeddedLogicPattern` no longer lists `sql` as unconditionally required. It requires `sql` unless the build has a `stream` and either `parameters.flink` declares `management`, or it has a `mapping` and `parameters.spark`; `mapping` requires `stream` (`dependentRequired`). Every document that carried `sql` is unaffected.
+- `secretRef` (an acquisition source's `connection`, the `auth` of an acquisition build's `deployment`, and the `kafka-connect` `schema_registry.auth`) is now the shared `$defs/secretRef`: one pattern per scheme (`env`, `file`, `vault`, `aws-sm`, `gcp-sm`, `azure-kv`, and other lower-case schemes). It was any string of the form `<scheme>://<anything>`. This is the narrowing: a `vault://` reference now needs a `#field`, so `vault://secret/data/crm-db` is refused and `vault://secret/data/crm-db#password` is valid. `scripts/check-compat.py` reports it and `scripts/compat-waivers.txt` records it. See the [0.7.7 notes](/fluid/releases/0.7.7#secret-references).
 
 ## 0.7.5 to 0.7.6: Declarative Packaging Modes
 
