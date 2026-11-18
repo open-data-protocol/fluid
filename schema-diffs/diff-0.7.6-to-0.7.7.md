@@ -1,9 +1,9 @@
 # Schema Changes: 0.7.6 → 0.7.7
 
-**Total changes:** 61
+**Total changes:** 63
 - ✅ Added: 45
 - ❌ Removed: 5
-- 📝 Modified: 11
+- 📝 Modified: 13
 
 ---
 
@@ -855,6 +855,30 @@
 **After:**
 ```json
 "Build/ingestion engine. Transformation engines: dbt, sql, python, spark, glue, custom. Adapter-quali..."
+```
+
+### `$defs.column.properties.type.anyOf`
+
+**Before:**
+```json
+[{"type": "string", "enum": ["string", "text", "varchar", "varchar2", "nvarchar", "char", "nchar", "character", "clob", "int", "integer", "int2", "int4", "int8", "int16", "int32", "int64", "tinyint", "smallint", "mediumint", "bigint", "long", "longint", "serial", "bigserial", "float", "float4", "float8", "float32", "float64", "double", "real", "decimal", "dec", "numeric", "number", "bignumeric", "money", "boolean", "bool", "bit", "date", "time", "datetime", "datetime2", "smalldatetime", "timestamp", "timestamptz", "timestamp_tz", "timestamp_ntz", "timestamp_ltz", "timestampntz", "interval", "year", "variant", "object", "array", "struct", "map", "record", "row", "json", "jsonb", "super", "binary", "varbinary", "bytes", "blob", "bytea", "raw", "geography", "geometry", "geom", "point", "uuid", "uniqueidentifier", "guid", "enum", "hll"]}, {"type": "string", "pattern": "(?i)^\\s*(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\\s+with(out)?\\s+time\\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)\\s*(\\(\\s*[0-9A-Za-z_,\\s'\\\"-]*\\s*\\))?\\s*$"}]
+```
+
+**After:**
+```json
+[{"type": "string", "enum": ["string", "text", "varchar", "varchar2", "nvarchar", "char", "nchar", "character", "clob", "int", "integer", "int2", "int4", "int8", "int16", "int32", "int64", "tinyint", "smallint", "mediumint", "bigint", "long", "longint", "serial", "bigserial", "float", "float4", "float8", "float32", "float64", "double", "real", "decimal", "dec", "numeric", "number", "bignumeric", "money", "boolean", "bool", "bit", "date", "time", "datetime", "datetime2", "smalldatetime", "timestamp", "timestamptz", "timestamp_tz", "timestamp_ntz", "timestamp_ltz", "timestampntz", "interval", "year", "variant", "object", "array", "struct", "map", "record", "row", "json", "jsonb", "super", "binary", "varbinary", "bytes", "blob", "bytea", "raw", "geography", "geometry", "geom", "point", "uuid", "uniqueidentifier", "guid", "enum", "hll"]}, {"type": "string", "pattern": "(?i)^\\s*(?:enum\\s*\\(\\s*(?:(?:'(?:[^'\\x00-\\x1f\\x7f-\\x9f]|'')*'|\"(?:[^\"\\x00-\\x1f\\x7f-\\x9f]|\"\")*\"|[0-9A-Za-z_-]+(?:\\s+[0-9A-Za-z_-]+)*)\\s*(?:,\\s*(?:'(?:[^'\\x00-\\x1f\\x7f-\\x9f]|'')*'|\"(?:[^\"\\x00-\\x1f\\x7f-\\x9f]|\"\")*\"|[0-9A-Za-z_-]+(?:\\s+[0-9A-Za-z_-]+)*)\\s*)*)?\\)|(?!enum\\s*\\()(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\\s+with(out)?\\s+time\\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)(\\s*\\([0-9A-Za-z_,\\s'\\\"-]*\\))?)\\s*$"}]
+```
+
+### `$defs.column.properties.type.description`
+
+**Before:**
+```json
+"Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form..."
+```
+
+**After:**
+```json
+"Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form..."
 ```
 
 ### `$defs.packaging.properties.containers.description`

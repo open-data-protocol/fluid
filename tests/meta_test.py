@@ -283,9 +283,10 @@ def compat_gate_is_load_bearing() -> None:
         json.dumps(_set_in(json.loads(target.read_text()), ["properties", "exposes", "minItems"], 2), indent=2)
     )
     waivers = root / "scripts" / "compat-waivers.txt"
-    # the file must stay sorted, so the new line goes before the last pair's entry
+    # the file must stay sorted, so the new line goes before the first entry of
+    # the last pair, whatever number of entries that pair has
     text = waivers.read_text()
-    at = text.rindex("\n0.7.6->0.7.7 ") + 1
+    at = text.index("\n0.7.6->0.7.7 ") + 1
     waivers.write_text(text[:at] + "0.7.4->0.7.5 /properties/exposes\n" + text[at:])
     r = run(root, "scripts/check-compat.py", "--from", "0.7.4", "--to", "0.7.5")
     check("a waiver silences its own pointer", r.returncode == 0, f"exit={r.returncode}")

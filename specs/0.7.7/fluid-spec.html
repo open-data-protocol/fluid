@@ -3515,8 +3515,15 @@
             />
         </svg>
     <a href="#exposes_items_contract_schema_items_element_type" onclick="anchorLink('exposes_items_contract_schema_items_element_type')">type</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form such as decimal(18,4) or varchar(255). The enum lists the canonical bare types; the pattern additionally permits case variants and parameter suffixes. Intentionally generous — it rejects obvious garbage (e.g. MYSTERY_TYPE) while admitting the cross-dialect superset.</p>
-</span>
+<div class="description collapse" id="collapseDescription_exposes_items_contract_schema_items_element_type">
+            <p>Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form such as decimal(18,4) or varchar(255). The enum lists the canonical bare types; the pattern additionally permits case variants and parameter suffixes. An enum names its levels in its parameter list, comma-separated: each level is a word list (enum(IE, United Kingdom)) or a quoted string that may hold any character but a control character, with its own quote doubled, as in SQL string literals (enum('Dr.', '>10000', 'O''Brien', 'a, b')). Intentionally generous — it rejects obvious garbage (e.g. MYSTERY_TYPE) while admitting the cross-dialect superset.</p>
+
+        </div>
+        <div>
+            <a class="collapse-description-link collapsed" data-toggle="collapse" href="#collapseDescription_exposes_items_contract_schema_items_element_type"
+               aria-expanded="false" aria-controls="collapseDescriptionexposes_items_contract_schema_items_element_type"
+            ></a>
+        </div>
 
     <div class="any-of-value" id="exposes_items_contract_schema_items_element_type_anyOf"><h2 class="handle">
   <label>Any of</label>
@@ -3677,7 +3684,7 @@
             />
         </svg>
     <a href="#exposes_items_contract_schema_items_element_type_anyOf_i1" onclick="anchorLink('exposes_items_contract_schema_items_element_type_anyOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="pattern-value" id="exposes_items_contract_schema_items_element_type_anyOf_i1_pattern">Must match regular expression: <code>(?i)^\s*(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\s+with(out)?\s+time\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)\s*(\(\s*[0-9A-Za-z_,\s&#39;\&#34;-]*\s*\))?\s*$</code></span>
+<span class="pattern-value" id="exposes_items_contract_schema_items_element_type_anyOf_i1_pattern">Must match regular expression: <code>(?i)^\s*(?:enum\s*\(\s*(?:(?:&#39;(?:[^&#39;\x00-\x1f\x7f-\x9f]|&#39;&#39;)*&#39;|&#34;(?:[^&#34;\x00-\x1f\x7f-\x9f]|&#34;&#34;)*&#34;|[0-9A-Za-z_-]+(?:\s+[0-9A-Za-z_-]+)*)\s*(?:,\s*(?:&#39;(?:[^&#39;\x00-\x1f\x7f-\x9f]|&#39;&#39;)*&#39;|&#34;(?:[^&#34;\x00-\x1f\x7f-\x9f]|&#34;&#34;)*&#34;|[0-9A-Za-z_-]+(?:\s+[0-9A-Za-z_-]+)*)\s*)*)?\)|(?!enum\s*\()(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\s+with(out)?\s+time\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)(\s*\([0-9A-Za-z_,\s&#39;\&#34;-]*\))?)\s*$</code></span>
         
 
         
@@ -4369,8 +4376,15 @@
             />
         </svg>
     <a href="#exposes_items_contract_schema_items_type" onclick="anchorLink('exposes_items_contract_schema_items_type')">type</a></div><br/>
-<span class="description"><p>Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form such as decimal(18,4) or varchar(255). The enum lists the canonical bare types; the pattern additionally permits case variants and parameter suffixes. Intentionally generous — it rejects obvious garbage (e.g. MYSTERY_TYPE) while admitting the cross-dialect superset.</p>
-</span><div class="any-of-value" id="exposes_items_contract_schema_items_type_anyOf"><h2 class="handle">
+<div class="description collapse" id="collapseDescription_exposes_items_contract_schema_items_type">
+            <p>Column data type. Accepts a canonical FLUID/SQL type name (case-insensitive) or a parameterized form such as decimal(18,4) or varchar(255). The enum lists the canonical bare types; the pattern additionally permits case variants and parameter suffixes. An enum names its levels in its parameter list, comma-separated: each level is a word list (enum(IE, United Kingdom)) or a quoted string that may hold any character but a control character, with its own quote doubled, as in SQL string literals (enum('Dr.', '>10000', 'O''Brien', 'a, b')). Intentionally generous — it rejects obvious garbage (e.g. MYSTERY_TYPE) while admitting the cross-dialect superset.</p>
+
+        </div>
+        <div>
+            <a class="collapse-description-link collapsed" data-toggle="collapse" href="#collapseDescription_exposes_items_contract_schema_items_type"
+               aria-expanded="false" aria-controls="collapseDescriptionexposes_items_contract_schema_items_type"
+            ></a>
+        </div><div class="any-of-value" id="exposes_items_contract_schema_items_type_anyOf"><h2 class="handle">
   <label>Any of</label>
 </h2><ul class="nav nav-tabs" id="tabsexposes_items_contract_schema_items_type_anyOf_anyOf" role="tablist"><li class="nav-item">
             <a class="nav-link active anyOf-option"
@@ -4515,7 +4529,7 @@
             />
         </svg>
     <a href="#exposes_items_contract_schema_items_type_anyOf_i1" onclick="anchorLink('exposes_items_contract_schema_items_type_anyOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="pattern-value" id="exposes_items_contract_schema_items_type_anyOf_i1_pattern">Must match regular expression: <code>(?i)^\s*(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\s+with(out)?\s+time\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)\s*(\(\s*[0-9A-Za-z_,\s&#39;\&#34;-]*\s*\))?\s*$</code></span>
+<span class="pattern-value" id="exposes_items_contract_schema_items_type_anyOf_i1_pattern">Must match regular expression: <code>(?i)^\s*(?:enum\s*\(\s*(?:(?:&#39;(?:[^&#39;\x00-\x1f\x7f-\x9f]|&#39;&#39;)*&#39;|&#34;(?:[^&#34;\x00-\x1f\x7f-\x9f]|&#34;&#34;)*&#34;|[0-9A-Za-z_-]+(?:\s+[0-9A-Za-z_-]+)*)\s*(?:,\s*(?:&#39;(?:[^&#39;\x00-\x1f\x7f-\x9f]|&#39;&#39;)*&#39;|&#34;(?:[^&#34;\x00-\x1f\x7f-\x9f]|&#34;&#34;)*&#34;|[0-9A-Za-z_-]+(?:\s+[0-9A-Za-z_-]+)*)\s*)*)?\)|(?!enum\s*\()(string|text|varchar|varchar2|nvarchar|char|nchar|character|clob|int|integer|int2|int4|int8|int16|int32|int64|tinyint|smallint|mediumint|bigint|long|longint|serial|bigserial|float|float4|float8|float32|float64|double|real|double\s+precision|decimal|dec|numeric|number|bignumeric|money|boolean|bool|bit|date|time|datetime|datetime2|smalldatetime|timestamp|timestamptz|timestamp_tz|timestamp_ntz|timestamp_ltz|timestampntz|timestamp\s+with(out)?\s+time\s+zone|interval|year|variant|object|array|struct|map|record|row|json|jsonb|super|binary|varbinary|bytes|blob|bytea|raw|geography|geometry|geom|point|uuid|uniqueidentifier|guid|enum|hll)(\s*\([0-9A-Za-z_,\s&#39;\&#34;-]*\))?)\s*$</code></span>
         
 
         
