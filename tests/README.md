@@ -233,8 +233,8 @@ from the denominator; counting them would blame the corpus for a gap it cannot
 close, and they are findings about the *schema* instead.
 
 Today: **41.0%** for 0.7.5 (432 of 1053 falsifiable constraints, 123
-redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **48.2%**
-for 0.7.7 (632 of 1310, 135 redundant). The gate
+redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **41.4%**
+for 0.7.7 (638 of 1541, 141 redundant). The gate
 applies to the lowest. Most of what remains is `type` constraints, which need a
 wrong-typed value for every property in the schema; `--format json` lists the
 unpinned enums, required members, closed objects and bounds.
@@ -277,3 +277,10 @@ change, would have been at 39.7%, under the floor. The cases are in
 `tests/0.7.6/trigger-continuous.json` and `tests/0.7.6/bitol-fields.json`, and
 for 0.7.7 in `tests/0.7.7/stream-source.json`, `record-mapping.json` and
 `nested-columns.json`.
+
+0.7.7 was re-vendored once more from forge-cli v0.32.0, with quoted levels in
+the `enum` column type. That replaced one pattern and added no constraint, so
+coverage stayed at 41.4%. The case with an unrecognised type already covered the
+pattern, but it cannot tell the old grammar from the new, so seven cases in
+`tests/0.7.7/contract-schema.json` pin it: three valid and four invalid, of
+which six get the other verdict under the previous copy.

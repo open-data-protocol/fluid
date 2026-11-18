@@ -67,7 +67,53 @@
 0.7.3->0.7.4 /properties/fluidVersion
 
 # ---------------------------------------------------------------------------
-# 0.7.6 -> 0.7.7  --  DELIBERATE, in a PREVIEW. The only narrowing in the pair.
+# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. A widening with a narrow edge.
+#
+# $defs/column/properties/type, the pattern (second anyOf branch). An enum's
+# parameters are now a comma-separated list of levels. A level is a quoted
+# string, in single or double quotes, that may hold any character but a
+# control character, with its own quote doubled as SQL writes it, or an
+# unquoted list of words. Through 0.7.6, and in every copy of 0.7.7 published
+# here before forge-cli v0.32.0, the parameters were any run of letters,
+# digits, underscores, spaces, commas, quotes and hyphens. Every other type
+# keeps that character set.
+#
+# Regex containment is undecidable in general, so the gate reports any changed
+# pattern as breaking and asks for a decision. This one rests on comparing the
+# two patterns on 1,195,741 strings: every string of up to 5 characters (6
+# after "enum(") over the 9 symbols  a 0 - space , ' " . )  after each of the
+# 10 prefixes "enum(", "ENUM (", "varchar(", "decimal(", "timestamp with time
+# zone(", "map(", "enumx(", "enum", "string" and the empty prefix. A second
+# comparison covers 618,821 strings: every string of up to 4 characters (5
+# after "enum(") over the 13 symbols  a ' " , ) -  space, tab, newline, DEL,
+# U+0085, a non-ASCII letter and ">"  after each of the 8 prefixes "enum(",
+# "ENUM (", "varchar(", "decimal(", "map(", "enum", "string" and the empty
+# prefix. In both:
+#   - no type other than enum changes its verdict;
+#   - what 0.7.6 accepts and 0.7.7 now refuses (21,676 strings in the first
+#     run) is an enum with an empty item, a quote that does not open and close
+#     a level, or a whitespace control character inside a quoted level:
+#         enum(a,,b)   enum(a, )   enum(')   enum('it's')   enum('a'  'b')
+#         enum('a<TAB>b')
+#   - what 0.7.6 refuses and 0.7.7 now accepts (960 strings in the first run)
+#     is an enum with a quoted level that holds a character 0.7.6 refused:
+#         enum('Dr.', '>10000', 'O''Brien', 'a, b')   enum("Dr.", "Cir.")
+#   - unchanged: enum   enum()   enum(IE, United Kingdom)   varchar(255)
+#     decimal(18,4)   varchar('1, 2')
+#
+# Why it stands: 0.7.7 is a preview and a contract reaches it only by declaring
+# "0.7.7". The new grammar is what lets a level hold any character, and the
+# spellings it refuses are the ones it cannot read as a list of levels. The
+# 0.7.7 corpus pins both sides (tests/0.7.7/contract-schema.json).
+# docs/schema/changelog.md and docs/releases/0.7.7.md say the pair is not
+# purely additive.
+#
+# Re-examine when 0.7.7 is promoted: a stable version may not narrow.
+0.7.6->0.7.7 /$defs/column/properties/type/anyOf/1
+
+# ---------------------------------------------------------------------------
+# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. The other narrowing in the pair is
+# the column type pattern, above.
 #
 # secretRef (acquisitionSource.connection, acquisitionDeployment.auth and the
 # kafka-connect schema_registry.auth) was a string matching
