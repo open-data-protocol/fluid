@@ -4086,6 +4086,1827 @@
           "keyword": "dependentRequired"
         }
       ]
+    },
+    {
+      "description": "a stream with maxOffsetsPerTrigger",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "maxOffsetsPerTrigger": 10000
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a stream with maxOffsetsPerTrigger of 1",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "maxOffsetsPerTrigger": 1
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a stream with maxOffsetsPerTrigger of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "maxOffsetsPerTrigger": 0
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/maxOffsetsPerTrigger",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a stream with maxOffsetsPerTrigger as a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "maxOffsetsPerTrigger": "10000"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/maxOffsetsPerTrigger",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a stream with a fractional maxOffsetsPerTrigger",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "maxOffsetsPerTrigger": 1.5
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/maxOffsetsPerTrigger",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "an empty deadLetter",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {}
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a deadLetter with every table-sink member",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "enabled": true,
+                "sink": "table",
+                "table": "payments_clean__dead_letter",
+                "maxRecordsBeforeAbort": 0,
+                "alertOn": [
+                  "schema_violation"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a deadLetter switched off",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "enabled": false
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a deadLetter on a topic",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "topic",
+                "topic": "payments.v1.dlq"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a deadLetter that is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": "yes"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "retries": 3
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter",
+          "keyword": "additionalProperties",
+          "detail": "retries"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter enabled that is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "enabled": "yes"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/enabled",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter sink outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "queue"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/sink",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter table with a dash",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "table": "dead-letter"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/table",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter table that starts with a digit",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "table": "1dead"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/table",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter table of 255 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "table": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a deadLetter table of 256 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "table": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/table",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter topic with a space",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "topic",
+                "topic": "dead letters"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/topic",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter topic of 249 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "topic",
+                "topic": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a deadLetter topic of 250 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "topic",
+                "topic": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/topic",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a topic sink that names no topic",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "topic"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter",
+          "keyword": "required",
+          "detail": "topic"
+        }
+      ]
+    },
+    {
+      "description": "a topic sink that also names a table",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "topic",
+                "topic": "dlq",
+                "table": "t"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a table sink that names a topic",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "sink": "table",
+                "topic": "dlq"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter that names a topic and no sink",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "topic": "dlq"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter maxRecordsBeforeAbort below 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "maxRecordsBeforeAbort": -1
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/maxRecordsBeforeAbort",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter alertOn reason outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "alertOn": [
+                  "timeout"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/alertOn/0",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a deadLetter alertOn that lists a reason twice",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "flink",
+          "properties": {
+            "sql": "INSERT INTO payments_clean SELECT * FROM payments",
+            "stream": {
+              "kind": "kafka",
+              "topic": "payments.v1",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "payment_id",
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "type": "decimal"
+                }
+              ],
+              "deadLetter": {
+                "alertOn": [
+                  "schema_violation",
+                  "schema_violation"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/stream/deadLetter/alertOn",
+          "keyword": "uniqueItems"
+        }
+      ]
     }
   ]
 }

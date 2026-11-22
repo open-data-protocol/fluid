@@ -233,8 +233,8 @@ from the denominator; counting them would blame the corpus for a gap it cannot
 close, and they are findings about the *schema* instead.
 
 Today: **41.0%** for 0.7.5 (432 of 1053 falsifiable constraints, 123
-redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **41.4%**
-for 0.7.7 (638 of 1541, 141 redundant). The gate
+redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **46.1%**
+for 0.7.7 (786 of 1705, 143 redundant). The gate
 applies to the lowest. Most of what remains is `type` constraints, which need a
 wrong-typed value for every property in the schema; `--format json` lists the
 unpinned enums, required members, closed objects and bounds.
@@ -284,3 +284,16 @@ coverage stayed at 41.4%. The case with an unrecognised type already covered the
 pattern, but it cannot tell the old grammar from the new, so seven cases in
 `tests/0.7.7/contract-schema.json` pin it: three valid and four invalid, of
 which six get the other verdict under the previous copy.
+
+0.7.7 was re-vendored a third time from forge-cli v0.38.0, with alert routes,
+Iceberg table maintenance, the `local` Spark runtime and prebuilt PySpark
+packages, a Kafka stream's `maxOffsetsPerTrigger` and `deadLetter`,
+`orchestration.airflow.poolPerOutputTable`, and Airflow's own rule for a DAG or
+task id (so `dagId` is optional and `dagId` and `taskId` take upper case and
+are limited to 250 characters). That added constraints and no
+case pinned them, so the cases are in the new `tests/0.7.7/alerts.json`,
+`iceberg-maintenance.json` and `spark-runtime.json` (179 cases) and in
+`orchestration.json` and `stream-source.json` (43 more). 90 of the new cases get
+the other verdict under the previous copy of the schema. One existing case,
+"orchestration.airflow is present but omits dagId", is now valid and was
+renamed. Coverage rose from 41.4% to 46.1%.
