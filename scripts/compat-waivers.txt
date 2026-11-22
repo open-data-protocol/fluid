@@ -153,8 +153,8 @@
 0.7.6->0.7.7 /$defs/column/properties/type/anyOf/1
 
 # ---------------------------------------------------------------------------
-# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. The other narrowing in the pair is
-# the column type pattern, above.
+# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. The others in the pair are
+# the column type pattern and the Airflow ids, above.
 #
 # secretRef (acquisitionSource.connection, acquisitionDeployment.auth and the
 # kafka-connect schema_registry.auth) was a string matching

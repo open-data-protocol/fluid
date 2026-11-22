@@ -285,7 +285,7 @@ pattern, but it cannot tell the old grammar from the new, so seven cases in
 `tests/0.7.7/contract-schema.json` pin it: three valid and four invalid, of
 which six get the other verdict under the previous copy.
 
-0.7.7 was re-vendored a third time from forge-cli v0.38.0, with alert routes,
+0.7.7 was re-vendored again from forge-cli v0.38.0, with alert routes,
 Iceberg table maintenance, the `local` Spark runtime and prebuilt PySpark
 packages, a Kafka stream's `maxOffsetsPerTrigger` and `deadLetter`,
 `orchestration.airflow.poolPerOutputTable`, and Airflow's own rule for a DAG or
