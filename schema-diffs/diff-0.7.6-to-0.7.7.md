@@ -1,9 +1,9 @@
 # Schema Changes: 0.7.6 → 0.7.7
 
-**Total changes:** 63
-- ✅ Added: 45
-- ❌ Removed: 5
-- 📝 Modified: 13
+**Total changes:** 84
+- ✅ Added: 63
+- ❌ Removed: 6
+- 📝 Modified: 15
 
 ---
 
@@ -40,6 +40,120 @@
 ### `$defs.acquisitionSource.properties.connection.properties.secretRef.$ref`
 ```json
 "#/$defs/secretRef"
+```
+
+### `$defs.airflowOrchestration.properties.dagId.description`
+```json
+"The Airflow DAG id, exactly as Airflow spells it. Airflow's own rule: ASCII letters (either case), d..."
+```
+
+### `$defs.airflowOrchestration.properties.dagId.maxLength`
+```json
+250
+```
+
+### `$defs.airflowOrchestration.properties.dagId.minLength`
+```json
+1
+```
+
+### `$defs.airflowOrchestration.properties.poolPerOutputTable`
+```json
+{
+  type: "boolean"
+  default: false
+  description: "NEW in v0.7.7: When true, the generated DAG puts each task that writes an output table in a one-slot..."
+}
+```
+
+### `$defs.airflowTask.properties.taskId.description`
+```json
+"The Airflow task id, exactly as Airflow spells it. Airflow's own rule: ASCII letters (either case), ..."
+```
+
+### `$defs.airflowTask.properties.taskId.maxLength`
+```json
+250
+```
+
+### `$defs.airflowTask.properties.taskId.minLength`
+```json
+1
+```
+
+### `$defs.alertRoute`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  required: ["name", "kind"]
+  description: "NEW in v0.7.7: One alert route. A route carries no secret: connection names the scheduler connection..."
+  properties: {
+    name: {
+      type: "string"
+      pattern: "^[A-Za-z_][A-Za-z0-9_-]{0,63}$"
+    }
+    kind: {
+      type: "string"
+      pattern: "^[a-z][a-z0-9_-]{0,63}$"
+      description: "email (SmtpNotifier), slack (SlackWebhookNotifier), webhook (HttpNotifier, see format), pagerduty (P..."
+    }
+    events: {
+      type: "array"
+      minItems: 1
+      uniqueItems: true
+      items: {
+        enum: [...4 items...]
+      }
+      default: ["failure"]
+      ... (1 more)
+    }
+    connection: {
+      type: "string"
+      pattern: "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,249}$"
+      description: "The Airflow connection id that holds the address, URL or key: the scheduler's secrets backend serves..."
+    }
+    to: {
+      type: "array"
+      minItems: 1
+      maxItems: 50
+      items: {
+        type: "string"
+        pattern: "^[A-Za-z0-9._+-]{1,64}@[A-Za-z0-9-]{1,63}(\\.[A-Za-z0-9-]{1,63})+$"
+      }
+      description: "email only: the addresses to send to."
+    }
+    ... (4 more)
+  }
+}
+```
+
+### `$defs.alerts`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.7: The alert routes of the product's DAGs. The Airflow DAG renderers put each route's no..."
+  properties: {
+    sla: {
+      type: "string"
+      pattern: "^P(?=\\d|T\\d)(\\d{1,7}W)?(\\d{1,7}D)?(T(?=\\d)(\\d{1,7}H)?(\\d{1,7}M)?(\\d{1,7}S)?)?$"
+      description: "How long a run may take before its sla_miss routes alert, as an ISO-8601 duration in weeks, days, ho..."
+    }
+    defaults: {
+      type: "boolean"
+      default: true
+      description: "Whether the product takes the default routes of the organisation's installed packs (the fluid_build...."
+    }
+    routes: {
+      type: "array"
+      maxItems: 20
+      items: {
+        $ref: "#/$defs/alertRoute"
+      }
+    }
+  }
+}
 ```
 
 ### `$defs.binding.properties.properties.properties`
@@ -194,6 +308,11 @@
 }
 ```
 
+### `$defs.embeddedLogicPattern.allOf`
+```json
+[{"if": {"required": ["package"]}, "then": {"required": ["parameters"], "properties": {"language": {"const": "pyspark"}, "parameters": {"required": ["spark"], "properties": {"spark": {"properties": {"mode": {"const": "batch"}}}}}}, "not": {"anyOf": [{"required": ["sql"]}, {"required": ["mapping"]}, {"required": ["stream"]}]}, "description": "a package runs PySpark in a batch Spark build (parameters.spark), in place of sql, mapping and stream"}}]
+```
+
 ### `$defs.embeddedLogicPattern.dependentRequired`
 ```json
 {
@@ -205,7 +324,7 @@
 ```json
 {
   not: {
-    anyOf: [{"required": ["stream", "parameters"], "properties": {"parameters": {"required": ["flink"], "properties": {"flink": {"required": ["management"]}}}}}, {"required": ["stream", "mapping", "parameters"], "properties": {"parameters": {"required": ["spark"]}}}]
+    anyOf: [{"required": ["stream", "parameters"], "properties": {"parameters": {"required": ["flink"], "properties": {"flink": {"required": ["management"]}}}}}, {"required": ["stream", "mapping", "parameters"], "properties": {"parameters": {"required": ["spark"]}}}, {"required": ["package", "parameters"], "properties": {"parameters": {"required": ["spark"]}}}]
   }
 }
 ```
@@ -215,6 +334,14 @@
 {
   $ref: "#/$defs/recordMapping"
   description: "NEW in v0.7.7 (preview): How the stream's records become the output's rows. Requires stream, and rep..."
+}
+```
+
+### `$defs.embeddedLogicPattern.properties.package`
+```json
+{
+  $ref: "#/$defs/sparkPackage"
+  description: "NEW in v0.7.7 (preview): A prebuilt PySpark package a batch Spark build runs by its sha256 digest, i..."
 }
 ```
 
@@ -243,6 +370,14 @@
 }
 ```
 
+### `$defs.expose.properties.iceberg.properties.maintenance`
+```json
+{
+  $ref: "#/$defs/icebergMaintenance"
+  description: "NEW in v0.7.7: The table's maintenance: compaction, manifests, snapshot expiry, orphan files and a p..."
+}
+```
+
 ### `$defs.exposeContract.properties.invariants`
 ```json
 {
@@ -260,6 +395,112 @@
   type: "string"
   minLength: 1
   description: "NEW in v0.7.7 (preview): A FLUID SQL/1 text (RFC-data-rules.md section 2): a closed SQL expression s..."
+}
+```
+
+### `$defs.icebergMaintenance`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.7: What keeps the Iceberg table healthy, run on a schedule. backend spark (the default) ..."
+  properties: {
+    backend: {
+      type: "string"
+      enum: ["spark", "glue"]
+      default: "spark"
+      description: "spark: forge's Spark runner, on the writer build's runtime. glue: the Glue Data Catalog's table opti..."
+    }
+    schedule: {
+      type: "string"
+      minLength: 1
+      description: "backend spark, required: the cron (or Airflow preset) the table's maintenance DAG runs on."
+    }
+    timezone: {
+      type: "string"
+      minLength: 1
+      default: "UTC"
+      description: "backend spark: the IANA zone the schedule is read in."
+    }
+    build: {
+      type: "string"
+      minLength: 1
+      description: "backend spark: the id of the engine: spark build whose output this expose is, when more than one is;..."
+    }
+    roleArn: {
+      type: "string"
+      pattern: "^arn:aws[a-z-]*:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]{1,512}$"
+      description: "backend glue, required: the IAM role Glue's optimizers run as."
+    }
+    ... (6 more)
+  }
+}
+```
+
+### `$defs.icebergMaintenanceAction`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  required: ["name", "kind"]
+  description: "NEW in v0.7.7: One maintenance action of a package's kind, such as a GDPR erasure. When fluid plan c..."
+  properties: {
+    name: {
+      type: "string"
+      pattern: "^[A-Za-z_][A-Za-z0-9_-]{0,63}$"
+      description: "The action's name, unique on the table; its commits are stamped with it."
+    }
+    kind: {
+      type: "string"
+      pattern: "^[a-z][a-z0-9_-]{0,63}$"
+      description: "The kind's name under the fluid_build.maintenance_actions entry points."
+    }
+    options: {
+      type: "object"
+      description: "JSON values the kind reads. No secret: a kind reads its own."
+    }
+  }
+}
+```
+
+### `$defs.icebergMaintenanceCompaction`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.7: Rewrite small files into larger ones (Iceberg's rewrite_data_files with partial progr..."
+  properties: {
+    enabled: {
+      type: "boolean"
+      default: true
+      description: "false declares the block and runs nothing."
+    }
+    strategy: {
+      type: "string"
+      enum: ["binpack", "sort", "z-order"]
+      default: "binpack"
+      description: "sort orders by the table's sort order; z-order is backend glue's."
+    }
+    targetFileSizeMb: {
+      type: "integer"
+      minimum: 1
+      maximum: 1048576
+      description: "backend spark: the size files are rewritten to; default iceberg.compaction.targetFileSizeMb, else th..."
+    }
+    minInputFiles: {
+      type: "integer"
+      minimum: 1
+      maximum: 1000000
+      description: "The fewest files a group must hold to be rewritten."
+    }
+    deleteFileThreshold: {
+      type: "integer"
+      minimum: 1
+      maximum: 1000000
+      description: "The delete files that make a data file worth rewriting."
+    }
+    ... (2 more)
+  }
 }
 ```
 
@@ -644,6 +885,77 @@
 }
 ```
 
+### `$defs.sparkPackage`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.7 (preview): A prebuilt PySpark package a Spark build runs in place of sql or a mapping,..."
+  required: ["uri", "sha256", "entryPoint"]
+  properties: {
+    uri: {
+      type: "string"
+      pattern: "^(?:s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/|file:///)(?:(?!\.{1,2}/)[A-Za-z0-9._=+-]+/)*[A-Za-z0-9._=..."
+      maxLength: 1024
+      description: "The package as its team published it, a .whl or a .zip: s3://<bucket>/<key> for the AWS runtimes, fi..."
+    }
+    sha256: {
+      type: "string"
+      pattern: "^[0-9a-f]{64}(?![\\s\\S])"
+      description: "The package's sha256, as sha256sum prints it: 64 lowercase hex characters. The run refuses any other..."
+    }
+    entryPoint: {
+      type: "string"
+      pattern: "^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_..."
+      maxLength: 512
+      description: "The function the runner calls, as an entry-point object reference, <module>:<attribute>[.<attribute>..."
+    }
+    arguments: {
+      type: "object"
+      maxProperties: 64
+      propertyNames: {
+        pattern: "^[A-Za-z_][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"
+      }
+      additionalProperties: {
+        type: "string"
+        maxLength: 4096
+      }
+      description: "Strings the function reads as context.arguments, name to value (source: commerce.orders_raw)."
+    }
+    deadLetter: {
+      $ref: "#/$defs/sparkPackageDeadLetter"
+    }
+  }
+}
+```
+
+### `$defs.sparkPackageDeadLetter`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.7 (preview): What forge's Spark runner does with a row of a package's output that fails ..."
+  properties: {
+    enabled: {
+      type: "boolean"
+      default: true
+      description: "false: no dead letters; a row that fails the checks fails the run (an overlay can switch it off per ..."
+    }
+    table: {
+      type: "string"
+      pattern: "^[A-Za-z_][A-Za-z0-9_]{0,254}(?![\\s\\S])"
+      description: "The table's name in the output's database. Absent: <output table>__dead_letter."
+    }
+    maxRecordsBeforeAbort: {
+      type: "integer"
+      minimum: 0
+      default: 10000
+      description: "The run fails, after its dead letters have landed and before the output is written, once more rows t..."
+    }
+  }
+}
+```
+
 ### `$defs.sparkParameters`
 ```json
 {
@@ -653,8 +965,8 @@
   required: ["runtime"]
   properties: {
     runtime: {
-      enum: [...4 items...]
-      description: "The AWS service that runs the job: EMR Serverless, EMR on EC2, EMR on EKS or an AWS Glue Spark job. ..."
+      enum: [...5 items...]
+      description: "Where the job runs: EMR Serverless, EMR on EC2, EMR on EKS, an AWS Glue Spark job, or local, a spark..."
     }
     mode: {
       enum: ["streaming", "batch"]
@@ -663,17 +975,17 @@
     applicationId: {
       type: "string"
       pattern: "^[0-9a-z]{1,64}(?![\\s\\S])"
-      description: "emr-serverless only: an existing EMR Serverless application. Absent: the forge-managed application s..."
+      description: "emr-serverless only (runtime local ignores it): an existing EMR Serverless application. Absent: the ..."
     }
     clusterId: {
       type: "string"
       pattern: "^j-[0-9A-Za-z]{1,254}(?![\\s\\S])"
-      description: "emr-ec2 only: a running EMR cluster (j-...). Absent: a transient cluster that ends with the job."
+      description: "emr-ec2 only (runtime local ignores it): a running EMR cluster (j-...). Absent: a transient cluster ..."
     }
     virtualClusterId: {
       type: "string"
       pattern: "^[0-9a-z]{1,64}(?![\\s\\S])"
-      description: "emr-eks only, and required there: the EMR on EKS virtual cluster."
+      description: "emr-eks only, and required there (runtime local ignores it): the EMR on EKS virtual cluster."
     }
     ... (6 more)
   }
@@ -766,7 +1078,7 @@
     key: {
       $ref: "#/$defs/streamKey"
     }
-    ... (6 more)
+    ... (8 more)
   }
 }
 ```
@@ -777,6 +1089,14 @@
   type: "number"
   minimum: 0
   description: "NEW in v0.7.7 (preview): A number of rows, or a percentage (unit), read as an exact decimal from its..."
+}
+```
+
+### `properties.alerts`
+```json
+{
+  $ref: "#/$defs/alerts"
+  description: "NEW in v0.7.7: Who hears about the failures, retries, successes and missed SLAs of the DAGs forge ge..."
 }
 ```
 
@@ -800,6 +1120,11 @@
 ### `$defs.acquisitionSource.properties.connection.properties.secretRef.type`
 ```json
 "string"
+```
+
+### `$defs.airflowOrchestration.required`
+```json
+["dagId"]
 ```
 
 ### `$defs.embeddedLogicPattern.required`
@@ -831,6 +1156,30 @@
 **After:**
 ```json
 "NEW in v0.7.3: Username/principal for SQL- or REST-style sources. Required by most database drivers ..."
+```
+
+### `$defs.airflowOrchestration.properties.dagId.pattern`
+
+**Before:**
+```json
+"^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$"
+```
+
+**After:**
+```json
+"^[A-Za-z0-9_.-]+$"
+```
+
+### `$defs.airflowTask.properties.taskId.pattern`
+
+**Before:**
+```json
+"^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$"
+```
+
+**After:**
+```json
+"^[A-Za-z0-9_.-]+$"
 ```
 
 ### `$defs.build.properties.engine.anyOf`
