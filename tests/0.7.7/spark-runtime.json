@@ -1,0 +1,5034 @@
+{
+  "corpusVersion": "0.7.7",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
+  "group": "spark-runtime",
+  "description": "A Spark build's parameters.spark (0.7.7 preview): the runtime enum including local, the keys each runtime takes or refuses, the release label grammar per runtime, sparkConf and source; and properties.package, a prebuilt PySpark package, with its required members, uri, digest and entry-point grammars, arguments and dead-letter table.",
+  "cases": [
+    {
+      "description": "a Spark build on emr-serverless",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "applicationId": "00abc123",
+                "releaseLabel": "emr-7.12.0",
+                "executionRoleArn": "arn:aws:iam::123456789012:role/spark-job"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build on emr-ec2",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-ec2",
+                "clusterId": "j-ABC123",
+                "releaseLabel": "emr-7.12.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build on emr-eks with a dated image",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-eks",
+                "virtualClusterId": "abc123",
+                "releaseLabel": "emr-7.12.0-20260101"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build on emr-eks with a latest image",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-eks",
+                "virtualClusterId": "abc123",
+                "releaseLabel": "emr-7.12.0-latest"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build on emr-eks with a named image",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-eks",
+                "virtualClusterId": "abc123",
+                "releaseLabel": "emr-7.12.0-spark-latest"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build on glue",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "glue",
+                "glueVersion": "5.0",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build on local",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a local build that carries every AWS key, which it ignores",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "applicationId": "00abc123",
+                "clusterId": "j-ABC123",
+                "virtualClusterId": "abc123",
+                "glueVersion": "5.0",
+                "releaseLabel": "emr-7.12.0",
+                "executionRoleArn": "arn:aws:iam::123456789012:role/spark-job"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a local build with an EMR on EKS style image label",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "releaseLabel": "emr-7.12.0-latest"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a local build that reads source.bootstrapServers",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "bootstrapServers": "localhost:9092"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a local build that reads an MSK cluster",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "mskClusterArn": "arn:aws:kafka:eu-west-1:123456789012:cluster/c/1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-serverless build that reads an MSK cluster",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "source": {
+                  "mskClusterArn": "arn:aws:kafka:eu-west-1:123456789012:cluster/c/1",
+                  "auth": "msk-iam"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark build with no runtime",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "required",
+          "detail": "runtime"
+        }
+      ]
+    },
+    {
+      "description": "a runtime outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "dataproc"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/runtime",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a mode outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "mode": "micro-batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/mode",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "spark parameters carry a member outside the closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "queue": "q"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "additionalProperties",
+          "detail": "queue"
+        }
+      ]
+    },
+    {
+      "description": "an emr-eks build with no virtualClusterId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-eks"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "required",
+          "detail": "virtualClusterId"
+        }
+      ]
+    },
+    {
+      "description": "an emr-eks build whose release label names no image",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-eks",
+                "virtualClusterId": "abc123",
+                "releaseLabel": "emr-7.12.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/releaseLabel",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an emr-serverless build whose release label names an image",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "releaseLabel": "emr-7.12.0-latest"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/releaseLabel",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an emr-ec2 build whose release label names an image",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-ec2",
+                "releaseLabel": "emr-7.12.0-20260101"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/releaseLabel",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a release label that is not an EMR release",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "releaseLabel": "7.12.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/releaseLabel",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a glue build that names a release label",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "glue",
+                "releaseLabel": "emr-7.12.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-serverless build that names a glueVersion",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "glueVersion": "5.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-ec2 build that names a glueVersion",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-ec2",
+                "glueVersion": "5.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-eks build that names a glueVersion",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-eks",
+                "virtualClusterId": "abc123",
+                "glueVersion": "5.0"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a glue build that names an applicationId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "glue",
+                "applicationId": "00abc123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-ec2 build that names an applicationId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-ec2",
+                "applicationId": "00abc123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-serverless build that names a clusterId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "clusterId": "j-ABC123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a glue build that names a virtualClusterId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "glue",
+                "virtualClusterId": "abc123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an emr-ec2 build that names a virtualClusterId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-ec2",
+                "virtualClusterId": "abc123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "an applicationId with an upper-case letter",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "applicationId": "00ABC"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/applicationId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a clusterId that does not start with j-",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-ec2",
+                "clusterId": "ABC123"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/clusterId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a glueVersion that is not major.minor",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "glue",
+                "glueVersion": "five"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/glueVersion",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an executionRoleArn that is not a role ARN",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "executionRoleArn": "spark-job"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/executionRoleArn",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a maskKeySecretArn that is not a secret ARN",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "maskKeySecretArn": "mask-key"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/maskKeySecretArn",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a sparkConf of strings",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "sparkConf": {
+                  "spark.sql.shuffle.partitions": "64"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a sparkConf value that is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "sparkConf": {
+                  "spark.sql.shuffle.partitions": 64
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/sparkConf/spark.sql.shuffle.partitions",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a sparkConf key with a space",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "sparkConf": {
+                  "spark sql": "1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/sparkConf",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a source that names neither bootstrapServers nor mskClusterArn",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "auth": "none"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source",
+          "keyword": "anyOf"
+        }
+      ]
+    },
+    {
+      "description": "a source that names both bootstrapServers and mskClusterArn",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "source": {
+                  "bootstrapServers": "b:9092",
+                  "mskClusterArn": "arn:aws:kafka:eu-west-1:123456789012:cluster/c/1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a source auth outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "bootstrapServers": "b:9092",
+                  "auth": "sasl"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source/auth",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a source bootstrapServers with a leading space",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "bootstrapServers": " b:9092"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source/bootstrapServers",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a source groupIdPrefix of 256 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "bootstrapServers": "b:9092",
+                  "groupIdPrefix": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg"
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source/groupIdPrefix",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "description": "a source carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "sql": "SELECT customer_id FROM raw_customers",
+            "parameters": {
+              "spark": {
+                "runtime": "local",
+                "source": {
+                  "bootstrapServers": "b:9092",
+                  "tls": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/source",
+          "keyword": "additionalProperties",
+          "detail": "tls"
+        }
+      ]
+    },
+    {
+      "description": "a package build with every member",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": {
+                "source": "commerce.orders_raw"
+              },
+              "deadLetter": {
+                "enabled": true,
+                "table": "orders__dead_letter",
+                "maxRecordsBeforeAbort": 100
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package build with only the required members and no mode",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "local"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package read from a local file",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "file:///opt/jobs/orders_pkg.zip",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package build with no language declared",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package build with no parameters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties",
+          "keyword": "required",
+          "detail": "parameters"
+        }
+      ]
+    },
+    {
+      "description": "a package build whose parameters carry no spark block",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "flink": {}
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters",
+          "keyword": "required",
+          "detail": "spark"
+        }
+      ]
+    },
+    {
+      "description": "a package build in language python",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "python",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/language",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "description": "a package build in a streaming Spark mode",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "streaming"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/parameters/spark/mode",
+          "keyword": "const"
+        }
+      ]
+    },
+    {
+      "description": "a package build that also carries sql",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            },
+            "sql": "SELECT 1"
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a package build that also carries a stream",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            },
+            "stream": {
+              "kind": "kafka",
+              "topic": "t",
+              "format": "json",
+              "schema": [
+                {
+                  "name": "a",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a package build that also carries a mapping",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            },
+            "mapping": {}
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a package that omits uri",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package",
+          "keyword": "required",
+          "detail": "uri"
+        }
+      ]
+    },
+    {
+      "description": "a package that omits sha256",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package",
+          "keyword": "required",
+          "detail": "sha256"
+        }
+      ]
+    },
+    {
+      "description": "a package that omits entryPoint",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package",
+          "keyword": "required",
+          "detail": "entryPoint"
+        }
+      ]
+    },
+    {
+      "description": "a package carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "version": "1"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package",
+          "keyword": "additionalProperties",
+          "detail": "version"
+        }
+      ]
+    },
+    {
+      "description": "a package uri over http",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "https://example.com/p.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/uri",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package uri that is not a wheel or a zip",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/p.tar.gz",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/uri",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package uri with a parent-directory segment",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/../p.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/uri",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package uri with a one-character bucket name",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://a/p.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/uri",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package uri of 1025 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/uri",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "description": "a package sha256 in upper case",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/sha256",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package sha256 of 63 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/sha256",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package sha256 of 65 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/sha256",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package entryPoint with no colon",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs.merge_orders"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/entryPoint",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package entryPoint that starts with a digit",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "1pkg:run"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/entryPoint",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package entryPoint with a dotted attribute",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:Job.run"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package entryPoint of 513 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "m:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/entryPoint",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "description": "a package argument value that is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": {
+                "limit": 10
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/arguments/limit",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a package argument name that starts with a digit",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": {
+                "1limit": "10"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/arguments",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package argument value of 4097 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": {
+                "k": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/arguments/k",
+          "keyword": "maxLength"
+        }
+      ]
+    },
+    {
+      "description": "a package with 64 arguments",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": {
+                "a0": "v",
+                "a1": "v",
+                "a2": "v",
+                "a3": "v",
+                "a4": "v",
+                "a5": "v",
+                "a6": "v",
+                "a7": "v",
+                "a8": "v",
+                "a9": "v",
+                "a10": "v",
+                "a11": "v",
+                "a12": "v",
+                "a13": "v",
+                "a14": "v",
+                "a15": "v",
+                "a16": "v",
+                "a17": "v",
+                "a18": "v",
+                "a19": "v",
+                "a20": "v",
+                "a21": "v",
+                "a22": "v",
+                "a23": "v",
+                "a24": "v",
+                "a25": "v",
+                "a26": "v",
+                "a27": "v",
+                "a28": "v",
+                "a29": "v",
+                "a30": "v",
+                "a31": "v",
+                "a32": "v",
+                "a33": "v",
+                "a34": "v",
+                "a35": "v",
+                "a36": "v",
+                "a37": "v",
+                "a38": "v",
+                "a39": "v",
+                "a40": "v",
+                "a41": "v",
+                "a42": "v",
+                "a43": "v",
+                "a44": "v",
+                "a45": "v",
+                "a46": "v",
+                "a47": "v",
+                "a48": "v",
+                "a49": "v",
+                "a50": "v",
+                "a51": "v",
+                "a52": "v",
+                "a53": "v",
+                "a54": "v",
+                "a55": "v",
+                "a56": "v",
+                "a57": "v",
+                "a58": "v",
+                "a59": "v",
+                "a60": "v",
+                "a61": "v",
+                "a62": "v",
+                "a63": "v"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package with 65 arguments",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": {
+                "a0": "v",
+                "a1": "v",
+                "a2": "v",
+                "a3": "v",
+                "a4": "v",
+                "a5": "v",
+                "a6": "v",
+                "a7": "v",
+                "a8": "v",
+                "a9": "v",
+                "a10": "v",
+                "a11": "v",
+                "a12": "v",
+                "a13": "v",
+                "a14": "v",
+                "a15": "v",
+                "a16": "v",
+                "a17": "v",
+                "a18": "v",
+                "a19": "v",
+                "a20": "v",
+                "a21": "v",
+                "a22": "v",
+                "a23": "v",
+                "a24": "v",
+                "a25": "v",
+                "a26": "v",
+                "a27": "v",
+                "a28": "v",
+                "a29": "v",
+                "a30": "v",
+                "a31": "v",
+                "a32": "v",
+                "a33": "v",
+                "a34": "v",
+                "a35": "v",
+                "a36": "v",
+                "a37": "v",
+                "a38": "v",
+                "a39": "v",
+                "a40": "v",
+                "a41": "v",
+                "a42": "v",
+                "a43": "v",
+                "a44": "v",
+                "a45": "v",
+                "a46": "v",
+                "a47": "v",
+                "a48": "v",
+                "a49": "v",
+                "a50": "v",
+                "a51": "v",
+                "a52": "v",
+                "a53": "v",
+                "a54": "v",
+                "a55": "v",
+                "a56": "v",
+                "a57": "v",
+                "a58": "v",
+                "a59": "v",
+                "a60": "v",
+                "a61": "v",
+                "a62": "v",
+                "a63": "v",
+                "a64": "v"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/arguments",
+          "keyword": "maxProperties"
+        }
+      ]
+    },
+    {
+      "description": "a package arguments that is an array",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "arguments": [
+                "a"
+              ]
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/arguments",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a package deadLetter that is empty",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "deadLetter": {}
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package deadLetter switched off",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "deadLetter": {
+                "enabled": false
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a package deadLetter carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "deadLetter": {
+                "sink": "topic"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/deadLetter",
+          "keyword": "additionalProperties",
+          "detail": "sink"
+        }
+      ]
+    },
+    {
+      "description": "a package deadLetter enabled that is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "deadLetter": {
+                "enabled": "yes"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/deadLetter/enabled",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a package deadLetter table with a dash",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "deadLetter": {
+                "table": "dead-letter"
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/deadLetter/table",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a package deadLetter maxRecordsBeforeAbort below 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "build": {
+          "pattern": "embedded-logic",
+          "engine": "spark",
+          "properties": {
+            "language": "pyspark",
+            "package": {
+              "uri": "s3://acme-artifacts/jobs/orders_pkg-1.0.0-py3-none-any.whl",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "entryPoint": "orders_pkg.jobs:merge_orders",
+              "deadLetter": {
+                "maxRecordsBeforeAbort": -1
+              }
+            },
+            "parameters": {
+              "spark": {
+                "runtime": "emr-serverless",
+                "mode": "batch"
+              }
+            }
+          }
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/build/properties/package/deadLetter/maxRecordsBeforeAbort",
+          "keyword": "minimum"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2904 @@
+{
+  "corpusVersion": "0.7.7",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
+  "group": "iceberg-maintenance",
+  "description": "An Iceberg expose's maintenance block (0.7.7 preview): its closed member set, backend enum, schedule, timezone, build and roleArn, the Glue run interval's bounds, the compaction, rewriteManifests, expireSnapshots and removeOrphanFiles blocks with their bounds, enums and ISO-8601 durations, and the actions array.",
+  "cases": [
+    {
+      "description": "a Spark maintenance with every member",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "backend": "spark",
+                "schedule": "0 3 * * *",
+                "timezone": "Europe/Zurich",
+                "build": "ingest",
+                "compaction": {
+                  "enabled": true,
+                  "strategy": "sort",
+                  "targetFileSizeMb": 256,
+                  "minInputFiles": 5,
+                  "deleteFileThreshold": 3,
+                  "maxCommits": 20,
+                  "maxConcurrentRewrites": 8
+                },
+                "rewriteManifests": {
+                  "enabled": true
+                },
+                "expireSnapshots": {
+                  "enabled": true,
+                  "olderThan": "P7D",
+                  "retainLast": 5
+                },
+                "removeOrphanFiles": {
+                  "enabled": true,
+                  "olderThan": "P3D"
+                },
+                "actions": [
+                  {
+                    "name": "erase_subject",
+                    "kind": "gdpr-erasure",
+                    "options": {
+                      "column": "customer_id"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a Glue maintenance with every member",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "backend": "glue",
+                "roleArn": "arn:aws:iam::123456789012:role/glue-optimizer",
+                "runEveryHours": 24,
+                "compaction": {
+                  "strategy": "z-order"
+                },
+                "expireSnapshots": {
+                  "olderThan": "P5D",
+                  "cleanExpiredFiles": false
+                },
+                "removeOrphanFiles": {
+                  "olderThan": "P3D"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "an empty maintenance block",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {}
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a compaction strategy of binpack",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "strategy": "binpack"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a block declared and switched off",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "enabled": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "an olderThan of 36 hours",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "olderThan": "PT36H"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "an olderThan of one week",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "removeOrphanFiles": {
+                  "olderThan": "P1W"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "maintenance is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": "daily"
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "maintenance carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "vacuum": true
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance",
+          "keyword": "additionalProperties",
+          "detail": "vacuum"
+        }
+      ]
+    },
+    {
+      "description": "a backend outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "backend": "flink"
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/backend",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "an empty schedule",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": ""
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/schedule",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "description": "an empty timezone",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "timezone": ""
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/timezone",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "description": "an empty build id",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "build": ""
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/build",
+          "keyword": "minLength"
+        }
+      ]
+    },
+    {
+      "description": "a roleArn that is not an IAM role ARN",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "roleArn": "glue-optimizer"
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/roleArn",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a roleArn for a user, not a role",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "roleArn": "arn:aws:iam::123456789012:user/alice"
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/roleArn",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "runEveryHours below its minimum of 3",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "runEveryHours": 2
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runEveryHours",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "runEveryHours above its maximum of 168",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "runEveryHours": 169
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runEveryHours",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "runEveryHours at its minimum of 3",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "runEveryHours": 3
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "runEveryHours at its maximum of 168",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "runEveryHours": 168
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "runEveryHours is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "runEveryHours": "24"
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runEveryHours",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a compaction strategy outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "strategy": "zorder"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/strategy",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "parallel": 2
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction",
+          "keyword": "additionalProperties",
+          "detail": "parallel"
+        }
+      ]
+    },
+    {
+      "description": "a compaction targetFileSizeMb of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "targetFileSizeMb": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/targetFileSizeMb",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction targetFileSizeMb above its maximum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "targetFileSizeMb": 1048577
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/targetFileSizeMb",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction minInputFiles of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "minInputFiles": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/minInputFiles",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction minInputFiles above its maximum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "minInputFiles": 1000001
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/minInputFiles",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction deleteFileThreshold of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "deleteFileThreshold": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/deleteFileThreshold",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction deleteFileThreshold above its maximum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "deleteFileThreshold": 1000001
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/deleteFileThreshold",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction maxCommits of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "maxCommits": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/maxCommits",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction maxCommits above 1000",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "maxCommits": 1001
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/maxCommits",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction maxConcurrentRewrites of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "maxConcurrentRewrites": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/maxConcurrentRewrites",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction maxConcurrentRewrites above 1000",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "maxConcurrentRewrites": 1001
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/maxConcurrentRewrites",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "a compaction enabled that is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "compaction": {
+                  "enabled": "yes"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/compaction/enabled",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "rewriteManifests carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "rewriteManifests": {
+                  "force": true
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/rewriteManifests",
+          "keyword": "additionalProperties",
+          "detail": "force"
+        }
+      ]
+    },
+    {
+      "description": "rewriteManifests.enabled is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "rewriteManifests": {
+                  "enabled": "yes"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/rewriteManifests/enabled",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "expireSnapshots carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "keep": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots",
+          "keyword": "additionalProperties",
+          "detail": "keep"
+        }
+      ]
+    },
+    {
+      "description": "an expireSnapshots olderThan in prose",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "olderThan": "5 days"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots/olderThan",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an expireSnapshots olderThan that is a bare P",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "olderThan": "P"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots/olderThan",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an expireSnapshots olderThan that lists days before weeks",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "olderThan": "P1D2W"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots/olderThan",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an expireSnapshots retainLast of 0",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "retainLast": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots/retainLast",
+          "keyword": "minimum"
+        }
+      ]
+    },
+    {
+      "description": "an expireSnapshots retainLast above 100000",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "retainLast": 100001
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots/retainLast",
+          "keyword": "maximum"
+        }
+      ]
+    },
+    {
+      "description": "an expireSnapshots cleanExpiredFiles that is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "expireSnapshots": {
+                  "cleanExpiredFiles": "no"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/expireSnapshots/cleanExpiredFiles",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "removeOrphanFiles carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "removeOrphanFiles": {
+                  "dryRun": true
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/removeOrphanFiles",
+          "keyword": "additionalProperties",
+          "detail": "dryRun"
+        }
+      ]
+    },
+    {
+      "description": "a removeOrphanFiles olderThan in prose",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "removeOrphanFiles": {
+                  "olderThan": "3d"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/removeOrphanFiles/olderThan",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a removeOrphanFiles enabled that is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "removeOrphanFiles": {
+                  "enabled": "no"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/removeOrphanFiles/enabled",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "twenty actions",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "a0",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a1",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a2",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a3",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a4",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a5",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a6",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a7",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a8",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a9",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a10",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a11",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a12",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a13",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a14",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a15",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a16",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a17",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a18",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a19",
+                    "kind": "gdpr"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "twenty-one actions",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "a0",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a1",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a2",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a3",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a4",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a5",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a6",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a7",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a8",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a9",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a10",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a11",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a12",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a13",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a14",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a15",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a16",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a17",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a18",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a19",
+                    "kind": "gdpr"
+                  },
+                  {
+                    "name": "a20",
+                    "kind": "gdpr"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions",
+          "keyword": "maxItems"
+        }
+      ]
+    },
+    {
+      "description": "an action that omits name",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "kind": "gdpr"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "an action that omits kind",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "erase"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0",
+          "keyword": "required",
+          "detail": "kind"
+        }
+      ]
+    },
+    {
+      "description": "an action carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "erase",
+                    "kind": "gdpr",
+                    "sql": "DELETE"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0",
+          "keyword": "additionalProperties",
+          "detail": "sql"
+        }
+      ]
+    },
+    {
+      "description": "an action name that starts with a digit",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "1erase",
+                    "kind": "gdpr"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an action name of 65 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+                    "kind": "gdpr"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an action kind with an upper-case letter",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "erase",
+                    "kind": "Gdpr"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0/kind",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an action options that is an array",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "actions": [
+                  {
+                    "name": "erase",
+                    "kind": "gdpr",
+                    "options": [
+                      1
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/actions/0/options",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

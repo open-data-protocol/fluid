@@ -67,6 +67,47 @@
 0.7.3->0.7.4 /properties/fluidVersion
 
 # ---------------------------------------------------------------------------
+# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. A widening with one narrow edge.
+#
+# $defs/airflowOrchestration/properties/dagId and
+# $defs/airflowTask/properties/taskId. Through 0.7.6, and in every copy of
+# 0.7.7 published here before forge-cli v0.38.0, the pattern was
+# ^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$ with no length limit. Both ids now
+# follow Airflow's own rule, ^[A-Za-z0-9_.-]+$ with minLength 1 and
+# maxLength 250: ASCII letters of either case, digits, underscore, dot and dash,
+# at most 250 characters. The same change made dagId optional
+# ($defs/airflowOrchestration no longer requires it), which only widens.
+#
+# Regex containment is undecidable in general, so the gate reports any changed
+# pattern as breaking, and reports minLength and maxLength as tightened because
+# 0.7.6 had neither. The decision rests on two facts.
+#   - Every string the old pattern accepts uses only characters the new one
+#     allows, so the patterns alone narrow nothing. Checked with the two
+#     published schemas' own validators on 66,430 strings: every string of up
+#     to 5 characters over the 9 symbols  a Z 0 _ . - space, newline and a
+#     non-ASCII letter. 0 strings accepted by 0.7.6 are refused by 0.7.7, and
+#     9,195 are newly accepted (upper case, and a leading or trailing dot or
+#     dash: Customer_DAG, -daily, daily.).
+#   - What 0.7.6 accepts and 0.7.7 now refuses is an id longer than 250
+#     characters, and nothing else: 250 characters of "a" is accepted by both,
+#     251, 252 and 1000 only by 0.7.6, and the empty string is refused by both.
+#     Airflow's own limit on a DAG id and a task id is 250
+#     characters, so no id Airflow accepts is affected.
+#
+# Why it stands: 0.7.7 is a preview and a contract reaches it only by declaring
+# "0.7.7". The old pattern refused ids Airflow accepts, which made a DAG that
+# already existed in Airflow impossible to describe. The 0.7.7 corpus pins both
+# sides (tests/0.7.7/orchestration.json). docs/schema/changelog.md and
+# docs/releases/0.7.7.md say the pair is not purely additive.
+#
+# MAINTAINER DECISION implied: that a preview may narrow an id's length, to the
+# 250 characters Airflow itself allows.
+#
+# Re-examine when 0.7.7 is promoted: a stable version may not narrow.
+0.7.6->0.7.7 /$defs/airflowOrchestration/properties/dagId
+0.7.6->0.7.7 /$defs/airflowTask/properties/taskId
+
+# ---------------------------------------------------------------------------
 # 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. A widening with a narrow edge.
 #
 # $defs/column/properties/type, the pattern (second anyOf branch). An enum's
@@ -112,8 +153,8 @@
 0.7.6->0.7.7 /$defs/column/properties/type/anyOf/1
 
 # ---------------------------------------------------------------------------
-# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. The other narrowing in the pair is
-# the column type pattern, above.
+# 0.7.6 -> 0.7.7: DELIBERATE, in a PREVIEW. The others in the pair are
+# the column type pattern and the Airflow ids, above.
 #
 # secretRef (acquisitionSource.connection, acquisitionDeployment.auth and the
 # kafka-connect schema_registry.auth) was a string matching

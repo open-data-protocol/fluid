@@ -8,7 +8,7 @@ Human-readable summaries of what changed between consecutive versions of the FLU
 
 [Full diff →](https://github.com/open-data-protocol/fluid/blob/main/schema-diffs/diff-0.7.6-to-0.7.7.md) · [Release note →](/fluid/releases/0.7.7)
 
-Two narrowings, one in secret references and one at the edge of the `enum` column type (see **Changed**); everything else is additive. **Preview:** the 0.7.7 schema can still change before it is promoted. The file published here was re-vendored from forge-cli v0.32.0; it was first published from v0.27.0, and the items under "Added since the v0.27.0 copy" came after that.
+Three narrowings, in secret references, at the edge of the `enum` column type and in the length of an Airflow DAG or task id (see **Changed**); everything else is additive. **Preview:** the 0.7.7 schema can still change before it is promoted. The file published here was re-vendored from forge-cli v0.38.0; it was first published from v0.27.0, and the items under "Added since the v0.27.0 copy" came after that.
 
 **Added**
 
@@ -25,13 +25,19 @@ Two narrowings, one in secret references and one at the edge of the `enum` colum
   - `build.engine` value `lakeflow`.
   - `packaging.containers` keys `lfTagVocabulary`, `emrApplication`, `schemaRegistry`, `athenaWorkgroup`, `kmsKey` and `mwaaEnvironment`.
   - `connection.password` and `auth.token` as `writeOnly` members, on an acquisition source and on an acquisition build's `deployment.auth`.
+  - Alerts: the top-level `alerts` (`sla`, `defaults`, `routes[]`) with the new `alerts` and `alertRoute` definitions; a route needs `name` and `kind`, and takes `events`, `connection`, `to`, `from`, `format`, `severity` and `options`.
+  - Iceberg maintenance: `exposes[].iceberg.maintenance`, with the new `icebergMaintenance`, `icebergMaintenanceCompaction` and `icebergMaintenanceAction` definitions (`backend` `spark` | `glue`, `schedule`, `timezone`, `build`, `roleArn`, `runEveryHours`, `compaction`, `rewriteManifests`, `expireSnapshots`, `removeOrphanFiles`, `actions[]`).
+  - Spark: `parameters.spark.runtime` value `local`; a `releaseLabel` that names an image on `emr-eks` and the release itself on `emr-serverless` and `emr-ec2`; and `build(s).properties.package`, a new `sparkPackage` definition (`uri`, `sha256` and `entryPoint` required; `arguments`, `deadLetter`) with `sparkPackageDeadLetter`.
+  - Streams: `stream.maxOffsetsPerTrigger` and `stream.deadLetter` (`enabled`, `sink` `table` | `topic`, `table`, `topic`, `maxRecordsBeforeAbort`, `alertOn`).
+  - `orchestration.airflow.poolPerOutputTable`.
   - Quoted levels in an `enum` column type, such as `enum('Dr.', '>10000', 'O''Brien', 'a, b')`: a level is a word list or a quoted string that may hold any character but a control character, with its own quote doubled as SQL writes it. The `type` of a nested `element`, `key` and `value` is the same definition, so it accepts them too.
 
 **Changed:**
 
-- `embeddedLogicPattern` no longer lists `sql` as unconditionally required. It requires `sql` unless the build has a `stream` and either `parameters.flink` declares `management`, or it has a `mapping` and `parameters.spark`; `mapping` requires `stream` (`dependentRequired`). Every document that carried `sql` is unaffected.
+- `embeddedLogicPattern` no longer lists `sql` as unconditionally required. It requires `sql` unless the build has a `stream` and either `parameters.flink` declares `management`, or it has a `mapping` and `parameters.spark`, or it has a `package` and `parameters.spark`; `mapping` requires `stream` (`dependentRequired`). Every document that carried `sql` is unaffected.
 - `secretRef` (an acquisition source's `connection`, the `auth` of an acquisition build's `deployment`, and the `kafka-connect` `schema_registry.auth`) is now the shared `$defs/secretRef`: one pattern per scheme (`env`, `file`, `vault`, `aws-sm`, `gcp-sm`, `azure-kv`, and other lower-case schemes). It was any string of the form `<scheme>://<anything>`. This is the narrowing: a `vault://` reference now needs a `#field`, so `vault://secret/data/crm-db` is refused and `vault://secret/data/crm-db#password` is valid. `scripts/check-compat.py` reports it and `scripts/compat-waivers.txt` records it. See the [0.7.7 notes](/fluid/releases/0.7.7#secret-references).
 - The parameters of an `enum` column `type` are now a comma-separated list of levels, where 0.7.6 accepted any run of letters, digits, underscores, spaces, commas, quotes and hyphens. This is the second narrowing, and a narrow one: 0.7.6 accepted an empty item (`enum(a,,b)`), a quote that does not open and close a level (`enum('it's')`, `enum('a' 'b')`) and a tab, a newline or another whitespace control character inside a quoted level, and 0.7.7 refuses each. Every other type keeps its characters, and `enum`, `enum()` and `enum(IE, United Kingdom)` are unaffected. `scripts/check-compat.py` reports the pattern as changed and `scripts/compat-waivers.txt` records the comparison that settled it. See the [0.7.7 notes](/fluid/releases/0.7.7#enum-levels).
+- `dagId` (`orchestration.airflow`) and `taskId` (an Airflow task) follow the ASCII part of Airflow's own rule, `^[A-Za-z0-9_.-]+$` with `minLength` 1 and `maxLength` 250, where 0.7.6 required lower case, no leading or trailing dot or dash, and had no length limit. This is the third narrowing, and a narrow one: an id longer than 250 characters, which Airflow itself refuses, was accepted by 0.7.6 and is refused by 0.7.7. Every other id 0.7.6 accepted is still valid. `orchestration.airflow` no longer requires `dagId`.
 
 ## 0.7.5 to 0.7.6: Declarative Packaging Modes
 

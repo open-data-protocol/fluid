@@ -1,0 +1,2383 @@
+{
+  "corpusVersion": "0.7.7",
+  "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
+  "group": "alerts",
+  "description": "The top-level alerts block (0.7.7 preview): its closed member set, the sla duration, the routes array and its cap, and a route's required name and kind, name, kind and connection grammars, events, recipients, webhook format, severity and options.",
+  "cases": [
+    {
+      "description": "alerts with every member and every route kind",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "PT4H",
+          "defaults": false,
+          "routes": [
+            {
+              "name": "team_mail",
+              "kind": "email",
+              "events": [
+                "failure",
+                "retry"
+              ],
+              "connection": "smtp_default",
+              "to": [
+                "data-team@example.com"
+              ],
+              "from": "airflow@example.com",
+              "severity": "warning"
+            },
+            {
+              "name": "chat",
+              "kind": "slack",
+              "events": [
+                "failure",
+                "success",
+                "sla_miss"
+              ],
+              "severity": "info"
+            },
+            {
+              "name": "pager",
+              "kind": "webhook",
+              "connection": "zenduty_hook",
+              "format": "zenduty",
+              "severity": "critical"
+            },
+            {
+              "name": "ops",
+              "kind": "webhook",
+              "connection": "opsgenie_hook",
+              "format": "opsgenie",
+              "events": [
+                "failure"
+              ]
+            },
+            {
+              "name": "custom",
+              "kind": "my-plugin",
+              "options": {
+                "team": "data",
+                "level": 2
+              }
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "an empty alerts block",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {}
+      },
+      "valid": true
+    },
+    {
+      "description": "a route that names only its name and kind",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "an sla of one day and six hours",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "P1DT6H"
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "an sla of thirty days",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "P30D"
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "an sla of two weeks",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "P2W"
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "alerts is a string, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": "page me"
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "alerts carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "channel": "x"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts",
+          "keyword": "additionalProperties",
+          "detail": "channel"
+        }
+      ]
+    },
+    {
+      "description": "an sla that is prose",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "4 hours"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/sla",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an sla that is a bare P",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "P"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/sla",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an sla that is a bare PT",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "PT"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/sla",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an sla whose time part is empty after T",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "P1DT"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/sla",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an sla that lists days before weeks",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": "P1D2W"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/sla",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "an sla that is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "sla": 14400
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/sla",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "alerts.defaults is a string",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "defaults": "no"
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/defaults",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "alerts.routes is an object, not an array",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": {}
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "twenty routes",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "r0",
+              "kind": "email"
+            },
+            {
+              "name": "r1",
+              "kind": "email"
+            },
+            {
+              "name": "r2",
+              "kind": "email"
+            },
+            {
+              "name": "r3",
+              "kind": "email"
+            },
+            {
+              "name": "r4",
+              "kind": "email"
+            },
+            {
+              "name": "r5",
+              "kind": "email"
+            },
+            {
+              "name": "r6",
+              "kind": "email"
+            },
+            {
+              "name": "r7",
+              "kind": "email"
+            },
+            {
+              "name": "r8",
+              "kind": "email"
+            },
+            {
+              "name": "r9",
+              "kind": "email"
+            },
+            {
+              "name": "r10",
+              "kind": "email"
+            },
+            {
+              "name": "r11",
+              "kind": "email"
+            },
+            {
+              "name": "r12",
+              "kind": "email"
+            },
+            {
+              "name": "r13",
+              "kind": "email"
+            },
+            {
+              "name": "r14",
+              "kind": "email"
+            },
+            {
+              "name": "r15",
+              "kind": "email"
+            },
+            {
+              "name": "r16",
+              "kind": "email"
+            },
+            {
+              "name": "r17",
+              "kind": "email"
+            },
+            {
+              "name": "r18",
+              "kind": "email"
+            },
+            {
+              "name": "r19",
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "twenty-one routes",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "r0",
+              "kind": "email"
+            },
+            {
+              "name": "r1",
+              "kind": "email"
+            },
+            {
+              "name": "r2",
+              "kind": "email"
+            },
+            {
+              "name": "r3",
+              "kind": "email"
+            },
+            {
+              "name": "r4",
+              "kind": "email"
+            },
+            {
+              "name": "r5",
+              "kind": "email"
+            },
+            {
+              "name": "r6",
+              "kind": "email"
+            },
+            {
+              "name": "r7",
+              "kind": "email"
+            },
+            {
+              "name": "r8",
+              "kind": "email"
+            },
+            {
+              "name": "r9",
+              "kind": "email"
+            },
+            {
+              "name": "r10",
+              "kind": "email"
+            },
+            {
+              "name": "r11",
+              "kind": "email"
+            },
+            {
+              "name": "r12",
+              "kind": "email"
+            },
+            {
+              "name": "r13",
+              "kind": "email"
+            },
+            {
+              "name": "r14",
+              "kind": "email"
+            },
+            {
+              "name": "r15",
+              "kind": "email"
+            },
+            {
+              "name": "r16",
+              "kind": "email"
+            },
+            {
+              "name": "r17",
+              "kind": "email"
+            },
+            {
+              "name": "r18",
+              "kind": "email"
+            },
+            {
+              "name": "r19",
+              "kind": "email"
+            },
+            {
+              "name": "r20",
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes",
+          "keyword": "maxItems"
+        }
+      ]
+    },
+    {
+      "description": "a route that omits name",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0",
+          "keyword": "required",
+          "detail": "name"
+        }
+      ]
+    },
+    {
+      "description": "a route that omits kind",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0",
+          "keyword": "required",
+          "detail": "kind"
+        }
+      ]
+    },
+    {
+      "description": "a route carries a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "token": "x"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0",
+          "keyword": "additionalProperties",
+          "detail": "token"
+        }
+      ]
+    },
+    {
+      "description": "a route name that starts with a digit",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "1oncall",
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a route name of 65 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/name",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a route name of 64 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+              "kind": "email"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a route kind with an upper-case letter",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "Email"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/kind",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a route kind that starts with a digit",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "2email"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/kind",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a route with no events",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "events": []
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/events",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "description": "a route that lists an event twice",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "events": [
+                "failure",
+                "failure"
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/events",
+          "keyword": "uniqueItems"
+        }
+      ]
+    },
+    {
+      "description": "a route event outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "events": [
+                "start"
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/events/0",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a route on retry, success and sla_miss",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "events": [
+                "retry",
+                "success",
+                "sla_miss"
+              ]
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a route connection of 250 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "connection": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a route connection of 251 characters",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "connection": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/connection",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a route connection with a space",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "connection": "smtp default"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/connection",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a route with no recipients",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "to": []
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/to",
+          "keyword": "minItems"
+        }
+      ]
+    },
+    {
+      "description": "a route with fifty-one recipients",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "to": [
+                "u0@example.com",
+                "u1@example.com",
+                "u2@example.com",
+                "u3@example.com",
+                "u4@example.com",
+                "u5@example.com",
+                "u6@example.com",
+                "u7@example.com",
+                "u8@example.com",
+                "u9@example.com",
+                "u10@example.com",
+                "u11@example.com",
+                "u12@example.com",
+                "u13@example.com",
+                "u14@example.com",
+                "u15@example.com",
+                "u16@example.com",
+                "u17@example.com",
+                "u18@example.com",
+                "u19@example.com",
+                "u20@example.com",
+                "u21@example.com",
+                "u22@example.com",
+                "u23@example.com",
+                "u24@example.com",
+                "u25@example.com",
+                "u26@example.com",
+                "u27@example.com",
+                "u28@example.com",
+                "u29@example.com",
+                "u30@example.com",
+                "u31@example.com",
+                "u32@example.com",
+                "u33@example.com",
+                "u34@example.com",
+                "u35@example.com",
+                "u36@example.com",
+                "u37@example.com",
+                "u38@example.com",
+                "u39@example.com",
+                "u40@example.com",
+                "u41@example.com",
+                "u42@example.com",
+                "u43@example.com",
+                "u44@example.com",
+                "u45@example.com",
+                "u46@example.com",
+                "u47@example.com",
+                "u48@example.com",
+                "u49@example.com",
+                "u50@example.com"
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/to",
+          "keyword": "maxItems"
+        }
+      ]
+    },
+    {
+      "description": "a route with fifty recipients",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "to": [
+                "u0@example.com",
+                "u1@example.com",
+                "u2@example.com",
+                "u3@example.com",
+                "u4@example.com",
+                "u5@example.com",
+                "u6@example.com",
+                "u7@example.com",
+                "u8@example.com",
+                "u9@example.com",
+                "u10@example.com",
+                "u11@example.com",
+                "u12@example.com",
+                "u13@example.com",
+                "u14@example.com",
+                "u15@example.com",
+                "u16@example.com",
+                "u17@example.com",
+                "u18@example.com",
+                "u19@example.com",
+                "u20@example.com",
+                "u21@example.com",
+                "u22@example.com",
+                "u23@example.com",
+                "u24@example.com",
+                "u25@example.com",
+                "u26@example.com",
+                "u27@example.com",
+                "u28@example.com",
+                "u29@example.com",
+                "u30@example.com",
+                "u31@example.com",
+                "u32@example.com",
+                "u33@example.com",
+                "u34@example.com",
+                "u35@example.com",
+                "u36@example.com",
+                "u37@example.com",
+                "u38@example.com",
+                "u39@example.com",
+                "u40@example.com",
+                "u41@example.com",
+                "u42@example.com",
+                "u43@example.com",
+                "u44@example.com",
+                "u45@example.com",
+                "u46@example.com",
+                "u47@example.com",
+                "u48@example.com",
+                "u49@example.com"
+              ]
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a recipient that is not an address",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "to": [
+                "data-team"
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/to/0",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a sender that is not an address",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "from": "airflow"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/from",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a webhook format outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "format": "teams"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/format",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a webhook format generic",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "format": "generic"
+            }
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "description": "a severity outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "severity": "fatal"
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/severity",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "route options is an array, not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "alerts": {
+          "routes": [
+            {
+              "name": "oncall",
+              "kind": "email",
+              "options": [
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/alerts/routes/0/options",
+          "keyword": "type"
+        }
+      ]
+    }
+  ]
+}

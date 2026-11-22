@@ -356,6 +356,10 @@
       "$ref": "#/$defs/orchestration",
       "description": "Top-level orchestration configuration for scheduling and workflow engines."
     },
+    "alerts": {
+      "$ref": "#/$defs/alerts",
+      "description": "NEW in v0.7.7: Who hears about the failures, retries, successes and missed SLAs of the DAGs forge generates for this product, and how. Each route names a kind and the scheduler connection that holds the address, URL or key; the secret is never in the contract."
+    },
     "retention": {
       "$ref": "#/$defs/retention",
       "description": "NEW in v0.7.3: Retention durations for run state, run logs, lineage events, and DLQ records. Honored by the retention sweeper invoked from policy-apply."
@@ -847,12 +851,206 @@
                   "description": "Target file size in MB after compaction."
                 }
               }
+            },
+            "maintenance": {
+              "$ref": "#/$defs/icebergMaintenance",
+              "description": "NEW in v0.7.7: The table's maintenance: compaction, manifests, snapshot expiry, orphan files and a package's actions, on a schedule (backend spark) or by the Glue Data Catalog's table optimizers (backend glue)."
             }
           }
         },
         "mcp": {
           "$ref": "#/$defs/exposeMcp",
           "description": "NEW in v0.7.4: Declares this expose as agent-consumable over MCP, with per-expose overrides for the consumer-side output-port server (`fluid mcp output-port serve`). Its presence opts the expose into the Fluid MCP gateway, where `policy.agentPolicy.allowedModels` / `allowedUseCases` are enforced at every read."
+        }
+      }
+    },
+    "icebergMaintenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "NEW in v0.7.7: What keeps the Iceberg table healthy, run on a schedule. backend spark (the default) runs it with forge's Spark runner, on the runtime and as the role of the engine: spark build that writes the table, from the table's maintenance DAG (fluid apply --mode maintain --expose-id <expose>), while that build's stream keeps running; fluid plan binds its job config. backend glue has fluid apply provision the AWS Glue Data Catalog's table optimizers, which AWS runs. A run takes actions, compaction, rewriteManifests, expireSnapshots and removeOrphanFiles in that order. iceberg.compaction.targetFileSizeMb and iceberg.snapshotRetention are the defaults of the same settings here.",
+      "properties": {
+        "backend": {
+          "type": "string",
+          "enum": [
+            "spark",
+            "glue"
+          ],
+          "default": "spark",
+          "description": "spark: forge's Spark runner, on the writer build's runtime. glue: the Glue Data Catalog's table optimizers (compaction, retention, orphan file deletion), for a Glue Data Catalog table."
+        },
+        "schedule": {
+          "type": "string",
+          "minLength": 1,
+          "description": "backend spark, required: the cron (or Airflow preset) the table's maintenance DAG runs on."
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "default": "UTC",
+          "description": "backend spark: the IANA zone the schedule is read in."
+        },
+        "build": {
+          "type": "string",
+          "minLength": 1,
+          "description": "backend spark: the id of the engine: spark build whose output this expose is, when more than one is; its runtime and role run the maintenance."
+        },
+        "roleArn": {
+          "type": "string",
+          "pattern": "^arn:aws[a-z-]*:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]{1,512}$",
+          "description": "backend glue, required: the IAM role Glue's optimizers run as."
+        },
+        "runEveryHours": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 168,
+          "default": 24,
+          "description": "backend glue: the hours between the retention and orphan file deletion optimizers' runs."
+        },
+        "compaction": {
+          "$ref": "#/$defs/icebergMaintenanceCompaction"
+        },
+        "rewriteManifests": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "backend spark: rewrite the table's manifests (Iceberg's rewrite_manifests).",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "false declares the block and runs nothing."
+            }
+          }
+        },
+        "expireSnapshots": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Expire the snapshots older than olderThan, keeping the last retainLast (Iceberg's expire_snapshots, or Glue's retention optimizer).",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "false declares the block and runs nothing."
+            },
+            "olderThan": {
+              "type": "string",
+              "pattern": "^P(?=\\d|T\\d)(\\d{1,7}W)?(\\d{1,7}D)?(T(?=\\d)(\\d{1,7}H)?(\\d{1,7}M)?(\\d{1,7}S)?)?$",
+              "description": "An ISO-8601 duration of at least P1D (whole days on backend glue); default P5D, or iceberg.snapshotRetention.maxSnapshotAgeMs."
+            },
+            "retainLast": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000,
+              "description": "Snapshots kept whatever their age; default 1, or iceberg.snapshotRetention.minSnapshotsToKeep."
+            },
+            "cleanExpiredFiles": {
+              "type": "boolean",
+              "default": true,
+              "description": "backend glue: false keeps the files the expired snapshots held. forge's runner always deletes them."
+            }
+          }
+        },
+        "removeOrphanFiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Delete the files under the table's location that no snapshot references and that are older than olderThan (Iceberg's remove_orphan_files, or Glue's orphan file deletion optimizer). The location must be the table's alone: fluid validate refuses a bucket root, a location that holds, or sits inside, another expose's, and a '.' or '..' path segment, and it must not hold the files of a table outside the contract either.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "false declares the block and runs nothing."
+            },
+            "olderThan": {
+              "type": "string",
+              "pattern": "^P(?=\\d|T\\d)(\\d{1,7}W)?(\\d{1,7}D)?(T(?=\\d)(\\d{1,7}H)?(\\d{1,7}M)?(\\d{1,7}S)?)?$",
+              "description": "An ISO-8601 duration of at least P1D (whole days on backend glue), default P3D: a file younger than the longest write is not an orphan yet."
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "maxItems": 20,
+          "description": "backend spark: a package's maintenance actions (the fluid_build.maintenance_actions entry points), run first.",
+          "items": {
+            "$ref": "#/$defs/icebergMaintenanceAction"
+          }
+        }
+      }
+    },
+    "icebergMaintenanceCompaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "NEW in v0.7.7: Rewrite small files into larger ones (Iceberg's rewrite_data_files with partial progress, or Glue's compaction optimizer).",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "false declares the block and runs nothing."
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "binpack",
+            "sort",
+            "z-order"
+          ],
+          "default": "binpack",
+          "description": "sort orders by the table's sort order; z-order is backend glue's."
+        },
+        "targetFileSizeMb": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576,
+          "description": "backend spark: the size files are rewritten to; default iceberg.compaction.targetFileSizeMb, else the table's write.target-file-size-bytes."
+        },
+        "minInputFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "description": "The fewest files a group must hold to be rewritten."
+        },
+        "deleteFileThreshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "description": "The delete files that make a data file worth rewriting."
+        },
+        "maxCommits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 10,
+          "description": "backend spark: the most commits one run makes (Iceberg's partial-progress.max-commits)."
+        },
+        "maxConcurrentRewrites": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "backend spark: the file groups rewritten at once."
+        }
+      }
+    },
+    "icebergMaintenanceAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "description": "NEW in v0.7.7: One maintenance action of a package's kind, such as a GDPR erasure. When fluid plan compiles the job config, the kind returns its statements (each one DELETE, UPDATE or MERGE on this table), which the plan binds and forge's Spark runner executes.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,63}$",
+          "description": "The action's name, unique on the table; its commits are stamped with it."
+        },
+        "kind": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "description": "The kind's name under the fluid_build.maintenance_actions entry points."
+        },
+        "options": {
+          "type": "object",
+          "description": "JSON values the kind reads. No secret: a kind reads its own."
         }
       }
     },
@@ -1497,6 +1695,91 @@
             "latest"
           ],
           "description": "NEW in v0.7.7 (preview): Where a job with no checkpoint yet starts reading: earliest (all the topic retains) or latest (new records only). Absent: the engine's default, latest for a Spark stream. A job that has a checkpoint resumes from it."
+        },
+        "maxOffsetsPerTrigger": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807,
+          "description": "NEW in v0.7.7 (preview): The most Kafka records one micro-batch reads, split across the topic's partitions by their backlog (Spark's maxOffsetsPerTrigger). It bounds a batch's size and memory when a stream catches up: after a stop, or from earliest. Absent: no limit, so one batch reads everything waiting. A Spark stream only: managed Flink refuses the key."
+        },
+        "deadLetter": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "NEW in v0.7.7 (preview): What forge's Spark runner does with a record it cannot land: a value or key that is not the declared JSON, a field of another type, or a required field that is null (an Avro stream's dead letters are not supported yet). With deadLetter, each such record goes to a dead-letter sink, with its raw bytes, the reason, and its topic, partition and offset, and the stream keeps running; without it, or with enabled: false, the first such record fails the stream. The keys follow the acquisition lane's dlq (enabled, maxRecordsBeforeAbort, alertOn). A Spark stream only: managed Flink refuses the key.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "false: no dead letters; a record that cannot land fails the stream (an overlay can switch it off per environment)."
+            },
+            "sink": {
+              "enum": [
+                "table",
+                "topic"
+              ],
+              "default": "table",
+              "description": "table: an Iceberg table beside the output, in the output's catalog and database. topic: a Kafka topic on the cluster the stream reads, each record keyed by where it came from (<topic>-<partition>@<offset>), its own key in the fluid.dead-letter.raw-key header, and Kafka Connect's error-context headers (__connect.errors.topic, .partition, .offset, .exception.message). Sent at least once: a batch sent again after a failure carries the same keys, so a consumer can drop repeats by key."
+            },
+            "table": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,254}(?![\\s\\S])",
+              "description": "sink table only: the table's name in the output's database. Absent: <output table>__dead_letter, as late events go to <output table>__late_events."
+            },
+            "topic": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,249}(?![\\s\\S])",
+              "description": "sink topic only, and required there: the dead-letter topic, on the cluster the stream reads. It must exist; the job writes to it and creates nothing."
+            },
+            "maxRecordsBeforeAbort": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10000,
+              "description": "The stream fails once it has sent more dead letters than this since it started (0: the first one fails it, after it has landed in the sink)."
+            },
+            "alertOn": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "schema_violation"
+                ]
+              },
+              "description": "The reasons the runner logs a dead_letter_alert line for, each micro-batch that sends any: schema_violation is every record the stream could not land."
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "sink": {
+                    "const": "topic"
+                  }
+                },
+                "required": [
+                  "sink"
+                ]
+              },
+              "then": {
+                "required": [
+                  "topic"
+                ],
+                "not": {
+                  "required": [
+                    "table"
+                  ]
+                },
+                "description": "a topic sink names its topic, and no table"
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "topic"
+                  ]
+                },
+                "description": "topic is for sink: topic; a table sink takes table"
+              }
+            }
+          ]
         }
       }
     },
@@ -3959,6 +4242,10 @@
           "$ref": "#/$defs/recordMapping",
           "description": "NEW in v0.7.7 (preview): How the stream's records become the output's rows. Requires stream, and replaces sql."
         },
+        "package": {
+          "$ref": "#/$defs/sparkPackage",
+          "description": "NEW in v0.7.7 (preview): A prebuilt PySpark package a batch Spark build runs by its sha256 digest, in place of sql, stream and mapping."
+        },
         "tags": {
           "$ref": "#/$defs/tags"
         },
@@ -3966,6 +4253,59 @@
           "$ref": "#/$defs/labels"
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "package"
+            ]
+          },
+          "then": {
+            "required": [
+              "parameters"
+            ],
+            "properties": {
+              "language": {
+                "const": "pyspark"
+              },
+              "parameters": {
+                "required": [
+                  "spark"
+                ],
+                "properties": {
+                  "spark": {
+                    "properties": {
+                      "mode": {
+                        "const": "batch"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "sql"
+                  ]
+                },
+                {
+                  "required": [
+                    "mapping"
+                  ]
+                },
+                {
+                  "required": [
+                    "stream"
+                  ]
+                }
+              ]
+            },
+            "description": "a package runs PySpark in a batch Spark build (parameters.spark), in place of sql, mapping and stream"
+          }
+        }
+      ],
       "if": {
         "not": {
           "anyOf": [
@@ -4002,6 +4342,19 @@
                   ]
                 }
               }
+            },
+            {
+              "required": [
+                "package",
+                "parameters"
+              ],
+              "properties": {
+                "parameters": {
+                  "required": [
+                    "spark"
+                  ]
+                }
+              }
             }
           ]
         }
@@ -4017,10 +4370,77 @@
         ]
       }
     },
+    "sparkPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "NEW in v0.7.7 (preview): A prebuilt PySpark package a Spark build runs in place of sql or a mapping, at builds[].properties.package of an embedded-logic build with engine: spark and parameters.spark, a batch build. forge's runner reads the copy fluid apply made beside the job config, refuses it unless its sha256 is the pin, puts it on the Python path and calls the entry point as fn(spark, context), context.arguments holding arguments. The function returns a DataFrame and the runner writes it: the columns and their types must be the output's contract.schema, a row whose required value is null goes to the dead letters (without them it fails the run), and the run replaces the partitions its rows hold, as a SQL batch build does. While the function runs the session refuses writes, and a commit to the output or its dead letters that the runner did not make fails the run. Pure Python only: Python imports no compiled extension from a zip, so a dependency with one belongs in the runtime's image or environment.",
+      "required": [
+        "uri",
+        "sha256",
+        "entryPoint"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "pattern": "^(?:s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/|file:///)(?:(?!\\.{1,2}/)[A-Za-z0-9._=+-]+/)*[A-Za-z0-9._=+-]+\\.(?:whl|zip)(?![\\s\\S])",
+          "maxLength": 1024,
+          "description": "The package as its team published it, a .whl or a .zip: s3://<bucket>/<key> for the AWS runtimes, file:///<path> on the machine fluid apply runs on for runtime local. On AWS fluid apply copies the object into the build's artifact prefix only when S3's SHA-256 checksum of it is the pin, so publish it single-part with --checksum-algorithm SHA256 (aws s3api put-object). The operator lists where packages may come from in FLUID_SPARK_PACKAGE_ALLOWLIST."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])",
+          "description": "The package's sha256, as sha256sum prints it: 64 lowercase hex characters. The run refuses any other bytes."
+        },
+        "entryPoint": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*:[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*(?![\\s\\S])",
+          "maxLength": 512,
+          "description": "The function the runner calls, as an entry-point object reference, <module>:<attribute>[.<attribute>] (orders_pkg.jobs:merge_orders). The module must come from the package."
+        },
+        "arguments": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "description": "Strings the function reads as context.arguments, name to value (source: commerce.orders_raw)."
+        },
+        "deadLetter": {
+          "$ref": "#/$defs/sparkPackageDeadLetter"
+        }
+      }
+    },
+    "sparkPackageDeadLetter": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "NEW in v0.7.7 (preview): What forge's Spark runner does with a row of a package's output that fails the contract's checks: a required value that is null, at any depth. With deadLetter, each such row goes to an Iceberg table beside the output, with the reason, the row as JSON, the run and the package's sha256, and the run writes the other rows; without it, or with enabled: false, any such row fails the run and nothing is written. The keys follow properties.stream.deadLetter.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "false: no dead letters; a row that fails the checks fails the run (an overlay can switch it off per environment)."
+        },
+        "table": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,254}(?![\\s\\S])",
+          "description": "The table's name in the output's database. Absent: <output table>__dead_letter."
+        },
+        "maxRecordsBeforeAbort": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10000,
+          "description": "The run fails, after its dead letters have landed and before the output is written, once more rows than this fail the checks (0: any one)."
+        }
+      }
+    },
     "sparkParameters": {
       "type": "object",
       "additionalProperties": false,
-      "description": "NEW in v0.7.7 (preview): Where and how a Spark build runs, at builds[].properties.parameters.spark of an embedded-logic build with engine: spark. forge runs one versioned PySpark runner with a generated job config; the build declares what it computes, either properties.stream with properties.mapping, or properties.sql as Spark SQL. There is no user PySpark entry point. The split with builds[].execution: this block says where Spark runs (runtime, application or cluster, release, role, Spark configuration); execution keeps when the build runs and what happens when it fails (trigger, retries, notifications). execution.runtime is the orchestrator's generic runtime (platform, image, resources) and does not choose a Spark runtime.",
+      "description": "NEW in v0.7.7 (preview): Where and how a Spark build runs, at builds[].properties.parameters.spark of an embedded-logic build with engine: spark. forge runs one versioned PySpark runner with a generated job config; the build declares what it computes: properties.stream with properties.mapping, properties.sql as Spark SQL, or properties.package, a prebuilt PySpark package whose output the runner checks and writes. The split with builds[].execution: this block says where Spark runs (runtime, application or cluster, release, role, Spark configuration); execution keeps when the build runs and what happens when it fails (trigger, retries, notifications). execution.runtime is the orchestrator's generic runtime (platform, image, resources) and does not choose a Spark runtime.",
       "required": [
         "runtime"
       ],
@@ -4030,9 +4450,10 @@
             "emr-serverless",
             "emr-ec2",
             "emr-eks",
-            "glue"
+            "glue",
+            "local"
           ],
-          "description": "The AWS service that runs the job: EMR Serverless, EMR on EC2, EMR on EKS or an AWS Glue Spark job. One runner serves all four."
+          "description": "Where the job runs: EMR Serverless, EMR on EC2, EMR on EKS, an AWS Glue Spark job, or local, a spark-submit on the machine fluid apply runs on (a laptop, or a lab with an EMR 7.x image). One runner and one job config serve all five. A local run writes a table in an Iceberg REST catalog (location.catalog lakekeeper, rest or polaris) on platform local, which the operator's Spark configuration declares. local ignores the AWS runtimes' keys (applicationId, clusterId, virtualClusterId, releaseLabel, glueVersion, executionRoleArn), so a contract written for AWS switches to local with one overlay line."
         },
         "mode": {
           "enum": [
@@ -4044,34 +4465,34 @@
         "applicationId": {
           "type": "string",
           "pattern": "^[0-9a-z]{1,64}(?![\\s\\S])",
-          "description": "emr-serverless only: an existing EMR Serverless application. Absent: the forge-managed application shared by the product's domain."
+          "description": "emr-serverless only (runtime local ignores it): an existing EMR Serverless application. Absent: the forge-managed application shared by the product's domain."
         },
         "clusterId": {
           "type": "string",
           "pattern": "^j-[0-9A-Za-z]{1,254}(?![\\s\\S])",
-          "description": "emr-ec2 only: a running EMR cluster (j-...). Absent: a transient cluster that ends with the job."
+          "description": "emr-ec2 only (runtime local ignores it): a running EMR cluster (j-...). Absent: a transient cluster that ends with the job."
         },
         "virtualClusterId": {
           "type": "string",
           "pattern": "^[0-9a-z]{1,64}(?![\\s\\S])",
-          "description": "emr-eks only, and required there: the EMR on EKS virtual cluster."
+          "description": "emr-eks only, and required there (runtime local ignores it): the EMR on EKS virtual cluster."
         },
         "glueVersion": {
           "type": "string",
           "pattern": "^[0-9]+\\.[0-9]+(?![\\s\\S])",
           "default": "5.0",
-          "description": "glue only: the AWS Glue version of the job."
+          "description": "glue only (runtime local ignores it): the AWS Glue version of the job."
         },
         "releaseLabel": {
           "type": "string",
-          "pattern": "^emr-[0-9]+\\.[0-9]+\\.[0-9]+(?![\\s\\S])",
+          "pattern": "^emr-[0-9]+\\.[0-9]+\\.[0-9]+((-[a-z0-9]+)*-(latest|[0-9]{8}))?(?![\\s\\S])",
           "default": "emr-7.12.0",
-          "description": "EMR runtimes only (emr-serverless, emr-ec2, emr-eks): the EMR release. 7.12 or later writes Iceberg with Lake Formation credentials."
+          "description": "EMR runtimes only (emr-serverless, emr-ec2, emr-eks; runtime local ignores it): the EMR release, in the form the runtime takes. emr-serverless and emr-ec2 name the release (emr-7.12.0, the default); emr-eks names an image of it, emr-X.Y.Z-latest or emr-X.Y.Z-YYYYMMDD (default emr-7.12.0-latest). 7.12 or later writes Iceberg with Lake Formation credentials."
         },
         "executionRoleArn": {
           "type": "string",
           "pattern": "^arn:aws[a-zA-Z0-9-]*:iam::[0-9]{12}:role/[A-Za-z0-9_+=,.@/-]{1,512}(?![\\s\\S])",
-          "description": "The IAM role the job runs as. Absent: a least-privilege role forge creates for the build."
+          "description": "The IAM role the job runs as (runtime local ignores it: a local job runs with the credentials of the machine it runs on). Absent: a least-privilege role forge creates for the build."
         },
         "maskKeySecretArn": {
           "type": "string",
@@ -4174,7 +4595,10 @@
             "not": {
               "properties": {
                 "runtime": {
-                  "const": "emr-serverless"
+                  "enum": [
+                    "emr-serverless",
+                    "local"
+                  ]
                 }
               }
             }
@@ -4193,7 +4617,10 @@
             "not": {
               "properties": {
                 "runtime": {
-                  "const": "emr-ec2"
+                  "enum": [
+                    "emr-ec2",
+                    "local"
+                  ]
                 }
               }
             }
@@ -4212,7 +4639,10 @@
             "not": {
               "properties": {
                 "runtime": {
-                  "const": "emr-eks"
+                  "enum": [
+                    "emr-eks",
+                    "local"
+                  ]
                 }
               }
             }
@@ -4244,14 +4674,97 @@
               ]
             },
             "description": "releaseLabel is an EMR release; a glue runtime takes glueVersion"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "enum": [
+                  "emr-serverless",
+                  "emr-ec2",
+                  "emr-eks"
+                ]
+              }
+            },
+            "required": [
+              "runtime"
+            ]
           },
-          "else": {
+          "then": {
             "not": {
               "required": [
                 "glueVersion"
               ]
             },
             "description": "glueVersion is only valid with runtime: glue; EMR runtimes take releaseLabel"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "const": "local"
+              }
+            },
+            "required": [
+              "runtime"
+            ]
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "not": {
+                  "required": [
+                    "mskClusterArn"
+                  ]
+                },
+                "description": "a local run reads source.bootstrapServers: nothing resolves an MSK cluster's brokers for it"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "const": "emr-eks"
+              }
+            },
+            "required": [
+              "runtime"
+            ]
+          },
+          "then": {
+            "properties": {
+              "releaseLabel": {
+                "pattern": "^emr-[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9]+)*-(latest|[0-9]{8})(?![\\s\\S])"
+              }
+            },
+            "description": "EMR on EKS names an image of the release: emr-X.Y.Z-latest or emr-X.Y.Z-YYYYMMDD"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "enum": [
+                  "emr-serverless",
+                  "emr-ec2"
+                ]
+              }
+            },
+            "required": [
+              "runtime"
+            ]
+          },
+          "then": {
+            "properties": {
+              "releaseLabel": {
+                "pattern": "^emr-[0-9]+\\.[0-9]+\\.[0-9]+(?![\\s\\S])"
+              }
+            },
+            "description": "EMR Serverless and EMR on EC2 name the release itself: emr-X.Y.Z"
           }
         }
       ]
@@ -6148,15 +6661,122 @@
         }
       }
     },
+    "alerts": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "NEW in v0.7.7: The alert routes of the product's DAGs. The Airflow DAG renderers put each route's notifier on the DAG's callbacks: a task that failed for good (failure) or will retry (retry), a run that succeeded (success) and a run not done in time (sla_miss). An organisation's pack can add default routes; defaults: false leaves them out, and a route of the same name replaces one.",
+      "properties": {
+        "sla": {
+          "type": "string",
+          "pattern": "^P(?=\\d|T\\d)(\\d{1,7}W)?(\\d{1,7}D)?(T(?=\\d)(\\d{1,7}H)?(\\d{1,7}M)?(\\d{1,7}S)?)?$",
+          "description": "How long a run may take before its sla_miss routes alert, as an ISO-8601 duration in weeks, days, hours, minutes and seconds (PT4H, P1DT6H), at most P30D. On Airflow 2 it is every task's sla, measured from the end of the run's data interval (its scheduled start); on Airflow 3.1+, which has no SLAs, a deadline alert that long after the run was queued."
+        },
+        "defaults": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the product takes the default routes of the organisation's installed packs (the fluid_build.alert_defaults entry points)."
+        },
+        "routes": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/alertRoute"
+          }
+        }
+      }
+    },
+    "alertRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "description": "NEW in v0.7.7: One alert route. A route carries no secret: connection names the scheduler connection that holds it.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,63}$"
+        },
+        "kind": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "description": "email (SmtpNotifier), slack (SlackWebhookNotifier), webhook (HttpNotifier, see format), pagerduty (PagerdutyNotifier), or a kind an installed package registers under the fluid_build.alert_notifiers entry points."
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "failure",
+              "retry",
+              "success",
+              "sla_miss"
+            ]
+          },
+          "default": [
+            "failure"
+          ],
+          "description": "What the route alerts on. success resolves an incident a failure opened (zenduty and opsgenie formats, pagerduty). sla_miss needs alerts.sla."
+        },
+        "connection": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,249}$",
+          "description": "The Airflow connection id that holds the address, URL or key: the scheduler's secrets backend serves it. Required for webhook; email, slack and pagerduty default to smtp_default, slack_default and pagerduty_events_default."
+        },
+        "to": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._+-]{1,64}@[A-Za-z0-9-]{1,63}(\\.[A-Za-z0-9-]{1,63})+$"
+          },
+          "description": "email only: the addresses to send to."
+        },
+        "from": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+-]{1,64}@[A-Za-z0-9-]{1,63}(\\.[A-Za-z0-9-]{1,63})+$",
+          "description": "email only: the sender; without it the SMTP connection's from_email (or Airflow 2's [smtp] smtp_mail_from)."
+        },
+        "format": {
+          "enum": [
+            "generic",
+            "zenduty",
+            "opsgenie"
+          ],
+          "description": "webhook only: the JSON the route posts. generic is forge's own document; zenduty a Zenduty Generic Integration event (the integration URL is the connection's host); opsgenie an Opsgenie Alert API request (the alerts URL is the host, the GenieKey header is in the connection's extra)."
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "error",
+            "warning",
+            "info"
+          ],
+          "description": "The severity of the route's failure, retry and sla_miss alerts; by default critical for failure and warning for retry and sla_miss."
+        },
+        "options": {
+          "type": "object",
+          "description": "A plugin kind's own settings: JSON values whose strings hold no '{' or '}', no URL and no secret."
+        }
+      }
+    },
     "airflowOrchestration": {
       "type": "object",
-      "required": [
-        "dagId"
-      ],
       "properties": {
         "dagId": {
           "type": "string",
-          "pattern": "^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$"
+          "description": "The Airflow DAG id, exactly as Airflow spells it. Airflow's own rule: ASCII letters (either case), digits, underscore, dot and dash, at most 250 characters.",
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "minLength": 1,
+          "maxLength": 250
+        },
+        "poolPerOutputTable": {
+          "type": "boolean",
+          "default": false,
+          "description": "NEW in v0.7.7: When true, the generated DAG puts each task that writes an output table in a one-slot Airflow pool named after the table (pool_slots 1), so two DAGs that write the same table do not run together. The locking is Airflow's own pool. A build that writes more than one table (a build with no outputs writes every expose) is refused by validate and by the DAG renderer: declare one output per build or split it. `fluid schedule-sync --airflow-url` creates the pools Airflow lacks (and never changes one that exists); without it the generate and sync reports print the `airflow pools set` lines. Off by default: nothing changes in a DAG unless it is set."
         },
         "dagConfig": {
           "type": "object",
@@ -6370,7 +6990,10 @@
       "properties": {
         "taskId": {
           "type": "string",
-          "pattern": "^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$"
+          "description": "The Airflow task id, exactly as Airflow spells it. Airflow's own rule: ASCII letters (either case), digits, underscore, dot and dash, at most 250 characters.",
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "minLength": 1,
+          "maxLength": 250
         },
         "type": {
           "type": "string",
