@@ -12,7 +12,7 @@
     "schemaDir": "fluid_build/schemas",
     "previewSource": "fluid_build/schema_manager.py",
     "ref": "v0.39.0",
-    "commit": "fe601e07fad1f926d71ed3e3f2da9c4f53627a26"
+    "commit": "6b3cd32061f0b70639b1398d773fa9bb43f3834d"
   },
   "latestStable": "0.7.6",
   "preview": ["0.7.7"],
