@@ -1,7 +1,7 @@
 # Schema Changes: 0.7.6 → 0.7.7
 
-**Total changes:** 84
-- ✅ Added: 63
+**Total changes:** 85
+- ✅ Added: 64
 - ❌ Removed: 6
 - 📝 Modified: 15
 
@@ -44,7 +44,7 @@
 
 ### `$defs.airflowOrchestration.properties.dagId.description`
 ```json
-"The Airflow DAG id, exactly as Airflow spells it. Airflow's own rule: ASCII letters (either case), d..."
+"The Airflow DAG id, exactly as Airflow spells it. The ASCII part of Airflow's rule: letters (either ..."
 ```
 
 ### `$defs.airflowOrchestration.properties.dagId.maxLength`
@@ -68,7 +68,7 @@
 
 ### `$defs.airflowTask.properties.taskId.description`
 ```json
-"The Airflow task id, exactly as Airflow spells it. Airflow's own rule: ASCII letters (either case), ..."
+"The Airflow task id, exactly as Airflow spells it. The ASCII part of Airflow's rule: letters (either..."
 ```
 
 ### `$defs.airflowTask.properties.taskId.maxLength`
@@ -403,6 +403,9 @@
 {
   type: "object"
   additionalProperties: false
+  not: {
+    required: ["build", "runtime"]
+  }
   description: "NEW in v0.7.7: What keeps the Iceberg table healthy, run on a schedule. backend spark (the default) ..."
   properties: {
     backend: {
@@ -427,12 +430,10 @@
       minLength: 1
       description: "backend spark: the id of the engine: spark build whose output this expose is, when more than one is;..."
     }
-    roleArn: {
-      type: "string"
-      pattern: "^arn:aws[a-z-]*:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]{1,512}$"
-      description: "backend glue, required: the IAM role Glue's optimizers run as."
+    runtime: {
+      $ref: "#/$defs/sparkRuntime"
     }
-    ... (6 more)
+    ... (7 more)
   }
 }
 ```
@@ -993,6 +994,39 @@
 }
 ```
 
+### `$defs.sparkRuntime`
+```json
+{
+  type: "object"
+  additionalProperties: false
+  description: "NEW in v0.7.7 (preview): The runtime that maintains an Iceberg table no forge build writes (exposes[..."
+  required: ["runtime"]
+  properties: {
+    runtime: {
+      enum: [...4 items...]
+      description: "The runtime the maintenance runs on: an existing EMR Serverless application (applicationId), a runni..."
+    }
+    applicationId: {
+      $ref: "#/$defs/sparkParameters/properties/applicationId"
+      description: "With runtime emr-serverless, required: the EMR Serverless application the team's own runner uses. fo..."
+    }
+    clusterId: {
+      $ref: "#/$defs/sparkParameters/properties/clusterId"
+      description: "With runtime emr-ec2, required: the running EMR cluster (j-...) the maintenance steps go to. forge s..."
+    }
+    virtualClusterId: {
+      $ref: "#/$defs/sparkParameters/properties/virtualClusterId"
+      description: "With runtime emr-eks, required: the EMR on EKS virtual cluster."
+    }
+    releaseLabel: {
+      $ref: "#/$defs/sparkParameters/properties/releaseLabel"
+    }
+    ... (2 more)
+  }
+  ... (1 more)
+}
+```
+
 ### `$defs.streamKey`
 ```json
 {
@@ -1167,7 +1201,7 @@
 
 **After:**
 ```json
-"^[A-Za-z0-9_.-]+$"
+"^[A-Za-z0-9_.-]+(?![\\s\\S])"
 ```
 
 ### `$defs.airflowTask.properties.taskId.pattern`
@@ -1179,7 +1213,7 @@
 
 **After:**
 ```json
-"^[A-Za-z0-9_.-]+$"
+"^[A-Za-z0-9_.-]+(?![\\s\\S])"
 ```
 
 ### `$defs.build.properties.engine.anyOf`

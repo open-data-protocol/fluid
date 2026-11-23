@@ -73,32 +73,44 @@
 # $defs/airflowTask/properties/taskId. Through 0.7.6, and in every copy of
 # 0.7.7 published here before forge-cli v0.38.0, the pattern was
 # ^[a-z0-9_][a-z0-9_.-]*[a-z0-9_]$|^[a-z0-9_]$ with no length limit. Both ids now
-# follow Airflow's own rule, ^[A-Za-z0-9_.-]+$ with minLength 1 and
-# maxLength 250: ASCII letters of either case, digits, underscore, dot and dash,
-# at most 250 characters. The same change made dagId optional
+# follow the ASCII part of Airflow's own rule: the pattern
+# ^[A-Za-z0-9_.-]+(?![\s\S]) with minLength 1 and maxLength 250. That is ASCII
+# letters of either case, digits, underscore, dot and dash, at most 250
+# characters. The end of the pattern is (?![\s\S]), "nothing follows", not $,
+# so that the same id is accepted or refused by every validator: in ECMA-262 a
+# $ matches only at the very end, but in Python's re it also matches before a
+# final newline, so a pattern ending in $ accepted "abc\n" in one language and
+# refused it in the other. The same change made dagId optional
 # ($defs/airflowOrchestration no longer requires it), which only widens.
 #
 # Regex containment is undecidable in general, so the gate reports any changed
 # pattern as breaking, and reports minLength and maxLength as tightened because
 # 0.7.6 had neither. The decision rests on two facts.
 #   - Every string the old pattern accepts uses only characters the new one
-#     allows, so the patterns alone narrow nothing. Checked with the two
-#     published schemas' own validators on 66,430 strings: every string of up
-#     to 5 characters over the 9 symbols  a Z 0 _ . - space, newline and a
-#     non-ASCII letter. 0 strings accepted by 0.7.6 are refused by 0.7.7, and
-#     9,195 are newly accepted (upper case, and a leading or trailing dot or
-#     dash: Customer_DAG, -daily, daily.).
-#   - What 0.7.6 accepts and 0.7.7 now refuses is an id longer than 250
-#     characters, and nothing else: 250 characters of "a" is accepted by both,
-#     251, 252 and 1000 only by 0.7.6, and the empty string is refused by both.
-#     Airflow's own limit on a DAG id and a task id is 250
-#     characters, so no id Airflow accepts is affected.
+#     allows, so the patterns alone narrow nothing under ECMA-262. Checked on
+#     66,430 strings: every string of up to 5 characters over the 9 symbols
+#     a Z 0 _ . - space, newline and a non-ASCII letter. With ECMA-262 regular
+#     expressions 0 strings accepted by 0.7.6 are refused by 0.7.7, and 7,923
+#     are newly accepted (upper case, and a leading or trailing dot or dash:
+#     Customer_DAG, -daily, daily.). With the published schemas' own
+#     validators in Python the one difference is a trailing newline: 282 of
+#     those strings, every one ending in a newline ("abc\n"), were accepted by
+#     0.7.6 because Python's $ matches before it, and are refused by 0.7.7. No
+#     ECMA-262 validator ever accepted them, and an id that ends in a newline
+#     is not one Airflow accepts. Nothing else is refused.
+#   - What 0.7.6 accepts and 0.7.7 now refuses is, besides that, an id longer
+#     than 250 characters: 250 characters of "a" is accepted by both, 251, 252
+#     and 1000 only by 0.7.6, and the empty string is refused by both.
+#     Airflow's own limit on a DAG id and a task id is 250 characters, so no id
+#     Airflow accepts is affected.
 #
 # Why it stands: 0.7.7 is a preview and a contract reaches it only by declaring
 # "0.7.7". The old pattern refused ids Airflow accepts, which made a DAG that
 # already existed in Airflow impossible to describe. The 0.7.7 corpus pins both
-# sides (tests/0.7.7/orchestration.json). docs/schema/changelog.md and
-# docs/releases/0.7.7.md say the pair is not purely additive.
+# sides (tests/0.7.7/orchestration.json), including an id that ends in a
+# newline, which the previous pattern accepted under Python.
+# docs/schema/changelog.md and docs/releases/0.7.7.md say the pair is not
+# purely additive.
 #
 # MAINTAINER DECISION implied: that a preview may narrow an id's length, to the
 # 250 characters Airflow itself allows.

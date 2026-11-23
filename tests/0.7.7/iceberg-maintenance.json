@@ -2,7 +2,7 @@
   "corpusVersion": "0.7.7",
   "schema": "https://open-data-protocol.github.io/fluid/schema/fluid-schema-0.7.7.json",
   "group": "iceberg-maintenance",
-  "description": "An Iceberg expose's maintenance block (0.7.7 preview): its closed member set, backend enum, schedule, timezone, build and roleArn, the Glue run interval's bounds, the compaction, rewriteManifests, expireSnapshots and removeOrphanFiles blocks with their bounds, enums and ISO-8601 durations, and the actions array.",
+  "description": "An Iceberg expose's maintenance block (0.7.7 preview): its closed member set, backend enum, schedule, timezone, build and roleArn, the Glue run interval's bounds, the compaction, rewriteManifests, expireSnapshots and removeOrphanFiles blocks with their bounds, enums and ISO-8601 durations, and the actions array; and, in place of a build, the runtime of a table no forge build writes (its runtime enum, the role and the application, cluster or virtual cluster each EMR runtime needs, and that a build and a runtime are never both).",
   "cases": [
     {
       "description": "a Spark maintenance with every member",
@@ -2897,6 +2897,1272 @@
         {
           "pointer": "/exposes/0/iceberg/maintenance/actions/0/options",
           "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a Spark maintenance on an EMR Serverless runtime of its own, in place of a build",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "applicationId": "00f1a2b3c4d5e6f7",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark maintenance on an EMR on EC2 cluster of its own",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-ec2",
+                  "clusterId": "j-2AXXXXXXGAPLF",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark maintenance on an EMR on EKS virtual cluster of its own, with a release label and Spark conf",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-eks",
+                  "virtualClusterId": "abcdefghij1234567890",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner",
+                  "releaseLabel": "emr-7.12.0-latest",
+                  "sparkConf": {
+                    "spark.sql.shuffle.partitions": "64"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark maintenance on the local runtime, which takes no role",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "local"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a Spark maintenance on the local runtime with every action block beside it",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "local"
+                },
+                "compaction": {
+                  "strategy": "binpack"
+                },
+                "removeOrphanFiles": {
+                  "olderThan": "P3D"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "description": "a maintenance that names both a build and a runtime",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "build": "ingest",
+                "runtime": {
+                  "runtime": "local"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a maintenance that names both a build and an EMR runtime",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "build": "ingest",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "applicationId": "00f1a2b3c4d5e6f7",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance",
+          "keyword": "not"
+        }
+      ]
+    },
+    {
+      "description": "a runtime block that omits runtime",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "runtime"
+        }
+      ]
+    },
+    {
+      "description": "a runtime of glue, which Glue's optimizers take as backend glue instead",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "glue"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/runtime",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a runtime outside the enum",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "dataproc"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/runtime",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "description": "a runtime that is not an object",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": "local"
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a runtime block with a member outside its closed set",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "local",
+                  "queue": "default"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "additionalProperties",
+          "detail": "queue"
+        }
+      ]
+    },
+    {
+      "description": "an emr-serverless runtime with no executionRoleArn",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "applicationId": "00f1a2b3c4d5e6f7"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "executionRoleArn"
+        }
+      ]
+    },
+    {
+      "description": "an emr-ec2 runtime with no executionRoleArn",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-ec2",
+                  "clusterId": "j-2AXXXXXXGAPLF"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "executionRoleArn"
+        }
+      ]
+    },
+    {
+      "description": "an emr-eks runtime with no executionRoleArn",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-eks",
+                  "virtualClusterId": "abcdefghij1234567890"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "executionRoleArn"
+        }
+      ]
+    },
+    {
+      "description": "an emr-serverless runtime with no applicationId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "applicationId"
+        }
+      ]
+    },
+    {
+      "description": "an emr-ec2 runtime with no clusterId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-ec2",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "clusterId"
+        }
+      ]
+    },
+    {
+      "description": "an emr-eks runtime with no virtualClusterId",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-eks",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime",
+          "keyword": "required",
+          "detail": "virtualClusterId"
+        }
+      ]
+    },
+    {
+      "description": "a runtime applicationId with an upper-case letter",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "applicationId": "00F1A2B3C4D5E6F7",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/applicationId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a runtime clusterId that does not start with j-",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-ec2",
+                  "clusterId": "2AXXXXXXGAPLF",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/clusterId",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a runtime executionRoleArn that is not a role ARN",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "applicationId": "00f1a2b3c4d5e6f7",
+                  "executionRoleArn": "arn:aws:iam::123456789012:user/ops"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/executionRoleArn",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a runtime releaseLabel that is not an EMR release",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "emr-serverless",
+                  "applicationId": "00f1a2b3c4d5e6f7",
+                  "executionRoleArn": "arn:aws:iam::123456789012:role/maintenance-runner",
+                  "releaseLabel": "spark-3.5"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/releaseLabel",
+          "keyword": "pattern"
+        }
+      ]
+    },
+    {
+      "description": "a runtime sparkConf value that is a number",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "local",
+                  "sparkConf": {
+                    "spark.sql.shuffle.partitions": 64
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/sparkConf/spark.sql.shuffle.partitions",
+          "keyword": "type"
+        }
+      ]
+    },
+    {
+      "description": "a runtime sparkConf key with a space",
+      "contract": {
+        "fluidVersion": "0.7.7",
+        "kind": "DataProduct",
+        "id": "customer_profiles",
+        "name": "Customer Profiles",
+        "metadata": {
+          "owner": {
+            "team": "customer-analytics"
+          }
+        },
+        "exposes": [
+          {
+            "exposeId": "profiles_table",
+            "kind": "table",
+            "binding": {
+              "platform": "gcp",
+              "format": "bigquery_table",
+              "location": {
+                "project": "acme-prod",
+                "dataset": "customers",
+                "table": "profiles"
+              }
+            },
+            "contract": {
+              "schema": [
+                {
+                  "name": "customer_id",
+                  "type": "string"
+                }
+              ]
+            },
+            "iceberg": {
+              "maintenance": {
+                "schedule": "0 3 * * *",
+                "runtime": {
+                  "runtime": "local",
+                  "sparkConf": {
+                    "spark sql": "x"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/exposes/0/iceberg/maintenance/runtime/sparkConf",
+          "keyword": "pattern"
         }
       ]
     }

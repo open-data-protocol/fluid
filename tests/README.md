@@ -233,8 +233,8 @@ from the denominator; counting them would blame the corpus for a gap it cannot
 close, and they are findings about the *schema* instead.
 
 Today: **41.0%** for 0.7.5 (432 of 1053 falsifiable constraints, 123
-redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **46.1%**
-for 0.7.7 (786 of 1705, 143 redundant). The gate
+redundant), **45.7%** for 0.7.6 (570 of 1248, 135 redundant) and **46.5%**
+for 0.7.7 (800 of 1719, 143 redundant). The gate
 applies to the lowest. Most of what remains is `type` constraints, which need a
 wrong-typed value for every property in the schema; `--format json` lists the
 unpinned enums, required members, closed objects and bounds.
